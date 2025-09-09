@@ -28,6 +28,56 @@ namespace ScreamHotel.Core
         }
     }
 
-    public readonly struct GameStateChanged { public readonly object State; public GameStateChanged(object s){ State = s; } }
-    public readonly struct NightResolved { public readonly object Results; public NightResolved(object r){ Results = r; } }
+    public readonly struct GameStateChanged
+    {
+        public readonly object State;
+
+        public GameStateChanged(object s)
+        {
+            State = s;
+        }
+    }
+
+    public readonly struct NightResolved
+    {
+        public readonly object Results;
+
+        public NightResolved(object r)
+        {
+            Results = r;
+        }
+    }
+
+    // 经济 / 建造相关事件
+    public readonly struct GoldChanged
+    {
+        public readonly int Gold;
+
+        public GoldChanged(int g)
+        {
+            Gold = g;
+        }
+    }
+
+    public readonly struct RoomPurchasedEvent
+    {
+        public readonly string RoomId;
+
+        public RoomPurchasedEvent(string id)
+        {
+            RoomId = id;
+        }
+    }
+
+    public readonly struct RoomUpgradedEvent
+    {
+        public readonly string RoomId;
+        public readonly int NewLevel;
+
+        public RoomUpgradedEvent(string id, int lvl)
+        {
+            RoomId = id;
+            NewLevel = lvl;
+        }
+    }
 }
