@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": "Ghost_Spirit",
+      "main": 0,
+      "subRestriction": 1,
+      "baseScare": 35,
+      "recruitCost": 120
+    },
+    {
+      "id": "Ghost_Vampire",
+      "main": 1,
+      "subRestriction": 2,
+      "baseScare": 40,
+      "recruitCost": 180
+    }
+  ]
+}

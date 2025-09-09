@@ -1,0 +1,16 @@
+{
+  "fearPoolCurve": [
+    {
+      "day": 1,
+      "availableFearCount": 2
+    },
+    {
+      "day": 7,
+      "availableFearCount": 3
+    },
+    {
+      "day": 14,
+      "availableFearCount": 5
+    }
+  ]
+}

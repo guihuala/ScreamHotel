@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: GameRules
+  m_EditorClassIdentifier: Assembly-CSharp:ScreamHotel.Data:GameRuleConfig
+  mainBonus: 0.3
+  subBonus: 0.15
+  roomBonus: 0.1
+  fatiguePerNight: 0.1
+  fatigueRestRecover: 0.3
+  highFatiguePenalty: 0.2
+  forcedRestDaysOnCounter: 2
+  minGoldMultiplier: 0

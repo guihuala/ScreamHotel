@@ -23,7 +23,6 @@ public class PausePanel : BasePanel
         resumeButton.onClick.AddListener(OnResumeButtonClick);
         mainmenuButton.onClick.AddListener(OnMainmenuButtonClick);
         
-        GameManager.Instance.PauseGame();
     }
 
     #region 音量设置
@@ -58,13 +57,11 @@ public class PausePanel : BasePanel
     private void OnMainmenuButtonClick()
     {
         SaveSettings();
-        GameManager.Instance.ReturnToMainMenu();
     }
 
     private void OnResumeButtonClick()
     {
         SaveSettings();
-        GameManager.Instance.ResumeGame();
         UIManager.Instance.ClosePanel(panelName);
     }
 }

@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// 持久化的泛型单例基类
-/// </summary>
-/// <typeparam name="T"></typeparam>
 public class SingletonPersistent<T> : MonoBehaviour where T : MonoBehaviour
 {
     private static T instance;

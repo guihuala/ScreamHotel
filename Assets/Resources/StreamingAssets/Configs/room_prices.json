@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "Floor1",
+      "buyCost": 200,
+      "upgradeToLv2": 150,
+      "upgradeToLv3": 300,
+      "capacityLv1": 1,
+      "capacityLv3": 2,
+      "lv2HasTag": true,
+      "lv3HasTag": true
+    }
+  ]
+}
