@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 555934078851056605}
   - component: {fileID: 1418620524785643767}
   - component: {fileID: 6772807356517762401}
+  - component: {fileID: 87508637289386459}
   m_Layer: 0
   m_Name: Ghost
   m_TagString: Untagged
@@ -122,3 +123,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ghostId: 1
   body: {fileID: 555934078851056605}
+--- !u!114 &87508637289386459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4369380177762264235}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19e6b09d2a81c4f36ba3f55ff86c0e4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ghostId: 1
+  pawnView: {fileID: 6772807356517762401}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 0
+  dragHeight: 0.6
+  followLerp: 20

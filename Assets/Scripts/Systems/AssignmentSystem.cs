@@ -3,8 +3,6 @@ using ScreamHotel.Domain;
 
 namespace ScreamHotel.Systems
 {
-    
-    // 白天分配鬼怪到房间
     public class AssignmentSystem
     {
         private readonly World _world;
@@ -18,9 +16,24 @@ namespace ScreamHotel.Systems
             if (g.State is GhostState.Resting or GhostState.Training or GhostState.Injured) return false;
             if (r.AssignedGhostIds.Count >= r.Capacity) return false;
 
+            // 如果之前分配在别的房间，先移除旧房间中的记录
+            foreach (var room in _world.Rooms)
+                room.AssignedGhostIds.Remove(ghostId);
+
             if (!r.AssignedGhostIds.Contains(ghostId)) r.AssignedGhostIds.Add(ghostId);
             g.State = GhostState.Working;
             return true;
+        }
+
+        public bool UnassignGhost(string ghostId)
+        {
+            var g = _world.Ghosts.FirstOrDefault(x => x.Id == ghostId);
+            if (g == null) return false;
+            var removed = false;
+            foreach (var r in _world.Rooms)
+                removed |= r.AssignedGhostIds.Remove(ghostId);
+            if (g.State == GhostState.Working) g.State = GhostState.Idle;
+            return removed;
         }
 
         public void ClearAssignments()
