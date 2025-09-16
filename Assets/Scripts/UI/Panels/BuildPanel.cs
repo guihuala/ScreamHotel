@@ -44,8 +44,7 @@ namespace ScreamHotel.UI
             EventBus.Unsubscribe<RoomPurchasedEvent>(OnRoomPurchased);
             EventBus.Unsubscribe<RoomUpgradedEvent>(OnRoomUpgraded);
         }
-
-        // 通过反射拿到 Game 中创建的 BuildSystem 实例（避免你改 Game 的可见性）
+        
         private BuildSystem GetBuild()
         {
             var field = typeof(Game).GetField("_buildSystem",

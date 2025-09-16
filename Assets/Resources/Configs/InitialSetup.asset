@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: Ghost__Spirit
-  m_EditorClassIdentifier: Assembly-CSharp:ScreamHotel.Data:GhostConfig
-  id: Ghost_Spirit
-  main: 0
-  subRestriction: 0
-  baseScare: 35
-  recruitCost: 120
+  m_Script: {fileID: 11500000, guid: 8ec2fe8d19abb46bab4b9b55116f9ba7, type: 3}
+  m_Name: InitialSetup
+  m_EditorClassIdentifier: 
+  startGold: 300
+  startRoomCount: 2
+  giveDemoLv3: 1
+  starterGhostMains: 0000000001000000
+  defaultBaseScare: 35

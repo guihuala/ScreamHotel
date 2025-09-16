@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Data;
@@ -11,6 +12,8 @@ namespace ScreamHotel.Core
     public class Game : MonoBehaviour
     {
         [Header("Entry References")] public DataManager dataManager;
+        
+        public InitialSetupConfig initialSetup;
 
         public GameState State { get; private set; } = GameState.Boot;
         public int DayIndex { get; private set; } = 1;
@@ -30,6 +33,7 @@ namespace ScreamHotel.Core
             dataManager.Initialize();
 
             World = new World(dataManager.Database);
+            SeedInitialWorld(World);
 
             _assignmentSystem = new AssignmentSystem(World);
             _executionSystem = new NightExecutionSystem(World);
@@ -70,5 +74,46 @@ namespace ScreamHotel.Core
             DayIndex++;
             GoToDay();
         }
+        
+        private void SeedInitialWorld(World w)
+        {
+            var setup = initialSetup;
+
+            w.Economy.Gold = setup.startGold;
+
+            var priceCfg = w.Config.RoomPrices.Count > 0 ? w.Config.RoomPrices.Values.First() : null;
+            for (int i = 0; i < setup.startRoomCount; i++)
+            {
+                var id = $"Room_{i+1:00}";
+                if (!w.Rooms.Exists(r => r.Id == id))
+                    w.Rooms.Add(new Room {
+                        Id = id, Level = 1,
+                        Capacity = priceCfg != null ? priceCfg.capacityLv1 : 1,
+                        RoomTag = null
+                    });
+            }
+            if (setup.giveDemoLv3 && !w.Rooms.Exists(r => r.Level == 3))
+                w.Rooms.Add(new Room {
+                    Id = "Room_99", Level = 3,
+                    Capacity = priceCfg != null ? priceCfg.capacityLv3 : 2,
+                    RoomTag = FearTag.Darkness
+                });
+
+            if (w.Ghosts.Count == 0)
+            {
+                int idx = 1;
+                foreach (var main in setup.starterGhostMains)
+                {
+                    w.Ghosts.Add(new Ghost {
+                        Id = $"G{idx++}", Main = main,
+                        BaseScare = setup.defaultBaseScare,
+                        Fatigue = 0f, State = GhostState.Idle
+                    });
+                }
+            }
+
+            EventBus.Raise(new GoldChanged(w.Economy.Gold));
+        }
+
     }
 }

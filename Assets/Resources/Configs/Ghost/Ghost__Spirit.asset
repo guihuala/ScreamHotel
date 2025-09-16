@@ -9,12 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: GuestType__Coward
-  m_EditorClassIdentifier: Assembly-CSharp:ScreamHotel.Data:GuestTypeConfig
-  id: Coward
-  fears: 0000000002000000
-  barMax: 90
-  requiredPercent: 0.75
-  baseFee: 80
-  counterChance: 0
+  m_Script: {fileID: 11500000, guid: 51624d92c3e284dd3b783970bdecff4b, type: 3}
+  m_Name: Ghost__Spirit
+  m_EditorClassIdentifier: 
+  id: Ghost_Spirit
+  main: 0
+  subRestriction: 0
+  baseScare: 35
+  recruitCost: 120

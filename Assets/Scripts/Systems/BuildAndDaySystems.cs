@@ -9,8 +9,8 @@ namespace ScreamHotel.Systems
         private readonly World _world;
         public BuildSystem(World world) { _world = world; }
 
-        // 价格档，目前简单取第一个 RoomPriceConfig；
-        private ScreamHotel.Data.RoomPriceConfig CurrentPrice()
+        // 价格档，目前简单取第一个 RoomPriceConfig
+        private Data.RoomPriceConfig CurrentPrice()
         {
             return _world.Config.RoomPrices.Values.First();
         }

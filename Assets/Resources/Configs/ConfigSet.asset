@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a95b43db3b47d4031b213318ecd66417, type: 3}
+  m_Name: ConfigSet
+  m_EditorClassIdentifier: 
+  ghosts:
+  - {fileID: 11400000, guid: c3365b6df210d40bc88fa0b5146512c5, type: 2}
+  guestTypes:
+  - {fileID: 11400000, guid: b8ae7199681614fe2b834fe2e35b03f5, type: 2}
+  roomPrices:
+  - {fileID: 11400000, guid: 5fc5b14c4e279435ea4c9969e2290687, type: 2}
+  progression: {fileID: 11400000, guid: 1a21c819f999d49fbbab9268deee1740, type: 2}
+  rules: {fileID: 11400000, guid: 9e3d02a2d4f1245579c35a784b2ad781, type: 2}

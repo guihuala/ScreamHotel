@@ -9,14 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24218c0750fe24e4e859ea0216b9f033, type: 3}
-  m_Name: GameRules
+  m_Script: {fileID: 11500000, guid: b2742070fea95438b8c2bee739f62b1b, type: 3}
+  m_Name: RoomPrice__Floor1
   m_EditorClassIdentifier: 
-  mainBonus: 0.3
-  subBonus: 0.15
-  roomBonus: 0.1
-  fatiguePerNight: 0.1
-  fatigueRestRecover: 0.3
-  highFatiguePenalty: 0.2
-  forcedRestDaysOnCounter: 2
-  minGoldMultiplier: 0
+  id: Floor1
+  buyCost: 200
+  upgradeToLv2: 150
+  upgradeToLv3: 300
+  capacityLv1: 1
+  capacityLv3: 2
+  lv2HasTag: 1
+  lv3HasTag: 1
