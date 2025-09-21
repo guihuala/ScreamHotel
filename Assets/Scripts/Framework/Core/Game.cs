@@ -7,12 +7,19 @@ using ScreamHotel.Domain;
 
 namespace ScreamHotel.Core
 {
-    public enum GameState { Boot, Day, NightShow, NightExecute, Settlement }
+    public enum GameState
+    {
+        Boot,
+        Day,
+        NightShow,
+        NightExecute,
+        Settlement
+    }
 
     public class Game : MonoBehaviour
     {
         [Header("Entry References")] public DataManager dataManager;
-        
+
         public InitialSetupConfig initialSetup;
 
         public GameState State { get; private set; } = GameState.Boot;
@@ -43,6 +50,74 @@ namespace ScreamHotel.Core
 
             GoToDay();
         }
+        
+        public TimeSystem TimeSystem { get; private set; }
+        private Material skyboxMaterial;
+
+        private void Start()
+        {
+            TimeSystem = new TimeSystem();
+            
+            skyboxMaterial = RenderSettings.skybox;
+            
+            UpdateSkyboxTransition();
+        }
+
+        private void Update()
+        {
+            TimeSystem.Update(Time.deltaTime);
+            
+            UpdateSkyboxTransition();
+            
+            CheckDayNightTransition();
+        }
+
+        private void UpdateSkyboxTransition()
+        {
+            if (skyboxMaterial != null)
+            {
+                float transition = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
+                skyboxMaterial.SetFloat("_CubemapTransition", transition);
+            }
+        }
+
+        private float CalculateSkyTransition(float timeOfDay)
+        {
+            float transition;
+
+            if (timeOfDay < 0.25f)
+            {
+                transition = 1f - (timeOfDay / 0.25f);
+            }
+            else if (timeOfDay < 0.5f)
+            {
+                transition = (timeOfDay - 0.25f) / 0.25f;
+            }
+            else if (timeOfDay < 0.75f)
+            {
+                transition = 1f - ((timeOfDay - 0.5f) / 0.25f);
+            }
+            else // 傍晚到午夜
+            {
+                transition = ((timeOfDay - 0.75f) / 0.25f);
+            }
+            
+            transition = Mathf.SmoothStep(0, 1, transition);
+            return transition;
+        }
+
+        private void CheckDayNightTransition()
+        {
+            float previousTime = (TimeSystem.currentTimeOfDay - Time.deltaTime / TimeSystem.dayDurationInSeconds) % 1f;
+            if (previousTime < 0.25f && TimeSystem.currentTimeOfDay >= 0.25f)
+            {
+                EventBus.Raise(new DayStartedEvent());
+            }
+            else if (previousTime < 0.75f && TimeSystem.currentTimeOfDay >= 0.75f)
+            {
+                EventBus.Raise(new NightStartedEvent());
+            }
+        }
 
         public void GoToDay()
         {
@@ -56,25 +131,39 @@ namespace ScreamHotel.Core
             State = GameState.NightShow;
             EventBus.Raise(new GameStateChanged(State));
         }
-
+        
         public void StartNightExecution(int rngSeed)
         {
+            // 确保在夜晚时间执行
+            if (!TimeSystem.IsNight)
+            {
+                Debug.LogWarning("只能在夜晚执行!");
+                return;
+            }
+    
             State = GameState.NightExecute;
             EventBus.Raise(new GameStateChanged(State));
-
+    
+            // 暂停时间
+            TimeSystem.isPaused = true;
+    
             var results = _executionSystem.ResolveNight(rngSeed);
             EventBus.Raise(new NightResolved(results));
-
+    
             State = GameState.Settlement;
             EventBus.Raise(new GameStateChanged(State));
-
+    
             _buildSystem.ApplySettlement(results);
             _progressionSystem.Advance(results, DayIndex);
-
+    
             DayIndex++;
+    
+            // 恢复时间，推进到第二天早晨
+            TimeSystem.isPaused = false;
+            TimeSystem.currentTimeOfDay = 0.25f; // 清晨6点
             GoToDay();
         }
-        
+
         private void SeedInitialWorld(World w)
         {
             var setup = initialSetup;
@@ -84,16 +173,19 @@ namespace ScreamHotel.Core
             var priceCfg = w.Config.RoomPrices.Count > 0 ? w.Config.RoomPrices.Values.First() : null;
             for (int i = 0; i < setup.startRoomCount; i++)
             {
-                var id = $"Room_{i+1:00}";
+                var id = $"Room_{i + 1:00}";
                 if (!w.Rooms.Exists(r => r.Id == id))
-                    w.Rooms.Add(new Room {
+                    w.Rooms.Add(new Room
+                    {
                         Id = id, Level = 1,
                         Capacity = priceCfg != null ? priceCfg.capacityLv1 : 1,
                         RoomTag = null
                     });
             }
+
             if (setup.giveDemoLv3 && !w.Rooms.Exists(r => r.Level == 3))
-                w.Rooms.Add(new Room {
+                w.Rooms.Add(new Room
+                {
                     Id = "Room_99", Level = 3,
                     Capacity = priceCfg != null ? priceCfg.capacityLv3 : 2,
                     RoomTag = FearTag.Darkness
@@ -104,7 +196,8 @@ namespace ScreamHotel.Core
                 int idx = 1;
                 foreach (var main in setup.starterGhostMains)
                 {
-                    w.Ghosts.Add(new Ghost {
+                    w.Ghosts.Add(new Ghost
+                    {
                         Id = $"G{idx++}", Main = main,
                         BaseScare = setup.defaultBaseScare,
                         Fatigue = 0f, State = GhostState.Idle
@@ -114,6 +207,5 @@ namespace ScreamHotel.Core
 
             EventBus.Raise(new GoldChanged(w.Economy.Gold));
         }
-
     }
 }

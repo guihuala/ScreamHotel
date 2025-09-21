@@ -28,6 +28,7 @@ namespace ScreamHotel.Core
         }
     }
 
+    
     public readonly struct GameStateChanged
     {
         public readonly object State;
@@ -79,5 +80,15 @@ namespace ScreamHotel.Core
             RoomId = id;
             NewLevel = lvl;
         }
+    }
+    
+    public readonly struct DayStartedEvent { }
+    
+    public readonly struct NightStartedEvent { }
+    
+    public readonly struct TimeOfDayChangedEvent
+    {
+        public float TimeOfDay { get; }
+        public TimeOfDayChangedEvent(float timeOfDay) => TimeOfDay = timeOfDay;
     }
 }
