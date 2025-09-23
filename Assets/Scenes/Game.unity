@@ -380,7 +380,7 @@ GameObject:
   - component: {fileID: 231908871}
   - component: {fileID: 231908873}
   - component: {fileID: 231908872}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Text (Legacy)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -512,7 +512,7 @@ GameObject:
   - component: {fileID: 450790696}
   - component: {fileID: 450790695}
   - component: {fileID: 450790694}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Build
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -631,7 +631,7 @@ GameObject:
   m_Component:
   - component: {fileID: 609804003}
   - component: {fileID: 609804004}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Item
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -720,7 +720,7 @@ GameObject:
   - component: {fileID: 643722604}
   - component: {fileID: 643722603}
   - component: {fileID: 643722602}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Scrollbar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -980,7 +980,7 @@ GameObject:
   - component: {fileID: 850316789}
   - component: {fileID: 850316791}
   - component: {fileID: 850316790}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Arrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1214,7 +1214,7 @@ GameObject:
   - component: {fileID: 1014922533}
   - component: {fileID: 1014922535}
   - component: {fileID: 1014922534}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Item Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1293,7 +1293,7 @@ GameObject:
   - component: {fileID: 1064844322}
   - component: {fileID: 1064844324}
   - component: {fileID: 1064844323}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Handle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1436,7 +1436,7 @@ GameObject:
   - component: {fileID: 1108985791}
   - component: {fileID: 1108985793}
   - component: {fileID: 1108985792}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Item Checkmark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1511,7 +1511,7 @@ GameObject:
   - component: {fileID: 1114269696}
   - component: {fileID: 1114269698}
   - component: {fileID: 1114269697}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Text (Legacy)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2142,7 +2142,7 @@ GameObject:
   - component: {fileID: 1348712152}
   - component: {fileID: 1348712151}
   - component: {fileID: 1348712150}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Template
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2289,7 +2289,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   rayMaxDistance: 500
-  hideWhileMouseDown: 1
+  uiButtonLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1 &1403011075
 GameObject:
   m_ObjectHideFlags: 0
@@ -2537,7 +2539,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1497191929}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Sliding Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2575,7 +2577,7 @@ GameObject:
   - component: {fileID: 1506138930}
   - component: {fileID: 1506138932}
   - component: {fileID: 1506138931}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2766,6 +2768,7 @@ MonoBehaviour:
   infoText: {fileID: 1786477149}
   upgradeBtn: {fileID: 1841219191}
   tagDropdownForLv2: {fileID: 2126367144}
+  panelOffset: {x: 0, y: 2, z: 0}
 --- !u!114 &1598127881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2842,7 +2845,7 @@ GameObject:
   - component: {fileID: 1730678509}
   - component: {fileID: 1730678508}
   - component: {fileID: 1730678507}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Viewport
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3008,7 +3011,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1803550737}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Content
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3124,7 +3127,7 @@ GameObject:
   - component: {fileID: 1841219193}
   - component: {fileID: 1841219192}
   - component: {fileID: 1841219191}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Build
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3355,7 +3358,7 @@ GameObject:
   - component: {fileID: 1907935377}
   - component: {fileID: 1907935379}
   - component: {fileID: 1907935378}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Item Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3832,7 +3835,7 @@ GameObject:
   - component: {fileID: 2126367146}
   - component: {fileID: 2126367145}
   - component: {fileID: 2126367144}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Dropdown (Legacy)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

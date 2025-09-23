@@ -17,6 +17,9 @@ namespace ScreamHotel.UI
         public LayerMask interactMask = ~0; // 默认全打
         public float rayMaxDistance = 500f;
         
+        [Header("UI Settings")]
+        public LayerMask uiButtonLayer; // 专门用于UI按钮的层
+        
         private Game _game;
         private string _lastRoomId; // 记录上一次悬停的房间ID
 
@@ -30,10 +33,10 @@ namespace ScreamHotel.UI
 
         void Update()
         {
-            // 鼠标在别的UI上时，不进行射线
-            if (EventSystem.current && EventSystem.current.IsPointerOverGameObject())
-            { HideAll(); return; }
-
+            // 先检查是否点击了UI按钮
+            bool isOverUIButton = CheckUIButtonRaycast();
+            if (isOverUIButton) return;
+            
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             if (!Physics.Raycast(ray, out var hit, rayMaxDistance, interactMask))
             { HideAll(); return; }
@@ -78,6 +81,13 @@ namespace ScreamHotel.UI
 
             HideAll();
             _lastRoomId = null;
+        }
+        
+        private bool CheckUIButtonRaycast()
+        {
+            // 专门检测UI按钮层的射线
+            Ray uiRay = mainCamera.ScreenPointToRay(Input.mousePosition);
+            return Physics.Raycast(uiRay, rayMaxDistance, uiButtonLayer);
         }
 
         private Vector3 GetRoomWorldPosition(string roomId)
