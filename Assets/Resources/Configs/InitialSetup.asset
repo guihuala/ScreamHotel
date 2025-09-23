@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: InitialSetup
   m_EditorClassIdentifier: 
   startGold: 300
-  startRoomCount: 2
-  giveDemoLv3: 1
+  startRoomCount: 8
   starterGhostMains: 0000000001000000
   defaultBaseScare: 35

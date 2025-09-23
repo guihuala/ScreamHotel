@@ -167,29 +167,37 @@ namespace ScreamHotel.Core
         private void SeedInitialWorld(World w)
         {
             var setup = initialSetup;
+            Debug.Log($"初始化世界: startRoomCount = {setup.startRoomCount}");
 
             w.Economy.Gold = setup.startGold;
 
             var priceCfg = w.Config.RoomPrices.Count > 0 ? w.Config.RoomPrices.Values.First() : null;
+    
+            int actuallyAdded = 0;
             for (int i = 0; i < setup.startRoomCount; i++)
             {
-                var id = $"Room_{i + 1:00}";
-                if (!w.Rooms.Exists(r => r.Id == id))
+                int floor = (i / 4) + 1;
+                string[] slots = { "LA", "LB", "RA", "RB" };
+                string slot = slots[i % 4];
+                var id = $"Room_F{floor}_{slot}";
+        
+                bool exists = w.Rooms.Exists(r => r.Id == id);
+                Debug.Log($"房间 {i}: ID={id}, 是否存在={exists}");
+        
+                if (!exists)
+                {
                     w.Rooms.Add(new Room
                     {
                         Id = id, Level = 1,
                         Capacity = priceCfg != null ? priceCfg.capacityLv1 : 1,
                         RoomTag = null
                     });
+                    actuallyAdded++;
+                }
             }
-
-            if (setup.giveDemoLv3 && !w.Rooms.Exists(r => r.Level == 3))
-                w.Rooms.Add(new Room
-                {
-                    Id = "Room_99", Level = 3,
-                    Capacity = priceCfg != null ? priceCfg.capacityLv3 : 2,
-                    RoomTag = FearTag.Darkness
-                });
+    
+            Debug.Log($"实际添加房间数量: {actuallyAdded}");
+            Debug.Log($"世界中的总房间数: {w.Rooms.Count}");
 
             if (w.Ghosts.Count == 0)
             {

@@ -14,52 +14,34 @@ namespace ScreamHotel.Presentation
         public Transform ghostsRoot;
         public RoomView roomPrefab;
         public PawnView ghostPrefab;
+        
+        [Header("Floor/Room Layout (relative to roomsRoot)")]
+        [Tooltip("第1层相对 roomsRoot 的本地Y；第n层 = roomBaseY + (n-1)*floorSpacing。")]
+        public float roomBaseY = 0f;
 
-        // ---------- 房间摆放配置 ----------
-        [Header("Room Layout (优先使用显式插槽)")]
-        [Tooltip("若提供，则按顺序使用这些 Transform 作为房间生成位置。")]
-        public List<Transform> roomSlots = new();
+        [Tooltip("楼层间距（沿 Y 叠层）。")]
+        public float floorSpacing = 8f;
 
-        [Tooltip("若 roomSlots 为空，则启用网格排布。")]
-        public bool useGridWhenNoSlots = true;
+        [Tooltip("左右两侧两间房的 X 偏移（电梯井位于 X=0；内侧靠近电梯，外侧更远）。")]
+        public float xInner = 3.0f, xOuter = 6.0f;
 
-        [Tooltip("网格起点（世界坐标）。也可把其设为 roomsRoot 的子节点以便整体移动。")]
-        public Vector3 roomGridOrigin = new Vector3(0, 0, 0);
+        [Tooltip("电梯井预制体（可空）。若提供，每层在楼层中心生成一份。")]
+        public Transform elevatorPrefab;
 
-        [Tooltip("网格列数（每行房间数量）。")]
-        public int roomGridColumns = 4;
-
-        [Tooltip("网格间距（X / Z）。")]
-        public Vector2 roomGridSpacing = new Vector2(10f, 10f);
-
-        [Tooltip("房间放置的 Y 高度。")]
-        public float roomY = 0f;
-
-        [Header("是否使用 roomsRoot 的局部空间计算网格")]
-        public bool roomGridInLocalSpace = false;
-
-        // ---------- 待命区摆放配置 ----------
-        [Header("Staging Layout (优先使用显式待命点)")]
-        [Tooltip("若提供，则按顺序使用这些 Transform 作为鬼怪待命位置。")]
-        public List<Transform> ghostStagingSlots = new();
-
-        [Tooltip("若 stagingSlots 为空，则按 起点+步进 生成线性待命位。")]
-        public bool useLinearStagingWhenNoSlots = true;
-
-        [Tooltip("待命区起点（世界坐标）。")]
-        public Vector3 stagingOrigin = new Vector3(-5f, 0f, 0f);
-
-        [Tooltip("每个待命位的步进向量（世界坐标）。例如(-2.5, 0, 0)表示沿X轴每个向左2.5单位。")]
-        public Vector3 stagingStep = new Vector3(-2.5f, 0f, 0f);
-
-        [Tooltip("待命位的固定 Z（如果你只想在 XY 面上展示，请把这个 Z 设为你的展示平面Z）。")]
-        public float stagingFixedZ = 0f;
+        private readonly HashSet<int> _elevatorsSpawned = new();
+        
+        [Header("Ghost Spawn Room (relative to ghostsRoot)")]
+        [Tooltip("鬼出生‘独立房间’的根节点（必须设置）；建议这个root放在希望的独立房间中心。")]
+        public Transform ghostSpawnRoomRoot;
+        
+        [Tooltip("所有鬼的固定 Z（XY 平面演出时建议=与独立房间所在平面一致）。")]
+        public float spawnFixedZ = 0f;
 
         // 运行时映射
         private readonly Dictionary<string, RoomView> _roomViews = new();
         private readonly Dictionary<string, PawnView> _ghostViews = new();
 
-        // 缓存/复用的待命点（按 ghostId）
+        // 缓存/复用的待命点
         private readonly Dictionary<string, Transform> _stagingByGhost = new();
 
         void OnEnable()
@@ -94,7 +76,7 @@ namespace ScreamHotel.Presentation
             {
                 if (_roomViews.ContainsKey(r.Id)) continue;
                 var rv = Instantiate(roomPrefab, roomsRoot);
-                rv.transform.position = GetRoomSpawnPosition(_roomViews.Count);
+                rv.transform.position = GetRoomSpawnPositionById(r.Id);
                 rv.Bind(r);
                 _roomViews[r.Id] = rv;
             }
@@ -105,77 +87,95 @@ namespace ScreamHotel.Presentation
                 if (_ghostViews.ContainsKey(g.Id)) continue;
                 var pv = Instantiate(ghostPrefab, ghostsRoot);
                 pv.BindGhost(g);
-                var stagingT = GetStagingTransform(g.Id);
-                pv.SnapTo(stagingT.position); // 待命位
+
+                // 随机出生在独立房间内
+                pv.SnapTo(GetRandomGhostSpawnPos());
+
                 _ghostViews[g.Id] = pv;
 
-                // 如果有拖拽组件，绑定 ghostId 和 game
                 var drag = pv.GetComponent<DraggablePawn>();
-                if (drag)
-                {
-                    drag.ghostId = g.Id;
-                    drag.game = game;
-                }
+                if (drag) { drag.ghostId = g.Id; drag.game = game; }
             }
         }
+        
+        // 解析类似 "Room_F3_LA"
+        private bool TryParseRoomId(string roomId, out int floor, out string slot)
+        {
+            floor = 0; slot = null;
+            if (string.IsNullOrEmpty(roomId)) return false;
+            var fIdx = roomId.IndexOf("_F", System.StringComparison.Ordinal);
+            if (fIdx < 0) return false;
+            var usIdx = roomId.IndexOf('_', fIdx + 2);
+            if (usIdx < 0) return false;
+            var num = roomId.Substring(fIdx + 2, usIdx - (fIdx + 2));
+            if (!int.TryParse(num, out floor)) return false;
+            slot = roomId.Substring(usIdx + 1); // LA/LB/RA/RB
+            return true;
+        }
 
+        private Vector3 GetRoomSpawnPositionById(string roomId)
+        {
+            if (!TryParseRoomId(roomId, out var floor, out var slot))
+            {
+                Debug.LogWarning($"无法解析房间ID: {roomId}，使用默认位置");
+                return roomsRoot != null ? roomsRoot.position : Vector3.zero;
+            }
+    
+            Debug.Log($"解析房间 {roomId} → 楼层:{floor}, 槽位:{slot}");
+            
+            // 1) 本地楼层中心（相对 roomsRoot）
+            float ly = roomBaseY + (floor - 1) * floorSpacing;
+            var floorCenterLocal = new Vector3(0f, ly, 0f);
+
+            // 2) 槽位决定 X 偏移
+            float lx = slot switch
+            {
+                "LA" => -xInner, // 左内
+                "LB" => -xOuter, // 左外
+                "RA" =>  xInner, // 右内
+                "RB" =>  xOuter, // 右外
+                _    =>  0f,
+            };
+
+            var local = floorCenterLocal + new Vector3(lx, 0f, 0f);
+
+            // 3) 楼层电梯（仅一次）
+            TrySpawnElevatorOnce(floor, floorCenterLocal);
+
+            // 4) 转世界坐标
+            return roomsRoot ? roomsRoot.TransformPoint(local) : local;
+        }
+
+        private void TrySpawnElevatorOnce(int floor, Vector3 floorCenterLocal)
+        {
+            if (elevatorPrefab == null || _elevatorsSpawned.Contains(floor)) return;
+
+            var t = Instantiate(elevatorPrefab, roomsRoot);
+            t.position = roomsRoot ? roomsRoot.TransformPoint(floorCenterLocal) : floorCenterLocal;
+            t.name = $"Elevator_F{floor}";
+            _elevatorsSpawned.Add(floor);
+        }
+        
         // ---------- 布局计算 ----------
-        Vector3 GetRoomSpawnPosition(int index)
+        private Vector3 GetRandomGhostSpawnPos()
         {
-            // 1) 显式插槽优先
-            if (roomSlots != null && index < roomSlots.Count && roomSlots[index] != null)
-                return roomSlots[index].position;
-
-            // 2) 网格
-            if (useGridWhenNoSlots)
+            if (ghostSpawnRoomRoot == null)
             {
-                int cols = Mathf.Max(1, roomGridColumns);
-                float sx = roomGridSpacing.x;
-                float sz = roomGridSpacing.y;
-                int x = index % cols;
-                int z = index / cols;
-
-                Vector3 pos = new Vector3(
-                    roomGridOrigin.x + x * sx,
-                    roomY,
-                    roomGridOrigin.z + z * sz
-                );
-
-                if (roomGridInLocalSpace && roomsRoot != null)
-                    pos = roomsRoot.TransformPoint(pos);
-
-                return pos;
+                return ghostsRoot ? ghostsRoot.position : Vector3.zero;
             }
-
-            // 3) 兜底：放在 roomsRoot 原点
-            return roomsRoot != null ? roomsRoot.position : new Vector3(0, roomY, 0);
-        }
-
-        Vector3 GetStagingPosForIndex(int index)
-        {
-            Vector3 pos;
-
-            // 1) 显式待命插槽
-            if (ghostStagingSlots != null && index < ghostStagingSlots.Count && ghostStagingSlots[index] != null)
-            {
-                pos = ghostStagingSlots[index].position;
-            }
-            else
-            {
-                // 2) 线性起点+步进
-                if (useLinearStagingWhenNoSlots)
-                {
-                    pos = stagingOrigin + stagingStep * index;
-                }
-                else
-                {
-                    pos = stagingOrigin;
-                }
-            }
-
-            // 固定 Z（便于只在 XY 面展示）
-            pos.z = stagingFixedZ;
-            return pos;
+            
+            var box = ghostSpawnRoomRoot.GetComponentInChildren<BoxCollider>();
+            
+            // 在 box 的本地范围内均匀采样
+            var size = box.size;
+            var center = box.center;
+            float rx = Random.Range(-size.x * 0.5f, size.x * 0.5f);
+            float ry = Random.Range(-size.y * 0.5f, size.y * 0.5f);
+            var local = new Vector3(center.x + rx, center.y + ry, spawnFixedZ);
+            
+            var world = box.transform.TransformPoint(local);
+            world.z = spawnFixedZ; // 强制 XY 平面
+            return world;
         }
 
         // ---------- 事件响应 ----------
@@ -183,7 +183,7 @@ namespace ScreamHotel.Presentation
         {
             if (e.State is GameState.Day)
             {
-                // Day：保证视图与数据一致（房间数量/升级后的容量等）
+                // Day：保证视图与数据一致
                 SyncAll();
             }
             else if (e.State is GameState.NightShow)
@@ -209,11 +209,11 @@ namespace ScreamHotel.Presentation
         {
             var r = game.World.Rooms.First(x => x.Id == ev.RoomId);
             var rv = Instantiate(roomPrefab, roomsRoot);
-            rv.transform.position = GetRoomSpawnPosition(_roomViews.Count);
+            rv.transform.position = GetRoomSpawnPositionById(r.Id);
             rv.Bind(r);
             _roomViews[r.Id] = rv;
         }
-
+        
         void OnRoomUpgraded(RoomUpgradedEvent ev)
         {
             if (_roomViews.TryGetValue(ev.RoomId, out var rv))
@@ -236,14 +236,15 @@ namespace ScreamHotel.Presentation
                     else rv.PulseFail();
                 }
             }
-
-            // 清场：把鬼回到各自待命位（不再创建临时对象）
-            int idx = 0;
+            
+            // 清场：独立房间随机点
             foreach (var kv in _ghostViews)
             {
-                var t = GetStagingTransform(kv.Key, idx);
-                kv.Value.MoveTo(t, 0.4f);
-                idx++;
+                Vector3 randomPos = GetRandomGhostSpawnPos();
+                Transform tempTransform = new GameObject().transform;
+                tempTransform.position = randomPos;  // 使用随机位置
+                kv.Value.MoveTo(tempTransform, 0.4f);  // 传递临时的 Transform
+                Destroy(tempTransform.gameObject);  // 结束后销毁临时对象
             }
         }
 
@@ -266,10 +267,18 @@ namespace ScreamHotel.Presentation
             _stagingByGhost[ghostId] = t;
             return t;
         }
+        
+        private Vector3 GetStagingPosForIndex(int index)
+        {
+            // 在 ghostsRoot 附近按索引偏移
+            float spacing = 2f;
+            Vector3 basePos = ghostsRoot ? ghostsRoot.position : Vector3.zero;
+            return basePos + new Vector3(index * spacing, 0, 0);
+        }
 
         private int GetIndexForGhost(string ghostId)
         {
-            // 尝试用当前字典顺序做一个稳定索引；也可以根据 World.Ghosts 顺序来决定
+            // 尝试用当前字典顺序做一个稳定索引
             int i = 0;
             foreach (var id in game.World.Ghosts.Select(g => g.Id))
             {

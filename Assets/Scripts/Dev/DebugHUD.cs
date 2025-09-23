@@ -75,6 +75,21 @@ namespace ScreamHotel.Dev
                 }
             }
             GUILayout.EndHorizontal();
+            
+            // 行 2.5：建造新楼层
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Build Next Floor", GUILayout.Height(28)))
+            {
+                if (_build.TryBuildNextFloor(out var floor))
+                {
+                    Log($"Built Floor {floor} (Rooms: {string.Join(",", _build.EnumerateRoomIdsOnFloor(floor))})");
+                }
+                else
+                {
+                    Log("Not enough gold to build next floor.");
+                }
+            }
+            GUILayout.EndHorizontal();
 
             // 行 3：简单指派（G1/G2 -> Room_01）
             GUILayout.BeginHorizontal();
