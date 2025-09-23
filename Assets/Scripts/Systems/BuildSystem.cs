@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using ScreamHotel.Domain;
 using ScreamHotel.Core;
+using ScreamHotel.Presentation;
+using UnityEngine;
 
 namespace ScreamHotel.Systems
 {
@@ -91,19 +93,9 @@ namespace ScreamHotel.Systems
         {
             // 可在此处理建造队列完成、维修折旧等
         }
-
-
+        
         #region 对外Api
 
-        /// <summary>确保首层存在且已解锁四间房</summary>
-        public void EnsureInitialFloor()
-        {
-            if (HasAnyFloor()) return;
-            CreateFloorInternally(1, free: true);
-            EventBus.Raise(new FloorBuiltEvent(1));
-        }
-
-        /// <summary>尝试建造“下一层楼”（按当前已有最高层+1）。成功则自动生成四间Lv1房。</summary>
         public bool TryBuildNextFloor(out int newFloor)
         {
             newFloor = GetNextFloorIndex();
@@ -115,6 +107,10 @@ namespace ScreamHotel.Systems
 
             CreateFloorInternally(newFloor, free: true);
             EventBus.Raise(new FloorBuiltEvent(newFloor));
+
+            // 发送屋顶更新事件
+            EventBus.Raise(new RoofUpdateNeeded());
+
             return true;
         }
 

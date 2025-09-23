@@ -67,6 +67,9 @@ namespace ScreamHotel.Core
         public FloorBuiltEvent(int floor){ Floor = floor; }
     }
     
+    // 屋顶需要更新事件
+    public readonly struct RoofUpdateNeeded { }
+    
     public readonly struct RoomPurchasedEvent
     {
         public readonly string RoomId;

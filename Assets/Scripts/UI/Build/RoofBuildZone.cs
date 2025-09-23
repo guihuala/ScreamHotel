@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Systems;
@@ -11,7 +12,7 @@ namespace ScreamHotel.UI
     public class RoofBuildZone : MonoBehaviour
     {
         [Header("Layout (relative to roomsRoot)")]
-        public Transform roomsRoot;      // 与 PresentationController 的 roomsRoot 一致
+        public Transform roomsRoot;
         public float roomBaseY = 0f;
         public float floorSpacing = 8f;
         public float roofOffsetY = 2f;   // 楼顶比最高层中心再高一点
@@ -25,12 +26,8 @@ namespace ScreamHotel.UI
             _box = GetComponent<BoxCollider>();
             _box.isTrigger = true;
             _game = FindObjectOfType<Game>();
+            roomsRoot = transform.Find("RoomRoot");
             UpdateZone();
-        }
-
-        void Update()
-        {
-            UpdateZone(); // 简单起见每帧更新；你也可监听 FloorBuiltEvent 再更新
         }
 
         public int GetNextFloor()
@@ -49,15 +46,15 @@ namespace ScreamHotel.UI
         {
             var f = typeof(Game).GetField("_buildSystem",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            return (BuildSystem)f.GetValue(_game); // 复用你UI里拿 BuildSystem 的方式 :contentReference[oaicite:3]{index=3}
+            return (BuildSystem)f.GetValue(_game);
         }
 
         private void UpdateZone()
         {
             var build = GetBuild();
-            int highest = build.GetHighestFloor(); // 0 表示还没有房间/楼层 :contentReference[oaicite:4]{index=4}
+            int highest = build.GetHighestFloor();
 
-            float topY = roomBaseY + Mathf.Max(0, highest - 1) * floorSpacing + roofOffsetY;
+            float topY = roomBaseY + Mathf.Max(0, highest) * floorSpacing + roofOffsetY;
             Vector3 localCenter = new Vector3(0f, topY, 0f);
             Vector3 worldCenter = roomsRoot ? roomsRoot.TransformPoint(localCenter) : localCenter;
 

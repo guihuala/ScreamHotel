@@ -14,6 +14,7 @@ namespace ScreamHotel.Presentation
         public Transform ghostsRoot;
         public RoomView roomPrefab;
         public PawnView ghostPrefab;
+        public Transform roofPrefab;
         
         [Header("Floor/Room Layout (relative to roomsRoot)")]
         [Tooltip("第1层相对 roomsRoot 的本地Y；第n层 = roomBaseY + (n-1)*floorSpacing。")]
@@ -27,7 +28,7 @@ namespace ScreamHotel.Presentation
 
         [Tooltip("电梯井预制体（可空）。若提供，每层在楼层中心生成一份。")]
         public Transform elevatorPrefab;
-
+        
         private readonly HashSet<int> _elevatorsSpawned = new();
         
         [Header("Ghost Spawn Room (relative to ghostsRoot)")]
@@ -37,6 +38,8 @@ namespace ScreamHotel.Presentation
         [Tooltip("所有鬼的固定 Z（XY 平面演出时建议=与独立房间所在平面一致）。")]
         public float spawnFixedZ = 0f;
 
+        private Transform currentRoof;  // 当前屋顶实例
+        
         // 运行时映射
         private readonly Dictionary<string, RoomView> _roomViews = new();
         private readonly Dictionary<string, PawnView> _ghostViews = new();
@@ -50,13 +53,18 @@ namespace ScreamHotel.Presentation
             EventBus.Subscribe<RoomPurchasedEvent>(OnRoomPurchased);
             EventBus.Subscribe<RoomUpgradedEvent>(OnRoomUpgraded);
             EventBus.Subscribe<NightResolved>(OnNightResolved);
+            EventBus.Subscribe<FloorBuiltEvent>(OnFloorBuilt);
+            EventBus.Subscribe<RoofUpdateNeeded>(OnRoofUpdateNeeded);
         }
+
         void OnDisable()
         {
             EventBus.Unsubscribe<GameStateChanged>(OnGameState);
             EventBus.Unsubscribe<RoomPurchasedEvent>(OnRoomPurchased);
             EventBus.Unsubscribe<RoomUpgradedEvent>(OnRoomUpgraded);
             EventBus.Unsubscribe<NightResolved>(OnNightResolved);
+            EventBus.Unsubscribe<FloorBuiltEvent>(OnFloorBuilt);
+            EventBus.Unsubscribe<RoofUpdateNeeded>(OnRoofUpdateNeeded);
         }
 
         void Start()
@@ -92,13 +100,43 @@ namespace ScreamHotel.Presentation
                 pv.SnapTo(GetRandomGhostSpawnPos());
 
                 _ghostViews[g.Id] = pv;
-
-                var drag = pv.GetComponent<DraggablePawn>();
-                if (drag) { drag.ghostId = g.Id; drag.game = game; }
             }
+
+            // 更新屋顶位置
+            UpdateRoofPosition();
+        }
+
+        private void UpdateRoofPosition()
+        {
+            if (roofPrefab == null) return;
+
+            // 获取当前最高层的 Y 坐标
+            int highestFloor = GetHighestFloor();
+            float topY = roomBaseY + highestFloor * floorSpacing;
+
+            // 如果没有屋顶实例，则创建一个
+            if (currentRoof == null)
+            {
+                currentRoof = Instantiate(roofPrefab, roomsRoot);
+            }
+
+            // 更新屋顶位置
+            currentRoof.position = roomsRoot.TransformPoint(new Vector3(0f, topY, 0f));
         }
         
-        // 解析类似 "Room_F3_LA"
+        private int GetHighestFloor()
+        {
+            int maxFloor = 0;
+            foreach (var roomId in _roomViews.Keys)
+            {
+                if (TryParseRoomId(roomId, out int floor, out string slot))
+                {
+                    maxFloor = Mathf.Max(maxFloor, floor);
+                }
+            }
+            return maxFloor;
+        }
+        
         private bool TryParseRoomId(string roomId, out int floor, out string slot)
         {
             floor = 0; slot = null;
@@ -117,11 +155,8 @@ namespace ScreamHotel.Presentation
         {
             if (!TryParseRoomId(roomId, out var floor, out var slot))
             {
-                Debug.LogWarning($"无法解析房间ID: {roomId}，使用默认位置");
                 return roomsRoot != null ? roomsRoot.position : Vector3.zero;
             }
-    
-            Debug.Log($"解析房间 {roomId} → 楼层:{floor}, 槽位:{slot}");
             
             // 1) 本地楼层中心（相对 roomsRoot）
             float ly = roomBaseY + (floor - 1) * floorSpacing;
@@ -246,6 +281,16 @@ namespace ScreamHotel.Presentation
                 kv.Value.MoveTo(tempTransform, 0.4f);  // 传递临时的 Transform
                 Destroy(tempTransform.gameObject);  // 结束后销毁临时对象
             }
+        }
+                
+        void OnFloorBuilt(FloorBuiltEvent ev)
+        {
+            UpdateRoofPosition();
+        }
+
+        void OnRoofUpdateNeeded(RoofUpdateNeeded ev)
+        {
+            UpdateRoofPosition();
         }
 
         void SyncAll()

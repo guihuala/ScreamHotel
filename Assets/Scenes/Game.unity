@@ -967,6 +967,7 @@ MonoBehaviour:
   xInner: 20
   xOuter: 10
   elevatorPrefab: {fileID: 2135316494144389204, guid: dfd40add33a6c47d3b4d48ea6889219f, type: 3}
+  roofPrefab: {fileID: 2943580555342847563, guid: 5a13edc06cdee4dd681fef5491c6cd1f, type: 3}
   ghostSpawnRoomRoot: {fileID: 213172393}
   spawnFixedZ: 0
 --- !u!1 &850316788
