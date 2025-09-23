@@ -83,7 +83,7 @@ namespace ScreamHotel.UI
 
         void Update()
         {
-            // 如果面板显示中，持续更新位置以跟随房间移动（如果需要）
+            // 如果面板显示中，持续更新位置以跟随房间移动
             if (root.gameObject.activeInHierarchy && _currentRoomTransform != null)
             {
                 PlacePanelAtRoom();

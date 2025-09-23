@@ -20,11 +20,14 @@ namespace ScreamHotel.Presentation
         public TextMesh label;
 
         private Color _baseColor;
-        private float _pulseT; private Color _targetColor;
 
         void Awake()
         {
-            if (plate != null) _baseColor = plate.sharedMaterial.color;
+            if (plate != null) 
+            {
+                // 确保每个实例有独立材质
+                _baseColor = plate.material.color;
+            }
             if (label && string.IsNullOrEmpty(label.text)) label.text = "Room";
         }
 
@@ -42,8 +45,8 @@ namespace ScreamHotel.Presentation
             if (label) label.text = $"{room.Id}  Lv{room.Level}  [{tag}]  Cap:{room.Capacity}";
 
             EnsureAnchors(room.Capacity);
-            ApplyVisualByLevel(room);   // ★ 根据等级切外观
-            TintByTag(room);            // ★ 根据 Tag 微调底板色
+            ApplyVisualByLevel(room);
+            TintByTag(room);
         }
 
         // ----- 视觉切换 -----
@@ -57,7 +60,6 @@ namespace ScreamHotel.Presentation
         private void TintByTag(Room room)
         {
             if (plate == null) return;
-            // Lv2/Lv3 才有房间属性装饰，这里做一点点颜色偏移作为占位
             if (room.Level >= 2 && room.RoomTag.HasValue)
             {
                 var c = TagColor(room.RoomTag.Value);
@@ -87,24 +89,6 @@ namespace ScreamHotel.Presentation
         {
             if (arr == null) return;
             foreach (var go in arr) if (go) go.SetActive(on);
-        }
-
-        // ----- 脉冲反馈（保留） -----
-        public void PulseSuccess()  => StartPulse(new Color(0.3f, 1f, 0.3f));
-        public void PulseFail()     => StartPulse(new Color(1f, 0.9f, 0.3f));
-        public void PulseCounter()  => StartPulse(new Color(1f, 0.3f, 0.3f));
-
-        void StartPulse(Color c) { _targetColor = c; _pulseT = 1f; }
-
-        void Update()
-        {
-            if (_pulseT > 0f && plate != null)
-            {
-                _pulseT -= Time.deltaTime * 1.8f;
-                var t = Mathf.Clamp01(_pulseT);
-                plate.material.color = Color.Lerp(plate.material.color, _targetColor, Mathf.SmoothStep(0,1,t));
-                if (_pulseT <= 0f) TintByTag(new Room{ Level = 1, RoomTag = null }); // 回到基础/Tag色
-            }
         }
 
         public Transform GetAnchor(int index) =>

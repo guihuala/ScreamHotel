@@ -255,23 +255,11 @@ namespace ScreamHotel.Presentation
             {
                 var r = game.World.Rooms.First(x => x.Id == ev.RoomId);
                 rv.Refresh(r);
-                rv.PulseSuccess();
             }
         }
 
         void OnNightResolved(NightResolved ev)
         {
-            var res = (NightResults)ev.Results;
-            foreach (var rr in res.RoomDetails)
-            {
-                if (_roomViews.TryGetValue(rr.RoomId, out var rv))
-                {
-                    if (rr.Counter) rv.PulseCounter();
-                    else if (rr.TotalScare >= rr.Required) rv.PulseSuccess();
-                    else rv.PulseFail();
-                }
-            }
-            
             // 清场：独立房间随机点
             foreach (var kv in _ghostViews)
             {
