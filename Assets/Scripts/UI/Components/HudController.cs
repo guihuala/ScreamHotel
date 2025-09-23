@@ -1,20 +1,45 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using ScreamHotel.Core;
+using ScreamHotel.Systems;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HudController : MonoBehaviour
+namespace ScreamHotel.UI
 {
-    public Button pauseButton;
-
-    private void Awake()
+    public class HudController : MonoBehaviour
     {
-        pauseButton.onClick.AddListener(OnPauseButtonClicked);
-    }
+        [Header("References")] private Game game;
+        public Button pauseButton;
+        public TextMeshProUGUI goldText;
 
-    private void OnPauseButtonClicked()
-    {
-        UIManager.Instance.OpenPanel("PausePanel");
+        private void Awake()
+        {
+            game = FindObjectOfType<Game>();
+
+            pauseButton.onClick.AddListener(OnPauseButtonClicked);
+        }
+        
+        private void OnEnable()
+        {
+            EventBus.Subscribe<GoldChanged>(OnGoldChanged);
+            RefreshGoldUI();
+        }
+
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<GoldChanged>(OnGoldChanged);
+        }
+
+        private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();
+
+        private void OnPauseButtonClicked()
+        {
+            UIManager.Instance.OpenPanel("PausePanel");
+        }
+
+        private void RefreshGoldUI()
+        {
+            if (goldText != null) goldText.text = $"Gold: {game.World.Economy.Gold}";
+        }
     }
 }

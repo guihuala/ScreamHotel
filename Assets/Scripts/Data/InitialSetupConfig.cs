@@ -9,7 +9,7 @@ public class InitialSetupConfig : ScriptableObject
     public int startGold = 300;
 
     [Header("Rooms")]
-    public int startRoomCount = 2;      // 起始建几间 Lv1
+    public int startRoomCount = 8;      // 起始建几间 Lv1
 
     [Header("Starter Ghosts")]
     public List<FearTag> starterGhostMains = new() { FearTag.Darkness, FearTag.Blood };

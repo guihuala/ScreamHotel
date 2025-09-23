@@ -18,9 +18,6 @@ namespace ScreamHotel.Systems
         private int floorBaseCost = 500;
         private int floorStepCost = 250;
 
-        // 是否在新楼层自动生成四间Lv1房
-        private const bool autoCreateRoomsOnNewFloor = true;
-
         // 获取价格，目前区第一个价格
         private Data.RoomPriceConfig CurrentPrice()
         {
@@ -53,7 +50,7 @@ namespace ScreamHotel.Systems
             return true;
         }
 
-        // 升级房间：Lv1->Lv2（可选设置标签）、Lv2->Lv3（容量提高，保留标签）
+        // 升级房间：Lv1->Lv2、Lv2->Lv3
         public bool TryUpgradeRoom(string roomId, FearTag? setTagOnLv2 = null)
         {
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);

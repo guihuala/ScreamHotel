@@ -167,7 +167,6 @@ namespace ScreamHotel.Core
         private void SeedInitialWorld(World w)
         {
             var setup = initialSetup;
-            Debug.Log($"初始化世界: startRoomCount = {setup.startRoomCount}");
 
             w.Economy.Gold = setup.startGold;
 
