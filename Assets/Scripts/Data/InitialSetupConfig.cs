@@ -13,5 +13,4 @@ public class InitialSetupConfig : ScriptableObject
 
     [Header("Starter Ghosts")]
     public List<FearTag> starterGhostMains = new() { FearTag.Darkness, FearTag.Blood };
-    public float defaultBaseScare = 35f;
 }

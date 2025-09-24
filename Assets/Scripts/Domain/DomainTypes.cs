@@ -11,8 +11,6 @@ namespace ScreamHotel.Domain
         public string Id;
         public FearTag Main;
         public FearTag? Sub;
-        public float BaseScare;
-        public float Fatigue;
         public GhostState State;
         public int DaysForcedRest;
     }

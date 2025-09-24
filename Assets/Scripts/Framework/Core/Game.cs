@@ -216,8 +216,7 @@ namespace ScreamHotel.Core
                     w.Ghosts.Add(new Ghost
                     {
                         Id = $"G{idx++}", Main = main,
-                        BaseScare = setup.defaultBaseScare,
-                        Fatigue = 0f, State = GhostState.Idle
+                        State = GhostState.Idle
                     });
                 }
             }

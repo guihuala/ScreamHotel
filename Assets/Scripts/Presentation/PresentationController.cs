@@ -28,7 +28,7 @@ namespace ScreamHotel.Presentation
         [Tooltip("左右两侧两间房的 X 偏移（电梯井位于 X=0；内侧靠近电梯，外侧更远）。")]
         public float xInner = 3.0f, xOuter = 6.0f;
 
-        [Tooltip("电梯井预制体（可空）。若提供，每层在楼层中心生成一份。")]
+        [Tooltip("电梯井预制体。若提供，每层在楼层中心生成一份。")]
         public Transform elevatorPrefab;
         
         private readonly HashSet<int> _elevatorsSpawned = new();
@@ -39,6 +39,23 @@ namespace ScreamHotel.Presentation
         
         [Tooltip("所有鬼的固定 Z（XY 平面演出时建议=与独立房间所在平面一致）。")]
         public float spawnFixedZ = 0f;
+
+        [Header("Guest Queue (relative to guestQueueRoot)")]
+        [Tooltip("队列所在的房间/区域根节点（建议挂一个 BoxCollider 作为可视范围）。")]
+        public Transform guestQueueRoot;
+
+        [Tooltip("X 方向相邻客人的间距（世界单位）。")]
+        public float queueSpacingX = 0.8f;
+
+        [Tooltip("Y 方向换行间距（世界单位）。")]
+        public float queueRowHeight = 0.7f;
+
+        [Tooltip("每行最多多少人；<=0 表示自动根据 BoxCollider 宽度计算。")]
+        public int queueWrapCount = 0;
+
+        [Tooltip("队列的固定 Z（保持在 XY 平面）。")]
+        public float queueFixedZ = 0f;
+
 
         private Transform currentRoof;  // 当前屋顶实例
         
@@ -105,17 +122,15 @@ namespace ScreamHotel.Presentation
                 _ghostViews[g.Id] = pv;
             }
             
-            // 客人
             foreach (var g in w.Guests)
             {
                 if (_guestViews.ContainsKey(g.Id)) continue;
                 var gv = Instantiate(guestPrefab, guestsRoot);
                 gv.BindGuest(g.Id);
-                gv.SnapTo(GetRandomGhostSpawnPos());
+                gv.SnapTo(GetGuestQueueWorldPos(_guestViews.Count));
                 _guestViews[g.Id] = gv;
             }
-
-
+            
             // 更新屋顶位置
             UpdateRoofPosition();
         }
@@ -193,6 +208,52 @@ namespace ScreamHotel.Presentation
 
             // 4) 转世界坐标
             return roomsRoot ? roomsRoot.TransformPoint(local) : local;
+        }
+        
+        private Vector3 GetGuestQueueWorldPos(int index)
+        {
+            if (guestQueueRoot == null)
+            {
+                // 没配就退回 ghostsRoot/guestsRoot 原点
+                var origin = guestsRoot != null ? guestsRoot.position :
+                    (ghostsRoot != null ? ghostsRoot.position : Vector3.zero);
+                return new Vector3(origin.x + index * queueSpacingX, origin.y, queueFixedZ);
+            }
+
+            // 优先使用 BoxCollider 的范围来自动算可摆宽度
+            var box = guestQueueRoot.GetComponentInChildren<BoxCollider>();
+            if (box != null)
+            {
+                var size = box.size;
+                var center = box.center;
+
+                // 能摆的每行个数（自动或手动上限）
+                int perRowAuto = Mathf.Max(1, Mathf.FloorToInt(size.x / Mathf.Max(0.01f, queueSpacingX)));
+                int perRow = (queueWrapCount > 0) ? Mathf.Min(queueWrapCount, perRowAuto) : perRowAuto;
+
+                int row = index / perRow;
+                int col = index % perRow;
+
+                float startXLocal = center.x - (perRow - 1) * 0.5f * queueSpacingX; // 居中分布
+                float x = startXLocal + col * queueSpacingX;
+                float y = center.y - row * queueRowHeight;
+
+                var local = new Vector3(x, y, queueFixedZ);
+                var world = box.transform.TransformPoint(local);
+                world.z = queueFixedZ;
+                return world;
+            }
+            else
+            {
+                int perRow = (queueWrapCount > 0) ? queueWrapCount : 8;
+                int row = index / perRow;
+                int col = index % perRow;
+
+                float startXLocal = -(perRow - 1) * 0.5f * queueSpacingX;
+                var local = new Vector3(startXLocal + col * queueSpacingX, -row * queueRowHeight, queueFixedZ);
+
+                return guestQueueRoot.TransformPoint(local);
+            }
         }
 
         private void TrySpawnElevatorOnce(int floor, Vector3 floorCenterLocal)
@@ -307,14 +368,17 @@ namespace ScreamHotel.Presentation
                 Destroy(tempTransform.gameObject);  // 结束后销毁临时对象
             }
             
-            // 客人也回独立房间随机点
-            foreach (var kv in _guestViews)
+            // 客人按 World.Guests 的顺序回到队列
+            var order = game.World.Guests.Select((g, i) => new { g.Id, Index = i }).ToList();
+            foreach (var item in order)
             {
-                Vector3 randomPos = GetRandomGhostSpawnPos();
-                var tmp = new GameObject("tmpTarget").transform;
-                tmp.position = randomPos;
-                kv.Value.MoveTo(tmp, 0.4f);
-                Destroy(tmp.gameObject);
+                if (_guestViews.TryGetValue(item.Id, out var gv))
+                {
+                    var tmp = new GameObject("tmpTarget").transform;
+                    tmp.position = GetGuestQueueWorldPos(item.Index);
+                    gv.MoveTo(tmp, 0.4f);
+                    Destroy(tmp.gameObject);
+                }
             }
         }
                 
