@@ -105,19 +105,33 @@ namespace ScreamHotel.Core
             transition = Mathf.SmoothStep(0, 1, transition);
             return transition;
         }
-
+        
         private void CheckDayNightTransition()
         {
-            float previousTime = (TimeSystem.currentTimeOfDay - Time.deltaTime / TimeSystem.dayDurationInSeconds) % 1f;
-            if (previousTime < 0.25f && TimeSystem.currentTimeOfDay >= 0.25f)
+            float prev = Mathf.Repeat(
+                TimeSystem.currentTimeOfDay - Time.deltaTime / TimeSystem.dayDurationInSeconds, 1f);
+            float curr = TimeSystem.currentTimeOfDay;
+
+            // 是否跨过阈值（含跨午夜）
+            bool Crossed(float a, float b, float thr)
             {
+                if (a <= b) return a < thr && b >= thr;
+                // wrap-around: a > b 表示从接近1跳到接近0
+                return (a < 1f && thr > a) || (thr <= b);
+            }
+
+            if (Crossed(prev, curr, 0.25f))
+            {
+                Debug.Log("[Time] DayStartedEvent @ 0.25");
                 EventBus.Raise(new DayStartedEvent());
             }
-            else if (previousTime < 0.75f && TimeSystem.currentTimeOfDay >= 0.75f)
+            if (Crossed(prev, curr, 0.75f))
             {
+                Debug.Log("[Time] NightStartedEvent @ 0.75");
                 EventBus.Raise(new NightStartedEvent());
             }
         }
+
 
         public void GoToDay()
         {
@@ -181,7 +195,6 @@ namespace ScreamHotel.Core
                 var id = $"Room_F{floor}_{slot}";
         
                 bool exists = w.Rooms.Exists(r => r.Id == id);
-                Debug.Log($"房间 {i}: ID={id}, 是否存在={exists}");
         
                 if (!exists)
                 {
@@ -194,11 +207,8 @@ namespace ScreamHotel.Core
                     actuallyAdded++;
                 }
             }
-    
-            Debug.Log($"实际添加房间数量: {actuallyAdded}");
-            Debug.Log($"世界中的总房间数: {w.Rooms.Count}");
 
-            if (w.Ghosts.Count == 0)
+            if (w.Ghosts.Count == 0) // 赠送玩家一定数量的鬼
             {
                 int idx = 1;
                 foreach (var main in setup.starterGhostMains)

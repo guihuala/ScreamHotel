@@ -35,6 +35,27 @@ namespace ScreamHotel.Systems
             if (g.State == GhostState.Working) g.State = GhostState.Idle;
             return removed;
         }
+        
+        public bool TryAssignGuestToRoom(string guestId, string roomId)
+        {
+            var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);   // 假设 World.Guests 有客人列表
+            var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
+            if (g == null || r == null) return false;
+            
+            // 一个客人只在一个房间：先从所有房间移除
+            foreach (var rr in _world.Rooms) rr.AssignedGuestIds.Remove(guestId);
+            if (!r.AssignedGuestIds.Contains(guestId)) r.AssignedGuestIds.Add(guestId);
+            return true;
+        }
+
+        public bool UnassignGuest(string guestId)
+        {
+            var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
+            if (g == null) return false;
+            var removed = false;
+            foreach (var r in _world.Rooms) removed |= r.AssignedGuestIds.Remove(guestId);
+            return removed;
+        }
 
         public void ClearAssignments()
         {

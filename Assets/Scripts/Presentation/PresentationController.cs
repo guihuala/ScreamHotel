@@ -12,8 +12,10 @@ namespace ScreamHotel.Presentation
         public Game game;
         public Transform roomsRoot;
         public Transform ghostsRoot;
+        public Transform guestsRoot;
         public RoomView roomPrefab;
         public PawnView ghostPrefab;
+        public GuestView guestPrefab; 
         public Transform roofPrefab;
         
         [Header("Floor/Room Layout (relative to roomsRoot)")]
@@ -43,6 +45,7 @@ namespace ScreamHotel.Presentation
         // 运行时映射
         private readonly Dictionary<string, RoomView> _roomViews = new();
         private readonly Dictionary<string, PawnView> _ghostViews = new();
+        private readonly Dictionary<string, GuestView> _guestViews = new();
 
         // 缓存/复用的待命点
         private readonly Dictionary<string, Transform> _stagingByGhost = new();
@@ -101,6 +104,17 @@ namespace ScreamHotel.Presentation
 
                 _ghostViews[g.Id] = pv;
             }
+            
+            // 客人
+            foreach (var g in w.Guests)
+            {
+                if (_guestViews.ContainsKey(g.Id)) continue;
+                var gv = Instantiate(guestPrefab, guestsRoot);
+                gv.BindGuest(g.Id);
+                gv.SnapTo(GetRandomGhostSpawnPos());
+                _guestViews[g.Id] = gv;
+            }
+
 
             // 更新屋顶位置
             UpdateRoofPosition();
@@ -237,6 +251,29 @@ namespace ScreamHotel.Presentation
                         }
                     }
                 }
+                
+                // NightShow：把已分配的客人移动到房间“客人锚点”
+                foreach (var room in w.Rooms)
+                {
+                    for (int i = 0; i < room.AssignedGuestIds.Count; i++)
+                    {
+                        var gid = room.AssignedGuestIds[i];
+                        if (_guestViews.TryGetValue(gid, out var gv) && _roomViews.TryGetValue(room.Id, out var rv))
+                        {
+                            Transform anchor;
+                            if (rv.TryGetGuestAnchor(i, out anchor))
+                            {
+                                gv.MoveTo(anchor, 0.5f);
+                            }
+                            else
+                            {
+                                // 兜底：没有客人锚点就用鬼的锚点或房间自身
+                                anchor = rv.GetAnchor(i);
+                                gv.MoveTo(anchor, 0.5f);
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -268,6 +305,16 @@ namespace ScreamHotel.Presentation
                 tempTransform.position = randomPos;  // 使用随机位置
                 kv.Value.MoveTo(tempTransform, 0.4f);  // 传递临时的 Transform
                 Destroy(tempTransform.gameObject);  // 结束后销毁临时对象
+            }
+            
+            // 客人也回独立房间随机点
+            foreach (var kv in _guestViews)
+            {
+                Vector3 randomPos = GetRandomGhostSpawnPos();
+                var tmp = new GameObject("tmpTarget").transform;
+                tmp.position = randomPos;
+                kv.Value.MoveTo(tmp, 0.4f);
+                Destroy(tmp.gameObject);
             }
         }
                 

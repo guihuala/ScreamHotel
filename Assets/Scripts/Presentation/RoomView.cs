@@ -18,6 +18,10 @@ namespace ScreamHotel.Presentation
 
         [Header("UI (Optional)")]
         public TextMesh label;
+        
+        // RoomView.cs（追加字段）
+        [Header("Guest Anchors (optional)")]
+        public Transform[] guestAnchors;
 
         private Color _baseColor;
 
@@ -93,7 +97,39 @@ namespace ScreamHotel.Presentation
 
         public Transform GetAnchor(int index) =>
             (ghostAnchors != null && index >= 0 && index < ghostAnchors.Length) ? ghostAnchors[index] : transform;
+        
+        public bool TryGetGuestAnchor(int index, out Transform anchor)
+        {
+            anchor = null;
+            // 如果你之前有 public Transform[] guestAnchors; 这里直接利用它
+            if (guestAnchors != null && guestAnchors.Length > 0)
+            {
+                index = Mathf.Clamp(index, 0, guestAnchors.Length - 1);
+                // 确保为空也能兜底
+                anchor = guestAnchors[index] != null ? guestAnchors[index] : transform;
+                return true;
+            }
+            return false;
+        }
 
+        public Transform GetGuestAnchor(int index)
+        {
+            if (guestAnchors == null || guestAnchors.Length == 0)
+            {
+                // 默认临时生成两个在另一侧
+                guestAnchors = new Transform[2];
+                for (int i=0;i<guestAnchors.Length;i++)
+                {
+                    var t = new GameObject($"GuestAnchor{i}").transform;
+                    t.SetParent(transform, false);
+                    t.localPosition = new Vector3((i==0?0.6f:0.2f), 0.55f, 0f); // 和鬼的 -0.4/0.4 相反侧
+                    guestAnchors[i] = t;
+                }
+            }
+            index = Mathf.Clamp(index, 0, guestAnchors.Length-1);
+            return guestAnchors[index];
+        }
+        
         private void EnsureAnchors(int capacity)
         {
             if (ghostAnchors == null || ghostAnchors.Length < capacity)

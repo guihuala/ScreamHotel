@@ -30,15 +30,9 @@ namespace ScreamHotel.Systems
                     if (guestType.fears.Contains(ghost.Main)) bonus += rules.mainBonus;
                     if (ghost.Sub.HasValue && guestType.fears.Contains(ghost.Sub.Value)) bonus += rules.subBonus;
                     if (room.RoomTag.HasValue && guestType.fears.Contains(room.RoomTag.Value)) bonus += rules.roomBonus;
-
-                    var fatiguePenalty = ghost.Fatigue > 0.5f ? rules.highFatiguePenalty : 0f;
-                    var contrib = ghost.BaseScare * (1 + bonus) * (1 - ghost.Fatigue) * (1 - fatiguePenalty);
-                    total += contrib;
                 }
 
                 var success = total >= required;
-                var goldMul = success ? Math.Min(1f, total / required) : Math.Max(_world.Config.Rules.minGoldMultiplier, total / required);
-                var gold = (int)Math.Max(0, Math.Round(guestType.baseFee * goldMul));
 
                 var counter = false;
                 if (!success && guestType.counterChance > 0f)
@@ -49,11 +43,9 @@ namespace ScreamHotel.Systems
                 foreach (var gid in room.AssignedGhostIds)
                 {
                     var ghost = _world.Ghosts.First(x => x.Id == gid);
-                    ghost.Fatigue = Math.Clamp(ghost.Fatigue + rules.fatiguePerNight, 0f, 1f);
                     if (counter)
                     {
                         ghost.State = GhostState.Injured;
-                        ghost.DaysForcedRest = Math.Max(ghost.DaysForcedRest, rules.forcedRestDaysOnCounter);
                     }
                     else ghost.State = GhostState.Idle;
                 }
@@ -64,11 +56,9 @@ namespace ScreamHotel.Systems
                     GuestTypeId = guestType.id,
                     TotalScare = total,
                     Required = required,
-                    Gold = gold,
                     Counter = counter
                 });
-
-                _world.Economy.Gold += gold;
+                
                 room.AssignedGhostIds.Clear();
             }
 
@@ -78,7 +68,7 @@ namespace ScreamHotel.Systems
 
     public class NightResults
     {
-        public readonly System.Collections.Generic.List<RoomResult> RoomDetails = new();
+        public readonly List<RoomResult> RoomDetails = new();
         public int TotalGold => RoomDetails.Sum(r => r.Gold);
     }
 

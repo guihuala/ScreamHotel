@@ -31,19 +31,8 @@ namespace ScreamHotel.Data
                         Database.RoomPrices[rp.id] = rp;
 
                 if (configSet.progression != null) Database.Progression = configSet.progression;
-                if (configSet.rules != null)       Database.Rules       = configSet.rules;
+                if (configSet.rules != null) Database.Rules = configSet.rules;
             }
-            
-            LogSummary();
-        }
-        
-        private void LogSummary()
-        {
-            Debug.Log(
-                $"[DataManager] Loaded Summary (Direct SO={configSet!=null}): " +
-                $"Ghosts:{Database.Ghosts.Count}, Guests:{Database.GuestTypes.Count}, Rooms:{Database.RoomPrices.Count}, " +
-                $"Progression:{(Database.Progression? "Y":"N")}, Rules:{(Database.Rules? "Y":"N")}"
-            );
         }
     }
 }

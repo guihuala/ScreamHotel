@@ -962,12 +962,12 @@ MonoBehaviour:
   ghostsRoot: {fileID: 2013256920}
   roomPrefab: {fileID: 3645281026548052219, guid: 7154a1fa4eba840a8ad607bcb90dbf5a, type: 3}
   ghostPrefab: {fileID: 6772807356517762401, guid: 01e02811184d045d5a3383cdf94fee75, type: 3}
+  roofPrefab: {fileID: 2943580555342847563, guid: 5a13edc06cdee4dd681fef5491c6cd1f, type: 3}
   roomBaseY: 0
   floorSpacing: 8
   xInner: 20
   xOuter: 10
   elevatorPrefab: {fileID: 2135316494144389204, guid: dfd40add33a6c47d3b4d48ea6889219f, type: 3}
-  roofPrefab: {fileID: 2943580555342847563, guid: 5a13edc06cdee4dd681fef5491c6cd1f, type: 3}
   ghostSpawnRoomRoot: {fileID: 213172393}
   spawnFixedZ: 0
 --- !u!1 &850316788
@@ -2657,6 +2657,7 @@ GameObject:
   - component: {fileID: 1538333944}
   - component: {fileID: 1538333946}
   - component: {fileID: 1538333945}
+  - component: {fileID: 1538333947}
   m_Layer: 0
   m_Name: -----GameCore-----
   m_TagString: Untagged
@@ -2708,6 +2709,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dataManager: {fileID: 1538333945}
   initialSetup: {fileID: 11400000, guid: c56a1df2bbdf94b729d2ffaf05d10a5e, type: 2}
+--- !u!114 &1538333947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1538333940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82fe1db9f4ad244c19cee63bcd645546, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toggleKey: 284
 --- !u!1 &1598127878
 GameObject:
   m_ObjectHideFlags: 0

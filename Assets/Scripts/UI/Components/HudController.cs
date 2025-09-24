@@ -1,3 +1,4 @@
+using System;
 using ScreamHotel.Core;
 using ScreamHotel.Systems;
 using TMPro;
@@ -18,11 +19,15 @@ namespace ScreamHotel.UI
 
             pauseButton.onClick.AddListener(OnPauseButtonClicked);
         }
-        
+
+        private void Start()
+        {
+            RefreshGoldUI();
+        }
+
         private void OnEnable()
         {
             EventBus.Subscribe<GoldChanged>(OnGoldChanged);
-            RefreshGoldUI();
         }
 
         private void OnDisable()

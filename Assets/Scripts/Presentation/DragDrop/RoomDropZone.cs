@@ -10,7 +10,7 @@ namespace ScreamHotel.Presentation
     {
         [Header("Binding")]
         public string roomId;
-        public MeshRenderer plate;         // 地板渲染器高亮用
+        public MeshRenderer plate;
         public Color canColor   = new Color(0.3f, 1f, 0.3f, 1f);
         public Color fullColor  = new Color(1f, 0.3f, 0.3f, 1f);
         public Color baseColor  = new Color(1f, 1f, 1f, 1f);
@@ -27,7 +27,7 @@ namespace ScreamHotel.Presentation
                 _origColor = plate.sharedMaterial.color;
                 baseColor = _origColor;
             }
-            if (game == null) game = FindObjectOfType<ScreamHotel.Core.Game>();
+            if (game == null) game = FindObjectOfType<Core.Game>();
         }
 
         public bool CanAccept(string ghostId)
@@ -65,6 +65,35 @@ namespace ScreamHotel.Presentation
             Flash(fullColor);
             return false;
         }
+        
+        // RoomDropZone.cs（追加）
+        public void ShowHoverFeedbackGuest()
+        {
+            // 也可以区分颜色；这里简单沿用可投放的绿色/红色规则
+            if (plate == null) return;
+            plate.material.color = canColor;
+        }
+
+        public bool TryDropGuest(string guestId, out Transform targetAnchor)
+        {
+            targetAnchor = null;
+            var w = game.World;
+            var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
+            if (r == null) return false;
+
+            if (_assign.TryAssignGuestToRoom(guestId, roomId))
+            {
+                // 客人锚点：重用 RoomView 的“第二列锚点”或额外的 guestAnchors（这里拿 index = 已有客人数-1）
+                var idx = Mathf.Max(0, r.AssignedGuestIds.IndexOf(guestId));
+                var rv = GetComponent<RoomView>();
+                targetAnchor = rv != null ? rv.GetGuestAnchor(idx) : transform;
+                Flash(canColor);
+                return true;
+            }
+            Flash(fullColor);
+            return false;
+        }
+
 
         public void ShowHoverFeedback(string ghostId)
         {

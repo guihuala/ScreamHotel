@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace ScreamHotel.Systems
 {
     [System.Serializable]
@@ -16,6 +18,11 @@ namespace ScreamHotel.Systems
             {
                 currentTimeOfDay = (currentTimeOfDay + deltaTime / dayDurationInSeconds) % 1f;
             }
+        }
+        
+        public void SetNormalizedTime(float t)
+        {
+            currentTimeOfDay = Mathf.Repeat(t, 1f);
         }
     }
 }

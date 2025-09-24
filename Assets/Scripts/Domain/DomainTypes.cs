@@ -34,6 +34,7 @@ namespace ScreamHotel.Domain
         public FearTag? RoomTag;
         public int Capacity;
         public readonly List<string> AssignedGhostIds = new();
+        public List<string> AssignedGuestIds = new(); 
     }
 
     public class Basement
@@ -51,6 +52,7 @@ namespace ScreamHotel.Domain
     public class World
     {
         public readonly List<Ghost> Ghosts = new();
+        public readonly List<Guest> Guests = new();
         public readonly List<Room> Rooms = new();
         public readonly Basement Basement = new();
         public readonly Economy Economy = new();
