@@ -37,9 +37,23 @@ namespace ScreamHotel.Domain
 
     public class Basement
     {
-        public int RestSlots;
+     
         public int TrainingSlots;
     }
+    
+    // ---- 商店状态与货架条目 ----
+    public class GhostOffer
+    {
+        public string OfferId;     // "Offer_第几天_序号"
+        public FearTag Main;       // 鬼的主恐惧，作为“品种”
+    }
+    
+    public class ShopState
+    {
+        public List<GhostOffer> Offers = new(); // 当天货架（长度==规则槽位数）
+        public int DayLastRefreshed = -1;       // 上次刷新是哪一天
+    }
+
 
     public class Economy
     {
@@ -55,6 +69,8 @@ namespace ScreamHotel.Domain
         public readonly Basement Basement = new();
         public readonly Economy Economy = new();
         public readonly Data.ConfigDatabase Config;
+        
+        public ShopState Shop = new ShopState();
         public World(Data.ConfigDatabase db) { Config = db; }
     }
 }

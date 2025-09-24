@@ -71,6 +71,17 @@ namespace ScreamHotel.Core
             
             CheckDayNightTransition();
         }
+        
+        public bool ShopTryReroll()
+        {
+            return _dayPhaseSystem != null && _dayPhaseSystem.ShopReroll(DayIndex);
+        }
+
+        public bool ShopTryBuy(int slot, out string newGhostId)
+        {
+            newGhostId = null;
+            return _dayPhaseSystem != null && _dayPhaseSystem.ShopBuy(slot, out newGhostId);
+        }
 
         private void UpdateSkyboxTransition()
         {
@@ -131,8 +142,7 @@ namespace ScreamHotel.Core
                 EventBus.Raise(new NightStartedEvent());
             }
         }
-
-
+        
         public void GoToDay()
         {
             State = GameState.Day;

@@ -1,8 +1,10 @@
+using System;
 using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
 using ScreamHotel.Core;
 using ScreamHotel.Systems;
+using Random = UnityEngine.Random;
 
 namespace ScreamHotel.Presentation
 {
@@ -55,6 +57,17 @@ namespace ScreamHotel.Presentation
 
         [Tooltip("队列的固定 Z（保持在 XY 平面）。")]
         public float queueFixedZ = 0f;
+        
+        [Header("Ghost Shop (Basement)")]
+        public Transform shopRoot;         // 地下室根节点（唯一一个）
+        public float shopSlotSpacingX = 1.6f;
+        public int   shopSlotsPerRow = 5;  // 5 个槽位一行
+        public float shopFixedZ = 0f;
+        
+        public Transform shopOfferPrefab;
+
+        private readonly Dictionary<string, Transform> _shopOfferViews = new();
+
 
 
         private Transform currentRoof;  // 当前屋顶实例
@@ -392,11 +405,13 @@ namespace ScreamHotel.Presentation
             UpdateRoofPosition();
         }
 
-        void SyncAll()
+        private void SyncAll()
         {
             BuildInitialViews();
             foreach (var r in game.World.Rooms)
                 if (_roomViews.TryGetValue(r.Id, out var rv)) rv.Refresh(r);
+            
+            SyncShop();   // ★ 同步地下室货架
         }
 
         // ---------- 待命位查询 ----------
@@ -430,7 +445,48 @@ namespace ScreamHotel.Presentation
                 i++;
             }
             // 若未找到，退回已有 staging 数量
+          
+            
             return _stagingByGhost.Count;
+        }
+        
+        private Vector3 GetShopSlotWorldPos(int index)
+        {
+            if (!shopRoot) return Vector3.zero;
+            int col = index % Math.Max(1, shopSlotsPerRow);
+            int row = index / Math.Max(1, shopSlotsPerRow);
+
+            float startX = -(shopSlotsPerRow - 1) * 0.5f * shopSlotSpacingX;
+            var local = new Vector3(startX + col * shopSlotSpacingX, 0f - row * 0.8f, shopFixedZ);
+            return shopRoot.TransformPoint(local);
+        }
+
+        private void SyncShop()
+        {
+            var offers = game.World.Shop.Offers;
+
+            // 删除已下架的
+            var alive = new HashSet<string>(offers.Select(o => o.OfferId));
+            var toRemove = _shopOfferViews.Keys.Where(id => !alive.Contains(id)).ToList();
+            foreach (var id in toRemove)
+            {
+                if (_shopOfferViews[id]) Destroy(_shopOfferViews[id].gameObject);
+                _shopOfferViews.Remove(id);
+            }
+
+            // 补齐/更新位置
+            for (int i = 0; i < offers.Count; i++)
+            {
+                var off = offers[i];
+                if (!_shopOfferViews.TryGetValue(off.OfferId, out var t) || t == null)
+                {
+                    if (!shopOfferPrefab) continue;
+                    t = Instantiate(shopOfferPrefab, shopRoot);
+                    t.name = $"Offer_{i+1}_{off.Main}";
+                    _shopOfferViews[off.OfferId] = t;
+                }
+                t.position = GetShopSlotWorldPos(i);
+            }
         }
     }
 }

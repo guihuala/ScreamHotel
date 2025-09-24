@@ -10,14 +10,15 @@ namespace ScreamHotel.Systems
     {
         private readonly World _world;
         private readonly DayGuestSpawner _guestSpawner;
-
+        private readonly GhostShopSystem _ghostShop;
 
         public DayPhaseSystem(World world)
         {
             _world = world;
             _guestSpawner = new DayGuestSpawner(world);
+            _ghostShop    = new GhostShopSystem(world);
         }
-
+        
         public void PrepareDay(int dayIndex)
         {
             // 1) 清当日分配/状态
@@ -41,8 +42,13 @@ namespace ScreamHotel.Systems
             Debug.Log($"[Day] Day {dayIndex} spawned {spawned} guests.");
 #endif
 
-            // todo.刷新商店、刷新鬼的训练进度
+            // 3) 刷新鬼商店
+            _ghostShop.RefreshDaily(dayIndex);
         }
+        
+        // UI接口
+        public bool ShopReroll(int dayIndex) => _ghostShop.TryReroll(dayIndex);
+        public bool ShopBuy(int slot, out string newGhostId) => _ghostShop.TryBuy(slot, out newGhostId);
     }
 
 
