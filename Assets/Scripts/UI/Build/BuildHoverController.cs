@@ -27,8 +27,6 @@ namespace ScreamHotel.UI
         {
             if (!mainCamera) mainCamera = Camera.main;
             _game = FindObjectOfType<Game>();
-            if (roomPanel) roomPanel.Hide();
-            if (roofPanel) roofPanel.Hide();
         }
 
         void Update()
@@ -57,11 +55,11 @@ namespace ScreamHotel.UI
 
             // 再判房间
             string roomId = null;
-            var rv = hit.collider.GetComponentInParent<ScreamHotel.Presentation.RoomView>();
+            var rv = hit.collider.GetComponentInParent<Presentation.RoomView>();
             if (rv != null) roomId = rv.roomId;
             else
             {
-                var drop = hit.collider.GetComponentInParent<ScreamHotel.Presentation.RoomDropZone>();
+                var drop = hit.collider.GetComponentInParent<Presentation.RoomDropZone>();
                 if (drop != null) roomId = drop.roomId;
             }
 
@@ -87,15 +85,7 @@ namespace ScreamHotel.UI
             Ray uiRay = mainCamera.ScreenPointToRay(Input.mousePosition);
             return Physics.Raycast(uiRay, rayMaxDistance, uiButtonLayer);
         }
-
-        private Vector3 GetRoomWorldPosition(string roomId)
-        {
-            // 查找RoomView获取房间的实际位置
-            var roomViews = FindObjectsOfType<ScreamHotel.Presentation.RoomView>();
-            var roomView = roomViews.FirstOrDefault(rv => rv.roomId == roomId);
-            return roomView != null ? roomView.transform.position : Vector3.zero;
-        }
-
+        
         private void HideAll()
         {
             roomPanel?.Hide();

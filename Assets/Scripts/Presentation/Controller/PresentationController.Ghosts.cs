@@ -33,7 +33,7 @@ namespace ScreamHotel.Presentation
             return world;
         }
 
-        // 待命位（如需）
+        // 待命位
         public Transform GetStagingTransform(string ghostId) => GetStagingTransform(ghostId, GetIndexForGhost(ghostId));
         public Transform GetStagingTransform(string ghostId, int suggestedIndex)
         {

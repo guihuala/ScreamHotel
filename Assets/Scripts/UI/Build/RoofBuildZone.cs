@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Systems;
@@ -11,13 +10,6 @@ namespace ScreamHotel.UI
     [RequireComponent(typeof(BoxCollider))]
     public class RoofBuildZone : MonoBehaviour
     {
-        [Header("Layout (relative to roomsRoot)")]
-        public Transform roomsRoot;
-        public float roomBaseY = 0f;
-        public float floorSpacing = 8f;
-        public float roofOffsetY = 2f;   // 楼顶比最高层中心再高一点
-        public Vector2 roofSize = new Vector2(20f, 6f); // X 宽度 × Z 深度
-
         private BoxCollider _box;
         private Game _game;
 
@@ -26,8 +18,6 @@ namespace ScreamHotel.UI
             _box = GetComponent<BoxCollider>();
             _box.isTrigger = true;
             _game = FindObjectOfType<Game>();
-            roomsRoot = transform.Find("RoomRoot");
-            UpdateZone();
         }
 
         public int GetNextFloor()
@@ -47,19 +37,6 @@ namespace ScreamHotel.UI
             var f = typeof(Game).GetField("_buildSystem",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             return (BuildSystem)f.GetValue(_game);
-        }
-
-        private void UpdateZone()
-        {
-            var build = GetBuild();
-            int highest = build.GetHighestFloor();
-
-            float topY = roomBaseY + Mathf.Max(0, highest) * floorSpacing + roofOffsetY;
-            Vector3 localCenter = new Vector3(0f, topY, 0f);
-            Vector3 worldCenter = roomsRoot ? roomsRoot.TransformPoint(localCenter) : localCenter;
-
-            _box.center = transform.InverseTransformPoint(worldCenter);
-            _box.size   = new Vector3(roofSize.x, 0.1f, roofSize.y);
         }
     }
 }
