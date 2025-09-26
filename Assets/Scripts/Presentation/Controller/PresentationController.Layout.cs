@@ -7,9 +7,10 @@ namespace ScreamHotel.Presentation
         private int GetHighestFloor()
         {
             int maxFloor = 0;
-            foreach (var roomId in _roomViews.Keys)
+            // 直接从领域数据算
+            foreach (var r in game.World.Rooms)
             {
-                if (TryParseRoomId(roomId, out int floor, out _))
+                if (TryParseRoomId(r.Id, out int floor, out _))
                     maxFloor = Mathf.Max(maxFloor, floor);
             }
             return maxFloor;
@@ -19,11 +20,13 @@ namespace ScreamHotel.Presentation
         {
             if (!roofPrefab) return;
             int highest = GetHighestFloor();
+            // 屋顶位于最高层中心之上一个楼层间距的高度（不占层）
             float topY = roomBaseY + highest * floorSpacing;
 
             if (!_currentRoof) _currentRoof = Instantiate(roofPrefab, roomsRoot);
-            _currentRoof.position = roomsRoot ? roomsRoot.TransformPoint(new Vector3(0f, topY, 0f))
-                                              : new Vector3(0f, topY, 0f);
+            var target = roomsRoot ? roomsRoot.TransformPoint(new Vector3(0f, topY, 0f))
+                : new Vector3(0f, topY, 0f);
+            _currentRoof.position = target;
         }
 
         private bool TryParseRoomId(string roomId, out int floor, out string slot)

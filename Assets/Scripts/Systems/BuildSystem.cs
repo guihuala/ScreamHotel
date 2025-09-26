@@ -17,8 +17,8 @@ namespace ScreamHotel.Systems
         public BuildSystem(World world) { _world = world; }
         
         // 楼层建造基础费用与增量
-        private int floorBaseCost = 500;
-        private int floorStepCost = 250;
+        private int floorBaseCost = 100;
+        private int floorStepCost = 50;
 
         // 获取价格，目前区第一个价格
         private Data.RoomPriceConfig CurrentPrice()

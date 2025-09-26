@@ -28,13 +28,12 @@ namespace ScreamHotel.UI
         void Awake()
         {
             _game = FindObjectOfType<Game>();
-            Debug.Log($"find game {_game}");
             mainCamera = Camera.main;
 
             if (tagDropdownForLv2)
             {
                 tagDropdownForLv2.ClearOptions();
-                tagDropdownForLv2.AddOptions(System.Enum.GetNames(typeof(FearTag)).ToList());
+                tagDropdownForLv2.AddOptions(Enum.GetNames(typeof(FearTag)).ToList());
             }
         }
 
