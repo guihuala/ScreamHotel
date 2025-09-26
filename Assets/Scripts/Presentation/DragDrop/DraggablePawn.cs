@@ -8,18 +8,16 @@ namespace ScreamHotel.Presentation
     {
         [Header("Binding")]
         public string ghostId;
-        public ScreamHotel.Core.Game game;
+        public Core.Game game;
         public PawnView pawnView;
 
         [Header("Drag (XY plane)")]
         public int dragMouseButton = 0;
         public float dragPlaneZ = 0f;       // 鼠标投射到 z=常量 的平面
         public float followLerp = 30f;      // 拖拽跟随插值
-        public float returnDuration = 0.15f;// 回原点时长
-
+        
         private Camera _cam;
         private bool _dragging;
-        private Vector3 _originPos;         // 拖拽开始时的原点
         private Vector3 _targetPos;
         private float _fixedZ;
         private Coroutine _returnCoro;
@@ -42,7 +40,6 @@ namespace ScreamHotel.Presentation
             if (Input.GetMouseButtonDown(dragMouseButton) && PointerHitsSelf())
             {
                 _dragging = true;
-                _originPos = transform.position;
                 if (_returnCoro != null) { StopCoroutine(_returnCoro); _returnCoro = null; }
 
                 _targetPos = MouseOnPlaneZ(dragPlaneZ);
@@ -72,27 +69,16 @@ namespace ScreamHotel.Presentation
             if (_dragging && Input.GetMouseButtonUp(dragMouseButton))
             {
                 _dragging = false;
-
-                bool dropped = false;
+                
                 if (_hoverZone != null)
                 {
                     if (_hoverZone.TryDrop(ghostId, out var anchor))
                     {
                         // 分配成功：吸附到房间锚点
                         if (anchor) pawnView.MoveTo(anchor, 0.12f);
-                        dropped = true;
                     }
                     _hoverZone.ClearFeedback();
                     _hoverZone = null;
-                }
-
-                if (!dropped)
-                {
-                    // 未投放到房间：取消分配并回待命位
-                    _assign.UnassignGhost(ghostId);
-                    var staging = FindObjectOfType<PresentationController>()?.GetStagingTransform(ghostId);
-                    if (staging != null) _returnCoro = StartCoroutine(ReturnTo(staging.position, returnDuration));
-                    else _returnCoro = StartCoroutine(ReturnTo(_originPos, returnDuration));
                 }
             }
         }

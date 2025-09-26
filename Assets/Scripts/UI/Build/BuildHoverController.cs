@@ -70,9 +70,7 @@ namespace ScreamHotel.UI
                 // 只有当进入新房间时才更新显示（避免频繁刷新）
                 if (roomId != _lastRoomId)
                 {
-                    // 获取房间的世界位置（使用RoomView的位置）
-                    Vector3 roomWorldPosition = GetRoomWorldPosition(roomId);
-                    roomPanel.Show(roomId, roomWorldPosition);
+                    roomPanel.Show(roomId);
                     _lastRoomId = roomId;
                 }
                 roofPanel?.Hide();

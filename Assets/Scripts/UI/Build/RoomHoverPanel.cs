@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace ScreamHotel.UI
         public Text titleText;     // Room_F1_LA
         public Text infoText;      // Lv/Cap/Tag
         public Button upgradeBtn;  // 升级按钮
-        public Dropdown tagDropdownForLv2; // 可选：Lv1->Lv2 时选择Tag
+        public Dropdown tagDropdownForLv2; // Lv1->Lv2 时选择Tag
 
         [Header("Panel Position")]
         public Vector3 panelOffset = new Vector3(0, 2f, 0); // 面板相对于房间的偏移
@@ -27,9 +28,8 @@ namespace ScreamHotel.UI
         void Awake()
         {
             _game = FindObjectOfType<Game>();
+            Debug.Log($"find game {_game}");
             mainCamera = Camera.main;
-            
-            Hide();
 
             if (tagDropdownForLv2)
             {
@@ -38,14 +38,19 @@ namespace ScreamHotel.UI
             }
         }
 
-        public void Show(string roomId, Vector3 worldPosition)
+        private void Start()
+        {
+            Hide();
+        }
+
+        public void Show(string roomId)
         {
             if (!canvas) canvas = GetComponentInParent<Canvas>();
             var w = _game.World;
             var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
             if (r == null) { Hide(); return; }
 
-            // 查找房间的Transform（通过RoomView）
+            // 查找房间的Transform
             var roomView = FindRoomView(roomId);
             if (roomView == null) { Hide(); return; }
 

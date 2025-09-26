@@ -37,11 +37,8 @@ namespace ScreamHotel.Systems
                 ? _world.Config.Rules.dayGuestSpawnCount
                 : 4;
 
-            int spawned = _guestSpawner.SpawnGuests(guestCountToday);
-#if UNITY_EDITOR
-            Debug.Log($"[Day] Day {dayIndex} spawned {spawned} guests.");
-#endif
-
+            _guestSpawner.SpawnGuests(guestCountToday);
+            
             // 3) 刷新鬼商店
             _ghostShop.RefreshDaily(dayIndex);
         }

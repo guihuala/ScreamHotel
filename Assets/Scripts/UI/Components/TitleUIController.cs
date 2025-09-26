@@ -17,7 +17,7 @@ public class TitleUIController : MonoBehaviour
 
     public void OnStartButtonClicked()
     {
-        SceneLoader.Instance.LoadScene(GameScene.Gameplay);
+        SceneLoader.Instance.LoadScene(GameScene.Game);
     }
 
     public void OnSettingsButtonClicked()

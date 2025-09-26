@@ -7,7 +7,7 @@ using System;
 public enum GameScene
 {
     MainMenu = 0,   // 主菜单
-    Gameplay = 1,   // 游戏场景
+    Game = 1,   // 游戏场景
 }
 
 public class SceneLoader : SingletonPersistent<SceneLoader>
