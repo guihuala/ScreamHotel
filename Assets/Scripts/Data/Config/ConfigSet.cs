@@ -9,7 +9,6 @@ namespace ScreamHotel.Data
         [Header("Tables")]
         public List<GhostConfig> ghosts = new();
         public List<GuestTypeConfig> guestTypes = new();
-        public List<RoomPriceConfig> roomPrices = new();
 
         [Header("Singletons")]
         public ProgressionConfig progression;

@@ -19,11 +19,7 @@ public static class ConfigMenus
         guest.id = "Coward"; guest.fears = new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>{ ScreamHotel.Domain.FearTag.Darkness, ScreamHotel.Domain.FearTag.Noise};
         guest.barMax = 90; guest.requiredPercent = 0.75f; guest.baseFee = 80; guest.counterChance = 0f;
         AssetDatabase.CreateAsset(guest, $"{root}/GuestType__Coward.asset");
-
-        var price = ScriptableObject.CreateInstance<RoomPriceConfig>();
-        price.id = "Floor1"; price.buyCost = 200; price.upgradeToLv2 = 150; price.upgradeToLv3 = 300; price.capacityLv1 = 1; price.capacityLv3 = 2; price.lv2HasTag = true; price.lv3HasTag = true;
-        AssetDatabase.CreateAsset(price, $"{root}/RoomPrice__Floor1.asset");
-
+        
         var prog = ScriptableObject.CreateInstance<ProgressionConfig>();
         AssetDatabase.CreateAsset(prog, $"{root}/Progression.asset");
 

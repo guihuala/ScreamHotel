@@ -22,5 +22,21 @@ namespace ScreamHotel.Data
         [Tooltip("刷新商店所需的消耗")] public int ghostShopRerollCost = 50;
         [Tooltip("是否在同一轮商店中不重复出现相同的主恐惧类型")] public bool ghostShopUniqueMains = true;
         [Tooltip("购买鬼魂后加入世界时提供的基础恐惧值")] public float shopSpawnBaseScare = 10f;
+        
+        [Header("Build Prices")]
+        public int   floorBuildBaseCost = 500;
+        public float floorCostGrowth    = 1.25f;
+        
+        [Tooltip("房间升级的价格：Index 0 表示 Lv1→Lv2，Index 1 表示 Lv2→Lv3")]
+        public int[] roomUpgradeCosts = new[] { 200, 400 };
+        
+        [Header("Room Pricing & Capacity")]
+        [Tooltip("购买一间Lv1房间的价格")] public int roomBuyCost = 200;
+        [Tooltip("Lv1与Lv3的容量（Lv2若与Lv1一致则无需字段）")]
+        public int capacityLv1 = 1;
+        public int capacityLv3 = 2;
+        [Tooltip("Lv2/3 是否赋予房间恐惧Tag（装饰表现用）")]
+        public bool lv2HasTag = true;
+        public bool lv3HasTag = true;
     }
 }

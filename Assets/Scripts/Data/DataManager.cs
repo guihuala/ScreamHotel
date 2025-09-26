@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -8,7 +9,6 @@ namespace ScreamHotel.Data
     {
         [Header("SO")]
         public ConfigSet configSet;
-
         public ConfigDatabase Database { get; private set; } = new();
 
         public void Initialize()
@@ -26,13 +26,20 @@ namespace ScreamHotel.Data
                     if (gt != null && !string.IsNullOrEmpty(gt.id))
                         Database.GuestTypes[gt.id] = gt;
 
-                foreach (var rp in configSet.roomPrices)
-                    if (rp != null && !string.IsNullOrEmpty(rp.id))
-                        Database.RoomPrices[rp.id] = rp;
-
                 if (configSet.progression != null) Database.Progression = configSet.progression;
                 if (configSet.rules != null) Database.Rules = configSet.rules;
             }
         }
+    }
+    
+    public class ConfigDatabase
+    {
+        public readonly Dictionary<string, GhostConfig> Ghosts = new();
+        public readonly Dictionary<string, GuestTypeConfig> GuestTypes = new();
+        public ProgressionConfig Progression;
+        public GameRuleConfig Rules;
+        public override string ToString() => $"Ghosts:{Ghosts.Count}, Guests:{GuestTypes.Count}";
+        public GhostConfig GetGhost(string id) => Ghosts[id];
+        public GuestTypeConfig GetGuestType(string id) => GuestTypes[id];
     }
 }

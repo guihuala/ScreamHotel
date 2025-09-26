@@ -15,33 +15,24 @@ namespace ScreamHotel.Systems
     {
         private readonly World _world;
         public BuildSystem(World world) { _world = world; }
-        
-        // 楼层建造基础费用与增量
-        private int floorBaseCost = 100;
-        private int floorStepCost = 50;
 
-        // 获取价格，目前区第一个价格
-        private Data.RoomPriceConfig CurrentPrice()
-        {
-            return _world.Config.RoomPrices.Values.First();
-        }
 
         // 购买新房（Lv1）
         public bool TryBuyRoom(out string newRoomId)
         {
-            var cfg = CurrentPrice();
             newRoomId = null;
+            var rules = _world.Config?.Rules;
+            if (rules == null) return false;
 
-            if (_world.Economy.Gold < cfg.buyCost) return false;
-
-            _world.Economy.Gold -= cfg.buyCost;
+            if (_world.Economy.Gold < rules.roomBuyCost) return false;
+            _world.Economy.Gold -= rules.roomBuyCost;
 
             var id = $"Room_{_world.Rooms.Count + 1:00}";
             var room = new Room
             {
                 Id = id,
                 Level = 1,
-                Capacity = cfg.capacityLv1,
+                Capacity = rules.capacityLv1,
                 RoomTag = null
             };
             _world.Rooms.Add(room);
@@ -57,17 +48,18 @@ namespace ScreamHotel.Systems
         {
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
             if (r == null) return false;
-
-            var cfg = CurrentPrice();
+            var rules = _world.Config?.Rules;
+            if (rules == null) return false;
 
             if (r.Level == 1)
             {
-                if (_world.Economy.Gold < cfg.upgradeToLv2) return false;
-                _world.Economy.Gold -= cfg.upgradeToLv2;
+                // Lv1 -> Lv2
+                if (_world.Economy.Gold < GetRoomUpgradeCost(roomId, r.Level)) return false;
+                _world.Economy.Gold -= GetRoomUpgradeCost(roomId, r.Level);
 
                 r.Level = 2;
-                r.Capacity = cfg.capacityLv1; // 如需 Lv2 改容量，可改为独立字段
-                if (cfg.lv2HasTag && setTagOnLv2.HasValue) r.RoomTag = setTagOnLv2.Value;
+                r.Capacity = rules.capacityLv1; // 若Lv2容量不同，可再加字段 capacityLv2
+                if (rules.lv2HasTag && setTagOnLv2.HasValue) r.RoomTag = setTagOnLv2.Value;
 
                 EventBus.Raise(new GoldChanged(_world.Economy.Gold));
                 EventBus.Raise(new RoomUpgradedEvent(r.Id, r.Level));
@@ -75,18 +67,19 @@ namespace ScreamHotel.Systems
             }
             if (r.Level == 2)
             {
-                if (_world.Economy.Gold < cfg.upgradeToLv3) return false;
-                _world.Economy.Gold -= cfg.upgradeToLv3;
+                // Lv2 -> Lv3
+                if (_world.Economy.Gold < GetRoomUpgradeCost(roomId, r.Level)) return false;
+                _world.Economy.Gold -= GetRoomUpgradeCost(roomId, r.Level);
 
                 r.Level = 3;
-                r.Capacity = cfg.capacityLv3; // 扩容
+                r.Capacity = rules.capacityLv3; // 扩容
+                if (rules.lv3HasTag && r.RoomTag == null) { /* 如需在Lv3强制保留Tag，可按设计处理 */ }
 
                 EventBus.Raise(new GoldChanged(_world.Economy.Gold));
                 EventBus.Raise(new RoomUpgradedEvent(r.Id, r.Level));
                 return true;
             }
-
-            return false; // 已经是 Lv3
+            return false; // 已经Lv3
         }
         
         public void ApplySettlement(NightResults results)
@@ -132,23 +125,25 @@ namespace ScreamHotel.Systems
             var h = GetHighestFloor();
             return Math.Max(1, h + 1);
         }
-
-        /// <summary>计算“第 floor 层”的建造费用</summary>
-        public int GetFloorBuildCost(int floor)
+        
+        public int GetFloorBuildCost(int newFloor)
         {
-            floor = Math.Max(1, floor);
-            return floorBaseCost + (floor - 1) * floorStepCost;
+            var rules = _world.Config?.Rules;
+            if (rules == null) return 0;
+            double cost = rules.floorBuildBaseCost * Math.Pow(rules.floorCostGrowth, Math.Max(0, newFloor - 1));
+            return (int)Math.Round(cost);
         }
 
-        /// <summary>列出某层的房间Id（按 LA,LB,RA,RB 顺序）</summary>
-        public IEnumerable<string> EnumerateRoomIdsOnFloor(int floor)
+        private int GetRoomUpgradeCost(string roomId, int currentLevel)
         {
-            yield return MakeRoomId(floor, RoomSlot.LA);
-            yield return MakeRoomId(floor, RoomSlot.LB);
-            yield return MakeRoomId(floor, RoomSlot.RA);
-            yield return MakeRoomId(floor, RoomSlot.RB);
+            var rules = _world.Config?.Rules;
+            if (rules == null || rules.roomUpgradeCosts == null) return 0;
+            
+            int idx = currentLevel - 1;
+            if (idx < 0 || idx >= rules.roomUpgradeCosts.Length) return 0;
+            return rules.roomUpgradeCosts[idx];
         }
-
+        
         #endregion
         
         // ====== 内部实现 ======
@@ -156,10 +151,11 @@ namespace ScreamHotel.Systems
 
         private void CreateFloorInternally(int floor, bool free)
         {
-            // 若该层已存在任一房间则忽略
             if (_world.Rooms.Any(r => TryParseFloor(r.Id, out var f) && f == floor)) return;
 
-            var cfg = CurrentPrice();
+            var rules = _world.Config?.Rules;
+            var capLv1 = rules != null ? rules.capacityLv1 : 1;
+
             foreach (var slot in new[] { RoomSlot.LA, RoomSlot.LB, RoomSlot.RA, RoomSlot.RB })
             {
                 var id = MakeRoomId(floor, slot);
@@ -167,11 +163,11 @@ namespace ScreamHotel.Systems
                 {
                     Id = id,
                     Level = 1,
-                    Capacity = cfg.capacityLv1,
+                    Capacity = capLv1,
                     RoomTag = null
                 };
                 _world.Rooms.Add(room);
-                EventBus.Raise(new RoomPurchasedEvent(id)); // “解锁/生成”也用买房事件，便于 UI 同步
+                EventBus.Raise(new RoomPurchasedEvent(id));
             }
         }
 

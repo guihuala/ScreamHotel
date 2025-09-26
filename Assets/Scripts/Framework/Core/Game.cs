@@ -187,15 +187,22 @@ namespace ScreamHotel.Core
             TimeSystem.currentTimeOfDay = 0.25f; // 清晨6点
             GoToDay();
         }
-
+        
         private void SeedInitialWorld(World w)
         {
             var setup = initialSetup;
 
+            // 初始金币
             w.Economy.Gold = setup.startGold;
+            
+            var rules = w.Config?.Rules;
+            if (rules == null)
+            {
+                Debug.LogWarning("[Game] Rules is null. Using safe defaults.");
+            }
+            int capLv1 = rules != null ? rules.capacityLv1 : 1;
 
-            var priceCfg = w.Config.RoomPrices.Count > 0 ? w.Config.RoomPrices.Values.First() : null;
-    
+            // 播种首批房间（按 LA/LB/RA/RB 顺序铺层）
             int actuallyAdded = 0;
             for (int i = 0; i < setup.startRoomCount; i++)
             {
@@ -203,34 +210,37 @@ namespace ScreamHotel.Core
                 string[] slots = { "LA", "LB", "RA", "RB" };
                 string slot = slots[i % 4];
                 var id = $"Room_F{floor}_{slot}";
-        
+
                 bool exists = w.Rooms.Exists(r => r.Id == id);
-        
                 if (!exists)
                 {
                     w.Rooms.Add(new Room
                     {
-                        Id = id, Level = 1,
-                        Capacity = priceCfg != null ? priceCfg.capacityLv1 : 1,
+                        Id = id,
+                        Level = 1,
+                        Capacity = capLv1,
                         RoomTag = null
                     });
                     actuallyAdded++;
                 }
             }
 
-            if (w.Ghosts.Count == 0) // 赠送玩家一定数量的鬼
+            // 开局赠送鬼
+            if (w.Ghosts.Count == 0)
             {
                 int idx = 1;
                 foreach (var main in setup.starterGhostMains)
                 {
                     w.Ghosts.Add(new Ghost
                     {
-                        Id = $"G{idx++}", Main = main,
+                        Id = $"G{idx++}",
+                        Main = main,
                         State = GhostState.Idle
                     });
                 }
             }
 
+            // 同步金币 UI
             EventBus.Raise(new GoldChanged(w.Economy.Gold));
         }
     }
