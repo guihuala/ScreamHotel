@@ -31,7 +31,7 @@ namespace ScreamHotel.Systems
                 {
                     Id = id,
                     // 给一点基础数据，避免后续空引用
-                    Fears = new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>
+                    Fears = new System.Collections.Generic.List<FearTag>
                     {
                         fearValues[_rng.Next(fearValues.Length)]
                     },
@@ -48,21 +48,6 @@ namespace ScreamHotel.Systems
 
             return spawned;
         }
-    }
-
-    public enum GuestState
-    {
-        Idle,
-        InRoom,
-        Leaving
-    }
-
-    [System.Serializable]
-    public class Guest
-    {
-        public string Id;
-        public string TypeId;
-        public GuestState State;
     }
 
     public readonly struct GuestSpawnedEvent

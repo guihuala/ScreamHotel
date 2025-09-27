@@ -82,11 +82,6 @@ namespace ScreamHotel.Systems
             return false; // 已经Lv3
         }
         
-        public void ApplySettlement(NightResults results)
-        {
-            // 可在此处理建造队列完成、维修折旧等
-        }
-        
         #region 对外Api
 
         public bool TryBuildNextFloor(out int newFloor)

@@ -54,10 +54,5 @@ namespace ScreamHotel.Systems
     {
         private readonly World _world;
         public ProgressionSystem(World world) { _world = world; }
-
-        public void Advance(NightResults results, int dayIndex)
-        {
-            // TODO：根据 ProgressionConfig 调整可用恐惧池、解锁特殊客人/功能、切换价格档等
-        }
     }
 }

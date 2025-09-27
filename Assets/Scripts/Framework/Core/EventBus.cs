@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace ScreamHotel.Core
 {
+    public interface IGameEvent {}
+    
     public static class EventBus
     {
         private static readonly Dictionary<Type, List<Delegate>> _subs = new();

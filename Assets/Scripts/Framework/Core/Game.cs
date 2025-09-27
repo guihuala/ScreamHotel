@@ -158,35 +158,33 @@ namespace ScreamHotel.Core
         
         public void StartNightExecution(int rngSeed)
         {
-            // 确保在夜晚时间执行
             if (!TimeSystem.IsNight)
             {
                 Debug.LogWarning("只能在夜晚执行!");
                 return;
             }
-    
+
             State = GameState.NightExecute;
             EventBus.Raise(new GameStateChanged(State));
-    
+
             // 暂停时间
             TimeSystem.isPaused = true;
-    
-            var results = _executionSystem.ResolveNight(rngSeed);
+
+            // 调用无参 ResolveNight()
+            var results = _executionSystem.ResolveNight();
             EventBus.Raise(new NightResolved(results));
-    
+
             State = GameState.Settlement;
             EventBus.Raise(new GameStateChanged(State));
-    
-            _buildSystem.ApplySettlement(results);
-            _progressionSystem.Advance(results, DayIndex);
-    
+
             DayIndex++;
-    
-            // 恢复时间，推进到第二天早晨
+
+            // 恢复时间，推进到第二天早晨（清晨 6 点）
             TimeSystem.isPaused = false;
-            TimeSystem.currentTimeOfDay = 0.25f; // 清晨6点
+            TimeSystem.currentTimeOfDay = 0.25f;
             GoToDay();
         }
+
         
         private void SeedInitialWorld(World w)
         {

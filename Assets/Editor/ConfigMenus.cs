@@ -16,7 +16,7 @@ public static class ConfigMenus
         AssetDatabase.CreateAsset(ghost, $"{root}/Ghost__Spirit.asset");
 
         var guest = ScriptableObject.CreateInstance<GuestTypeConfig>();
-        guest.id = "Coward"; guest.fears = new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>{ ScreamHotel.Domain.FearTag.Darkness, ScreamHotel.Domain.FearTag.Noise};
+        guest.id = "Coward"; guest.immunities = new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>{ ScreamHotel.Domain.FearTag.Darkness, ScreamHotel.Domain.FearTag.Noise};
         guest.barMax = 90; guest.requiredPercent = 0.75f; guest.baseFee = 80; guest.counterChance = 0f;
         AssetDatabase.CreateAsset(guest, $"{root}/GuestType__Coward.asset");
         

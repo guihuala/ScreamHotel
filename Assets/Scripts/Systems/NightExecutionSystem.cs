@@ -1,84 +1,126 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScreamHotel.Core;
 using ScreamHotel.Domain;
 
 namespace ScreamHotel.Systems
 {
-    // 夜晚执行
+    /// <summary>
+    /// 极简夜晚结算：按“命中 >= 1 成功；收益 = 基础房费 * 命中数”
+    /// 不涉及疲劳、条形槽、概率等。
+    /// </summary>
     public class NightExecutionSystem
     {
         private readonly World _world;
-        public NightExecutionSystem(World world) { _world = world; }
 
-        public NightResults ResolveNight(int rngSeed)
+        public NightExecutionSystem(World world) => _world = world;
+
+        public NightResolved ResolveNight()
         {
-            var rand = new Random(rngSeed);
-            var results = new NightResults();
-            var rules = _world.Config.Rules;
+            var result = new NightResolved { RoomResults = new List<RoomNightResult>() };
+            int totalGold = 0;
 
             foreach (var room in _world.Rooms)
             {
-                var guestType = _world.Config.GuestTypes.Values.ElementAt(rand.Next(_world.Config.GuestTypes.Count));
-                var required = guestType.barMax * guestType.requiredPercent;
+                // 1) 收集该房间“有效恐惧集合”（鬼 Main/Sub + 房间Tag）
+                var effectiveTags = CollectEffectiveFearTags(room);
 
-                float total = 0f;
-                foreach (var gid in room.AssignedGhostIds)
+                // 2) 针对该房间分配的每位客人逐个结算
+                var rr = new RoomNightResult { RoomId = room.Id, GuestResults = new List<GuestNightResult>() };
+
+                foreach (var guestId in room.AssignedGuestIds)
                 {
-                    var ghost = _world.Ghosts.First(x => x.Id == gid);
-                    var bonus = 0f;
-                    if (guestType.fears.Contains(ghost.Main)) bonus += rules.mainBonus;
-                    if (ghost.Sub.HasValue && guestType.fears.Contains(ghost.Sub.Value)) bonus += rules.subBonus;
-                    if (room.RoomTag.HasValue && guestType.fears.Contains(room.RoomTag.Value)) bonus += rules.roomBonus;
-                }
+                    var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
+                    if (g == null) continue;
 
-                var success = total >= required;
+                    var vulnerabilities = GetGuestVulnerabilities(g);
+                    int hits = effectiveTags.Count(t => vulnerabilities.Contains(t));
+                    int baseFee = GetGuestBaseFee(g);
 
-                var counter = false;
-                if (!success && guestType.counterChance > 0f)
-                {
-                    counter = rand.NextDouble() < guestType.counterChance;
-                }
+                    int gold = (hits >= 1) ? baseFee * hits : 0;
+                    totalGold += gold;
 
-                foreach (var gid in room.AssignedGhostIds)
-                {
-                    var ghost = _world.Ghosts.First(x => x.Id == gid);
-                    if (counter)
+                    rr.GuestResults.Add(new GuestNightResult
                     {
-                        ghost.State = GhostState.Injured;
-                    }
-                    else ghost.State = GhostState.Idle;
+                        GuestId = g.Id,
+                        Hits = hits,
+                        BaseFee = baseFee,
+                        GoldEarned = gold,
+                        EffectiveTags = new List<FearTag>(effectiveTags),
+                        Immunities = new List<FearTag>()
+                    });
                 }
 
-                results.RoomDetails.Add(new RoomResult
-                {
-                    RoomId = room.Id,
-                    GuestTypeId = guestType.id,
-                    TotalScare = total,
-                    Required = required,
-                    Counter = counter
-                });
-                
-                room.AssignedGhostIds.Clear();
+                result.RoomResults.Add(rr);
             }
 
-            return results;
+            // 3) 加钱并返回结果
+            _world.Economy.Gold += totalGold;
+            EventBus.Raise(new GoldChanged(_world.Economy.Gold));
+            result.TotalGold = totalGold;
+
+            EventBus.Raise(result);
+            return result;
+        }
+
+        // ======= Helpers =======
+
+        /// <summary>
+        /// 房间内所有鬼的 Main/Sub ∪ 房间 Tag（若有）
+        /// </summary>
+        private HashSet<FearTag> CollectEffectiveFearTags(Room room)
+        {
+            var set = new HashSet<FearTag>();
+
+            // 鬼
+            foreach (var gid in room.AssignedGhostIds)
+            {
+                var gh = _world.Ghosts.FirstOrDefault(x => x.Id == gid);
+                if (gh == null) continue;
+                set.Add(gh.Main);
+                if (gh.Sub.HasValue) set.Add(gh.Sub.Value);
+            }
+
+            // 房间 Tag（Lv2/Lv3 可能带装饰恐惧）
+            if (room.RoomTag.HasValue) set.Add(room.RoomTag.Value);
+
+            return set;
+        }
+
+        private HashSet<FearTag> GetGuestVulnerabilities(Guest g)
+        {
+            // Domain.Guest.Fears 既已是“怕的东西/易感集合”
+            return g.Fears != null ? new HashSet<FearTag>(g.Fears) : new HashSet<FearTag>();
+        }
+
+        private int GetGuestBaseFee(Guest g)
+        {
+            return (g.BaseFee > 0) ? g.BaseFee : 40;
         }
     }
 
-    public class NightResults
+    // ====== 结果结构（可保持你现有的类型命名） ======
+    public class NightResolved : IGameEvent
     {
-        public readonly List<RoomResult> RoomDetails = new();
-        public int TotalGold => RoomDetails.Sum(r => r.Gold);
+        public int TotalGold;
+        public List<RoomNightResult> RoomResults;
     }
 
-    public struct RoomResult
+    public class RoomNightResult
     {
         public string RoomId;
-        public string GuestTypeId;
-        public float TotalScare;
-        public float Required;
-        public int Gold;
-        public bool Counter;
+        public List<GuestNightResult> GuestResults;
+    }
+
+    public class GuestNightResult
+    {
+        public string GuestId;
+        public int Hits;
+        public int BaseFee;
+        public int GoldEarned;
+        public List<FearTag> EffectiveTags; // 鬼/房间构成的全集
+        public List<FearTag> Immunities;    // 客人免疫集合（用于调试展示）
     }
 }
+
