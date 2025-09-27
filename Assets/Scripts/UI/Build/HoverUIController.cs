@@ -95,7 +95,8 @@ namespace ScreamHotel.UI
                     break;
 
                 case HoverKind.ShopSlot:
-                    shopPanel?.Show(info.ShopMain, info.ShopPrice, Input.mousePosition);
+                    var screen = (Vector3)( (Vector2)Input.mousePosition + info.ScreenOffset );
+                    shopPanel?.Show(info.ShopMain, info.ShopPrice, screen);
                     roomPanel?.Hide();
                     roofPanel?.Hide();
                     _lastKind = HoverKind.ShopSlot;

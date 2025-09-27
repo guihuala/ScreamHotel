@@ -11,7 +11,6 @@ namespace ScreamHotel.Presentation.Shop
         public Color colorShadow;
         public Color colorDoll;
         public Color colorPoison;
-        // …按你的 FearTag 枚举补齐映射
 
         public void Apply(FearTag tag)
         {

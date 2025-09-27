@@ -14,6 +14,7 @@ namespace ScreamHotel.UI
         public Domain.FearTag ShopMain;
         public int ShopPrice;
         public Vector3 WorldPosition; // 用于定位3D/世界空间UI
+        public Vector2 ScreenOffset;
     }
 
     public interface IHoverInfoProvider
