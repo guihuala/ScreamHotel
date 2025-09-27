@@ -34,15 +34,7 @@ namespace ScreamHotel.UI
 
         void Update()
         {
-            // 1) 若鼠标在任何 UI 上方，则不打物理射线（避免闪烁/误触）
-            if (blockWhenPointerOverUI && EventSystem.current != null &&
-                EventSystem.current.IsPointerOverGameObject())
-            {
-                HideAll();
-                return;
-            }
-
-            // 2) 物理射线
+            // 1) 物理射线
             var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             if (!Physics.Raycast(ray, out var hit, rayMaxDistance, interactMask))
             {
@@ -50,21 +42,21 @@ namespace ScreamHotel.UI
                 return;
             }
 
-            // 3) 读取 Hover 信息
+            // 2) 读取 Hover 信息
             var provider = hit.collider.GetComponentInParent<IHoverInfoProvider>();
             if (provider == null) { HideAll(); return; }
             var info = provider.GetHoverInfo();
 
-            // 4) 展示对应面板
+            // 3) 展示对应面板
             ShowPanels(info);
 
-            // 5) 点击行为（左键）
+            // 4) 点击行为（左键）
             if (Input.GetMouseButtonDown(0))
             {
                 var clickable = hit.collider.GetComponentInParent<IClickActionProvider>();
                 if (clickable != null && clickable.TryClick(_game))
                 {
-                    // 购买/建造成功：让表现层自己刷新（你已有事件流/或直接消息）
+                    // 购买/建造成功：让表现层自己刷新
                     SendMessage("SyncShop", SendMessageOptions.DontRequireReceiver);
                     SendMessage("SyncAll",  SendMessageOptions.DontRequireReceiver);
                 }

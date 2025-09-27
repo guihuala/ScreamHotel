@@ -61,5 +61,19 @@ namespace ScreamHotel.Presentation
             }
             return _stagingByGhost.Count;
         }
+        
+        // 同步
+        public void SyncGhosts()
+        {
+            var w = game.World;
+            foreach (var g in w.Ghosts)
+            {
+                if (_ghostViews.ContainsKey(g.Id)) continue;
+                var pv = Instantiate(ghostPrefab, ghostsRoot);
+                pv.BindGhost(g);
+                pv.SnapTo(GetRandomGhostSpawnPos());
+                _ghostViews[g.Id] = pv;
+            }
+        }
     }
 }

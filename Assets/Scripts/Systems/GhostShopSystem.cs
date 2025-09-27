@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using ScreamHotel.Domain;
 using ScreamHotel.Core;
+using UnityEngine;
+using Random = System.Random;
 
 namespace ScreamHotel.Systems
 {
@@ -72,6 +74,7 @@ namespace ScreamHotel.Systems
         // 购买指定槽位：扣钱，加入世界鬼列表，并从货架移除
         public bool TryBuy(int slotIndex, out string newGhostId)
         {
+            Debug.Log($"TryBuy {slotIndex}");
             newGhostId = null;
             var rules = _world.Config?.Rules;
             if (rules == null) return false;
