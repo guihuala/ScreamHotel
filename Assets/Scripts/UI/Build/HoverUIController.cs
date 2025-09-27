@@ -10,9 +10,10 @@ namespace ScreamHotel.UI
     {
         [Header("Refs")]
         public Camera mainCamera;
-        public RoomHoverPanel roomPanel;    // 你的屏幕空间UI
-        public RoofHoverPanel roofPanel;    // 你的屏幕空间UI
-        public ShopHoverPanel shopPanel;    // 新增：商店悬浮面板（世界/屏幕空间皆可）
+        public RoomHoverPanel roomPanel;
+        public RoofHoverPanel roofPanel;
+        public ShopHoverPanel shopPanel;
+        public ShopRerollHoverPanel shopRerollPanel;
 
         [Header("Raycast")]
         public LayerMask interactMask = ~0;
@@ -20,6 +21,10 @@ namespace ScreamHotel.UI
 
         [Header("Behavior")]
         public bool blockWhenPointerOverUI = true;
+        
+        [Header("Hover UI")]
+        [Tooltip("鼠标悬停时面板的屏幕像素偏移（相对于鼠标位置）。")]
+        public Vector2 hoverScreenOffset = new Vector2(100f, 16f);
 
         private Game _game;
         private HoverKind _lastKind = HoverKind.None;
@@ -65,12 +70,11 @@ namespace ScreamHotel.UI
 
         private void ShowPanels(HoverInfo info)
         {
+            var screen = (Vector3)( (Vector2)Input.mousePosition + hoverScreenOffset );
             switch (info.Kind)
             {
                 case HoverKind.Roof:
                     roofPanel?.Show(info.NextFloor, info.Cost, Input.mousePosition);
-                    roomPanel?.Hide();
-                    shopPanel?.Hide();
                     _lastKind = HoverKind.Roof;
                     _lastRoomId = null;
                     _lastShopIndex = -1;
@@ -79,22 +83,24 @@ namespace ScreamHotel.UI
                 case HoverKind.Room:
                     if (info.RoomId != _lastRoomId || _lastKind != HoverKind.Room)
                         roomPanel?.Show(info.RoomId);
-                    roofPanel?.Hide();
-                    shopPanel?.Hide();
                     _lastKind = HoverKind.Room;
                     _lastRoomId = info.RoomId;
                     _lastShopIndex = -1;
                     break;
 
                 case HoverKind.ShopSlot:
-                    var screen = (Vector3)( (Vector2)Input.mousePosition + info.ScreenOffset );
                     shopPanel?.Show(info.ShopMain, info.ShopPrice, screen);
-                    roomPanel?.Hide();
-                    roofPanel?.Hide();
                     _lastKind = HoverKind.ShopSlot;
                     _lastRoomId = null;
                     _lastShopIndex = info.ShopSlotIndex;
                     break;
+                
+                case HoverKind.ShopReroll:
+                {
+                    shopRerollPanel?.Show(info.Cost, screen);
+                    _lastKind = HoverKind.ShopReroll;
+                    break;
+                }
 
                 default:
                     HideAll();
@@ -107,6 +113,7 @@ namespace ScreamHotel.UI
             roomPanel?.Hide();
             roofPanel?.Hide();
             shopPanel?.Hide();
+            shopRerollPanel?.Hide();
             _lastKind = HoverKind.None;
             _lastRoomId = null;
             _lastShopIndex = -1;

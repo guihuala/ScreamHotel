@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ScreamHotel.UI
 {
-    public enum HoverKind { None, Room, Roof, ShopSlot }
+    public enum HoverKind { None, Room, Roof, ShopSlot, ShopReroll }
 
     public struct HoverInfo
     {
@@ -14,7 +14,6 @@ namespace ScreamHotel.UI
         public Domain.FearTag ShopMain;
         public int ShopPrice;
         public Vector3 WorldPosition; // 用于定位3D/世界空间UI
-        public Vector2 ScreenOffset;
     }
 
     public interface IHoverInfoProvider

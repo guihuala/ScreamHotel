@@ -17,33 +17,24 @@ namespace ScreamHotel.Systems
         {
             _world = world;
         }
-
-        // 每日刷新
-        public void RefreshDaily(int dayIndex, bool force = false)
+        
+        private void GenerateOffers(int dayIndex, int count, bool unique)
         {
-            var rules = _world.Config?.Rules;
-            if (rules == null) return;
-
-            if (!force && _world.Shop.DayLastRefreshed == dayIndex) return;
-
             _world.Shop.Offers.Clear();
-            int slots = Math.Max(1, rules.ghostShopSlots);
+            var all = (FearTag[])Enum.GetValues(typeof(FearTag));
+            var pool = all.ToList();
 
-            var mains = ((FearTag[])Enum.GetValues(typeof(FearTag))).ToList();
-
-            // 抽样：是否要求不重复
-            for (int i = 0; i < slots; i++)
+            for (int i = 0; i < count; i++)
             {
                 FearTag main;
-                if (rules.ghostShopUniqueMains && mains.Count > 0)
+                if (unique && pool.Count > 0)
                 {
-                    int idx = _rng.Next(mains.Count);
-                    main = mains[idx];
-                    mains.RemoveAt(idx);
+                    int idx = _rng.Next(pool.Count);
+                    main = pool[idx];
+                    pool.RemoveAt(idx);
                 }
                 else
                 {
-                    var all = (FearTag[])Enum.GetValues(typeof(FearTag));
                     main = all[_rng.Next(all.Length)];
                 }
 
@@ -53,23 +44,35 @@ namespace ScreamHotel.Systems
                     Main = main
                 });
             }
-
             _world.Shop.DayLastRefreshed = dayIndex;
         }
+        
+        public void RefreshDaily(int dayIndex, bool force = false)
+        {
+            var rules = _world.Config?.Rules;
+            if (rules == null) return;
+            if (!force && _world.Shop.DayLastRefreshed == dayIndex) return;
 
-        // 刷新当前日：扣钱并重抽
+            int slots = Math.Max(1, rules.ghostShopSlots);
+            GenerateOffers(dayIndex, slots, unique: rules.ghostShopUniqueMains);
+        }
+        
         public bool TryReroll(int dayIndex)
         {
             var rules = _world.Config?.Rules;
             if (rules == null) return false;
-            if (_world.Economy.Gold < rules.ghostShopRerollCost) return false;
 
+            int remaining = _world.Shop.Offers.Count;
+            if (remaining <= 0) return false;                  // 没货可刷，直接失败
+
+            if (_world.Economy.Gold < rules.ghostShopRerollCost) return false;
             _world.Economy.Gold -= rules.ghostShopRerollCost;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
 
-            RefreshDaily(dayIndex, force: true);
+            GenerateOffers(dayIndex, remaining, unique: rules.ghostShopUniqueMains);
             return true;
         }
+
 
         // 购买指定槽位：扣钱，加入世界鬼列表，并从货架移除
         public bool TryBuy(int slotIndex, out string newGhostId)

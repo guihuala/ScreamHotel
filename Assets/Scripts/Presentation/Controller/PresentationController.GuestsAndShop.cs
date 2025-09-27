@@ -116,21 +116,17 @@ namespace ScreamHotel.Presentation
             {
                 var off = offers[i];
 
-                // 如果没有该 Offer 的槽位就新建
                 if (!_shopOfferViews.TryGetValue(off.OfferId, out var t) || !t)
                 {
                     if (!shopSlotPrefab || !shopRoot) continue;
-
                     var slot = Instantiate(shopSlotPrefab, shopRoot);
                     slot.name = $"Slot_{i+1}_{off.Main}";
                     slot.Rebind(off.Main, i);
-
                     t = slot.transform;
                     _shopOfferViews[off.OfferId] = t;
                 }
                 else
                 {
-                    // 已存在则检查是否需要重绑（顺序或品种变化）
                     var slotView = t.GetComponent<ShopSlotView>();
                     if (slotView != null && (slotView.slotIndex != i || slotView.main != off.Main))
                     {
@@ -138,9 +134,19 @@ namespace ScreamHotel.Presentation
                     }
                 }
 
-                // 无论新建还是已有，最后都更新到正确世界坐标
                 t.position = GetShopSlotWorldPos(i);
             }
+
+            //  3) 同步刷新按钮可见性：有货可见；全卖空隐藏/禁用
+            UpdateShopRerollButton();
+        }
+
+        
+        private void UpdateShopRerollButton()
+        {
+            if (!shopRerollPrefab) return;
+            bool hasAny = game.World.Shop.Offers.Count > 0;
+            shopRerollPrefab.SetActive(hasAny);
         }
     }
 }

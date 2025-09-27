@@ -23,10 +23,6 @@ namespace ScreamHotel.Presentation
         public Vector3 pawnLocalOffset = new Vector3(0, 0.5f, 0);
         public float   pawnLocalScale  = 1.0f;
 
-        [Header("Hover UI")]
-        [Tooltip("鼠标悬停时面板的屏幕像素偏移（相对于鼠标位置）。")]
-        public Vector2 hoverScreenOffset = new Vector2(100f, 16f);
-
         void Awake()
         {
             if (Application.isPlaying) BuildVisual();
@@ -43,7 +39,6 @@ namespace ScreamHotel.Presentation
                 ShopMain = main,
                 ShopPrice = price,
                 WorldPosition = transform.position,
-                ScreenOffset = hoverScreenOffset
             };
         }
 

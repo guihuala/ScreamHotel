@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ScreamHotel.Core;
-using ScreamHotel.Systems;
+
 
 namespace ScreamHotel.Presentation
 {
@@ -19,6 +19,8 @@ namespace ScreamHotel.Presentation
         public PawnView ghostPrefab;
         public GuestView guestPrefab;
         public Transform roofPrefab;
+        public ShopSlotView shopSlotPrefab;
+        public GameObject shopRerollPrefab;
 
         // ===== Floor/Room Layout =====
         [Header("Floor/Room Layout (relative to roomsRoot)")]
@@ -47,7 +49,6 @@ namespace ScreamHotel.Presentation
         public float shopSlotSpacingX = 1.6f;
         public int shopSlotsPerRow = 5;
         public float shopFixedZ = 0f;
-        public ShopSlotView shopSlotPrefab;
 
         // ===== Runtime maps =====
         private Transform _currentRoof;
