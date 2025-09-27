@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec2fe8d19abb46bab4b9b55116f9ba7, type: 3}
   m_Name: InitialSetup
   m_EditorClassIdentifier: 
-  startGold: 300
+  startGold: 9999
   startRoomCount: 8
   starterGhostMains: 0000000001000000
-  defaultBaseScare: 35

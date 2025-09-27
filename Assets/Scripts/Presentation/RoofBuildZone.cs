@@ -1,14 +1,12 @@
 using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Systems;
+using ScreamHotel.UI;
 
-namespace ScreamHotel.UI
+namespace ScreamHotel.Presentation
 {
-    /// <summary>
-    /// 放在一个空物体上，自动把自身 BoxCollider 放到“最高层上方”，用于鼠标悬停显示"建造下一层"。
-    /// </summary>
     [RequireComponent(typeof(BoxCollider))]
-    public class RoofBuildZone : MonoBehaviour
+    public class RoofBuildZone : MonoBehaviour, IHoverInfoProvider
     {
         private BoxCollider _box;
         private Game _game;
@@ -38,5 +36,13 @@ namespace ScreamHotel.UI
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             return (BuildSystem)f.GetValue(_game);
         }
+        
+        public HoverInfo GetHoverInfo() => new HoverInfo
+        {
+            Kind = HoverKind.Roof,
+            NextFloor = GetNextFloor(),
+            Cost = GetNextFloorCost(),
+            WorldPosition = transform.position
+        };
     }
 }

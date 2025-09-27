@@ -102,22 +102,32 @@ namespace ScreamHotel.Presentation
         {
             var offers = game.World.Shop.Offers;
 
-            // 删除下架
+            // 删除已下架
             var alive = new HashSet<string>(offers.Select(o => o.OfferId));
             var toRemove = _shopOfferViews.Keys.Where(id => !alive.Contains(id)).ToList();
-            foreach (var id in toRemove) { SafeDestroy(_shopOfferViews[id]?.gameObject); _shopOfferViews.Remove(id); }
+            foreach (var id in toRemove)
+            {
+                SafeDestroy(_shopOfferViews[id]?.gameObject);
+                _shopOfferViews.Remove(id);
+            }
 
-            // 补齐/定位
+            // 补齐与定位
             for (int i = 0; i < offers.Count; i++)
             {
                 var off = offers[i];
+
+                // 没有就创建
                 if (!_shopOfferViews.TryGetValue(off.OfferId, out var t) || !t)
                 {
-                    if (!shopOfferPrefab) continue;
-                    t = Instantiate(shopOfferPrefab, shopRoot);
-                    t.name = $"Offer_{i+1}_{off.Main}";
+                    if (!shopSlotPrefab) continue;
+                    var slot = Instantiate(shopSlotPrefab, shopRoot);
+                    slot.name = $"Slot_{i+1}_{off.Main}";
+                    
+                    t = slot.transform;
                     _shopOfferViews[off.OfferId] = t;
                 }
+
+                // 定位
                 t.position = GetShopSlotWorldPos(i);
             }
         }

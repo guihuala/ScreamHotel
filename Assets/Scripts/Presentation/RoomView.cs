@@ -1,10 +1,12 @@
+using ScreamHotel.Core;
 using UnityEngine;
 using ScreamHotel.Domain;
+using ScreamHotel.UI;
 
 
 namespace ScreamHotel.Presentation
 {
-    public class RoomView : MonoBehaviour
+    public class RoomView : MonoBehaviour, IHoverInfoProvider
     {
         [Header("Binding")]
         public string roomId;
@@ -151,5 +153,12 @@ namespace ScreamHotel.Presentation
                 ghostAnchors = newArr;
             }
         }
+        
+        public HoverInfo GetHoverInfo() => new HoverInfo
+        {
+            Kind = HoverKind.Room,
+            RoomId = roomId,
+            WorldPosition = transform.position
+        };
     }
 }

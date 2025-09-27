@@ -47,7 +47,7 @@ namespace ScreamHotel.Presentation
         public float shopSlotSpacingX = 1.6f;
         public int shopSlotsPerRow = 5;
         public float shopFixedZ = 0f;
-        public Transform shopOfferPrefab;
+        public ShopSlotView shopSlotPrefab;
 
         // ===== Runtime maps =====
         private Transform _currentRoof;
