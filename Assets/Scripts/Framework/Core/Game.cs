@@ -19,7 +19,6 @@ namespace ScreamHotel.Core
     public class Game : MonoBehaviour
     {
         [Header("Entry References")] public DataManager dataManager;
-
         public InitialSetupConfig initialSetup;
 
         public GameState State { get; private set; } = GameState.Boot;
@@ -30,6 +29,7 @@ namespace ScreamHotel.Core
         private BuildSystem _buildSystem;
         private DayPhaseSystem _dayPhaseSystem;
         private ProgressionSystem _progressionSystem;
+        public TimeSystem TimeSystem { get; private set; }
 
         public World World { get; private set; }
 
@@ -47,28 +47,24 @@ namespace ScreamHotel.Core
             _buildSystem = new BuildSystem(World);
             _dayPhaseSystem = new DayPhaseSystem(World);
             _progressionSystem = new ProgressionSystem(World);
-
+            
+            TimeSystem = new TimeSystem();
+            // 初始化为白天状态
             GoToDay();
         }
         
-        public TimeSystem TimeSystem { get; private set; }
         private Material skyboxMaterial;
 
         private void Start()
         {
-            TimeSystem = new TimeSystem();
-            
             skyboxMaterial = RenderSettings.skybox;
-            
             UpdateSkyboxTransition();
         }
 
         private void Update()
         {
             TimeSystem.Update(Time.deltaTime);
-            
             UpdateSkyboxTransition();
-            
             CheckDayNightTransition();
         }
         
@@ -135,11 +131,23 @@ namespace ScreamHotel.Core
             {
                 Debug.Log("[Time] DayStartedEvent @ 0.25");
                 EventBus.Raise(new DayStartedEvent());
+                
+                // 自动从黑夜过渡到白天（包括 Settlement 状态）
+                if (State == GameState.NightShow || State == GameState.Settlement || State == GameState.NightExecute)
+                {
+                    GoToDay();
+                }
             }
             if (Crossed(prev, curr, 0.75f))
             {
                 Debug.Log("[Time] NightStartedEvent @ 0.75");
                 EventBus.Raise(new NightStartedEvent());
+                
+                // 自动从白天过渡到黑夜展示阶段
+                if (State == GameState.Day)
+                {
+                    StartNightShow();
+                }
             }
         }
         
@@ -148,19 +156,35 @@ namespace ScreamHotel.Core
             State = GameState.Day;
             _dayPhaseSystem.PrepareDay(DayIndex);
             EventBus.Raise(new GameStateChanged(State));
+            
+            // 确保时间系统正常运行
+            TimeSystem.isPaused = false;
+            Debug.Log($"Enter Day {DayIndex}");
         }
 
         public void StartNightShow()
         {
             State = GameState.NightShow;
             EventBus.Raise(new GameStateChanged(State));
+            Debug.Log("Enter Night Show phase, waiting for player to execute");
+        }
+        
+        // 直接从白天跳到黑夜展示的快捷方法
+        public void SkipToNightShow()
+        {
+            if (State == GameState.Day)
+            {
+                // 设置时间为傍晚，触发黑夜事件
+                TimeSystem.SetNormalizedTime(0.75f);
+                StartNightShow();
+            }
         }
         
         public void StartNightExecution(int rngSeed)
         {
-            if (!TimeSystem.IsNight)
+            if (State != GameState.NightShow)
             {
-                Debug.LogWarning("只能在夜晚执行!");
+                Debug.LogWarning("Can only execute during Night Show phase!");
                 return;
             }
 
@@ -177,12 +201,14 @@ namespace ScreamHotel.Core
             State = GameState.Settlement;
             EventBus.Raise(new GameStateChanged(State));
 
+            // 天数递增
             DayIndex++;
 
-            // 恢复时间，推进到第二天早晨（清晨 6 点）
-            TimeSystem.isPaused = false;
-            TimeSystem.currentTimeOfDay = 0.25f;
-            GoToDay();
+            Debug.Log($"Night execution completed, preparing for Day {DayIndex}");
+            
+            // 立即设置时间为接近早晨，让时间自然过渡到白天
+            TimeSystem.SetNormalizedTime(0.24f); // 设置为早晨前一刻
+            TimeSystem.isPaused = false; // 恢复时间流动
         }
 
         

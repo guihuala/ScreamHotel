@@ -38,7 +38,7 @@ namespace ScreamHotel.Systems
                 : 4;
 
             _guestSpawner.SpawnGuests(guestCountToday);
-            
+
             // 3) 刷新鬼商店
             _ghostShop.RefreshDaily(dayIndex);
         }

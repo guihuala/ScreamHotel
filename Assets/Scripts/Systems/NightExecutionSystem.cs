@@ -6,10 +6,6 @@ using ScreamHotel.Domain;
 
 namespace ScreamHotel.Systems
 {
-    /// <summary>
-    /// 极简夜晚结算：按“命中 >= 1 成功；收益 = 基础房费 * 命中数”
-    /// 不涉及疲劳、条形槽、概率等。
-    /// </summary>
     public class NightExecutionSystem
     {
         private readonly World _world;
