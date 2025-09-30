@@ -1354,6 +1354,80 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 643722600}
   m_CullTransparentMesh: 1
+--- !u!1001 &670544118
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2116768960}
+    m_Modifications:
+    - target: {fileID: 186908, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_Name
+      value: StarFieldSimple
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 20.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 19849114, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: ShapeModule.radius.value
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 19938616, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 19971904, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+--- !u!4 &670544119 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 468366, guid: 07014c6862cc6bd4facec707d0923fe2, type: 3}
+  m_PrefabInstance: {fileID: 670544118}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &689955246
 GameObject:
   m_ObjectHideFlags: 0
@@ -1911,7 +1985,7 @@ MonoBehaviour:
   minX: -25
   maxX: 30
   minY: 0
-  maxY: 30
+  maxY: 260
   dragMouseButton: 1
   dragPlaneZ: 0
 --- !u!1 &1014922532
@@ -5829,6 +5903,7 @@ Transform:
   - {fileID: 2030606546}
   - {fileID: 1472049697}
   - {fileID: 830218245}
+  - {fileID: 670544119}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2126367142
