@@ -8,15 +8,14 @@ namespace ScreamHotel.Presentation
     [RequireComponent(typeof(Collider))]
     public class RoomDropZone : MonoBehaviour
     {
-        [Header("Binding")]
-        public string roomId;
+        [Header("Binding")] 
         public MeshRenderer plate;
-        public Color canColor   = new Color(0.3f, 1f, 0.3f, 1f);
-        public Color fullColor  = new Color(1f, 0.3f, 0.3f, 1f);
-        public Color baseColor  = new Color(1f, 1f, 1f, 1f);
+        public Color canColor = new Color(0.3f, 1f, 0.3f, 1f);
+        public Color fullColor = new Color(1f, 0.3f, 0.3f, 1f);
 
         private Core.Game game;
-
+        private RoomView _rv;  // 引用 RoomView
+        private string roomId;  // 房间ID（从RoomView获取）
         private AssignmentSystem _assign => GetSystem<AssignmentSystem>(game, "_assignmentSystem");
         private Color _origColor;
 
@@ -25,80 +24,137 @@ namespace ScreamHotel.Presentation
             if (plate != null)
             {
                 _origColor = plate.sharedMaterial.color;
-                baseColor = _origColor;
             }
+
             if (game == null) game = FindObjectOfType<Core.Game>();
+
+            // 获取 RoomView 组件
+            _rv = GetComponent<RoomView>();
+            if (_rv != null)
+            {
+                // 等待 Bind 方法设置 roomId
+                Debug.Log("等待 RoomView 完成绑定...");
+            }
         }
 
-        public bool CanAccept(string ghostId)
+        // 用于在 RoomView 绑定完成后设置 roomId
+        public void SetRoomId(string newRoomId)
+        {
+            roomId = newRoomId;
+            Debug.Log($"RoomDropZone 设置 roomId 为 {roomId}");
+        }
+
+        public bool CanAccept(string id, bool isGhost = true)
         {
             var w = game.World;
             var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
-            if (r == null) return false;
-            if (r.AssignedGhostIds.Count >= r.Capacity) return false;
+            if (r == null)
+            {
+                Debug.LogWarning($"房间 {roomId} 未找到！");
+                return false;
+            }
 
-            var g = w.Ghosts.FirstOrDefault(x => x.Id == ghostId);
-            if (g == null) return false;
-            if (g.State is GhostState.Resting or GhostState.Training or GhostState.Injured) return false;
+            // 判断是鬼怪还是客人，分别处理
+            if (isGhost)
+            {
+                var g = w.Ghosts.FirstOrDefault(x => x.Id == id);
+                if (g == null)
+                {
+                    Debug.LogWarning($"鬼怪 {id} 未找到！");
+                    return false;
+                }
+
+                if (g.State is GhostState.Training)
+                {
+                    Debug.LogWarning($"鬼怪 {id} 处于不可分配状态！");
+                    return false;
+                }
+
+                if (r.AssignedGhostIds.Count >= r.Capacity)
+                {
+                    Debug.LogWarning($"房间 {roomId} 已满，无法分配鬼怪 {id}！");
+                    return false;
+                }
+            }
+            else
+            {
+                var guest = w.Guests.FirstOrDefault(x => x.Id == id);
+                if (guest == null)
+                {
+                    Debug.LogWarning($"客人 {id} 未找到！");
+                    return false;
+                }
+
+                if (r.AssignedGuestIds.Count >= r.Capacity)
+                {
+                    Debug.LogWarning($"房间 {roomId} 已满，无法分配客人 {id}！");
+                    return false;
+                }
+            }
 
             return true;
         }
 
-        public bool TryDrop(string ghostId, out Transform targetAnchor)
+        public bool TryDrop(string id, bool isGhost, out Transform targetAnchor)
         {
             targetAnchor = null;
             var w = game.World;
             var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
-            if (r == null) return false;
-
-            if (!CanAccept(ghostId)) { Flash(fullColor); return false; }
-
-            if (_assign.TryAssignGhostToRoom(ghostId, roomId))
+            if (r == null)
             {
-                // 计算这只鬼在本房的索引
-                var index = r.AssignedGhostIds.IndexOf(ghostId);
-                var rv = GetComponent<RoomView>();
-                targetAnchor = rv != null ? rv.GetAnchor(index) : transform;
-                Flash(canColor);
-                return true;
+                Debug.LogWarning($"房间 {roomId} 未找到！");
+                return false;
             }
+
+            Debug.Log($"开始尝试放置 {id} 到房间 {roomId}");
+
+            if (!CanAccept(id, isGhost))
+            {
+                Debug.LogWarning($"无法放置 {id} 到房间 {roomId}");
+                Flash(fullColor);
+                return false;
+            }
+
+            if (isGhost)
+            {
+                if (_assign.TryAssignGhostToRoom(id, roomId))
+                {
+                    var index = r.AssignedGhostIds.IndexOf(id);
+                    var rv = GetComponent<RoomView>();
+                    targetAnchor = rv != null ? rv.GetAnchor(index) : transform;
+                    Debug.Log($"鬼怪 {id} 成功分配到房间 {roomId}");
+                    Flash(canColor);
+                    return true;
+                }
+            }
+            else
+            {
+                if (_assign.TryAssignGuestToRoom(id, roomId))
+                {
+                    var idx = Mathf.Max(0, r.AssignedGuestIds.IndexOf(id));
+                    var rv = GetComponent<RoomView>();
+                    targetAnchor = rv != null ? rv.GetGuestAnchor(idx) : transform;
+                    Debug.Log($"客人 {id} 成功分配到房间 {roomId}");
+                    Flash(canColor);
+                    return true;
+                }
+            }
+
             Flash(fullColor);
+            Debug.LogWarning($"放置失败，无法将 {id} 放置到房间 {roomId}");
             return false;
         }
-        
-        // RoomDropZone.cs（追加）
+
         public void ShowHoverFeedbackGuest()
         {
-            // 也可以区分颜色；这里简单沿用可投放的绿色/红色规则
             if (plate == null) return;
             plate.material.color = canColor;
         }
 
-        public bool TryDropGuest(string guestId, out Transform targetAnchor)
-        {
-            targetAnchor = null;
-            var w = game.World;
-            var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
-            if (r == null) return false;
-
-            if (_assign.TryAssignGuestToRoom(guestId, roomId))
-            {
-                // 客人锚点：重用 RoomView 的“第二列锚点”或额外的 guestAnchors（这里拿 index = 已有客人数-1）
-                var idx = Mathf.Max(0, r.AssignedGuestIds.IndexOf(guestId));
-                var rv = GetComponent<RoomView>();
-                targetAnchor = rv != null ? rv.GetGuestAnchor(idx) : transform;
-                Flash(canColor);
-                return true;
-            }
-            Flash(fullColor);
-            return false;
-        }
-
-
         public void ShowHoverFeedback(string ghostId)
         {
             if (plate == null) return;
-            var c = CanAccept(ghostId) ? canColor : fullColor;
+            var c = CanAccept(ghostId, true) ? canColor : fullColor;
             plate.material.color = Color.Lerp(plate.material.color, c, 0.5f);
         }
 
@@ -121,6 +177,7 @@ namespace ScreamHotel.Presentation
             CancelInvoke(nameof(Revert));
             Invoke(nameof(Revert), 0.25f);
         }
+
         private void Revert()
         {
             if (plate != null) plate.material.color = _origColor;

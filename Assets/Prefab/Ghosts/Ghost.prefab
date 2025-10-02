@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1418620524785643767}
   - component: {fileID: 6772807356517762401}
   - component: {fileID: 87508637289386459}
-  - component: {fileID: -6010749713044314117}
+  - component: {fileID: 3846706319776199229}
   m_Layer: 0
   m_Name: Ghost
   m_TagString: Untagged
@@ -123,7 +123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d73b593e518a415285ae822ee008ac5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ghostId: 1
+  ghostId: 
   body: {fileID: 555934078851056605}
 --- !u!114 &87508637289386459
 MonoBehaviour:
@@ -137,13 +137,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19e6b09d2a81c4f36ba3f55ff86c0e4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ghostId: 1
   game: {fileID: 0}
-  pawnView: {fileID: 6772807356517762401}
+  ghostPrefab: {fileID: 4922571751632684452, guid: 1b98f5179fb884157911c679eac12142, type: 3}
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 20
---- !u!54 &-6010749713044314117
+--- !u!54 &3846706319776199229
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -168,7 +167,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!1001 &3713149862900878572
 PrefabInstance:

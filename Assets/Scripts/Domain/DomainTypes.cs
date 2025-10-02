@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace ScreamHotel.Domain
 {
     public enum FearTag { Darkness, Blood, Noise, Rot, Gaze }
-    public enum GhostState { Idle, Working, Resting, Training, Injured }
+    public enum GhostState { Idle, Working, Training }
     public enum GuestType { Coward, WhiteCollar, NightOwl, Skeptic, Exorcist }
 
     public class Ghost

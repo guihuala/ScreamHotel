@@ -1,5 +1,6 @@
 using System.Linq;
 using ScreamHotel.Domain;
+using UnityEngine;  // 引入 UnityEngine 用于 Debug.Log
 
 namespace ScreamHotel.Systems
 {
@@ -12,48 +13,110 @@ namespace ScreamHotel.Systems
         {
             var g = _world.Ghosts.FirstOrDefault(x => x.Id == ghostId);
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
-            if (g == null || r == null) return false;
-            if (g.State is GhostState.Resting or GhostState.Training or GhostState.Injured) return false;
-            if (r.AssignedGhostIds.Count >= r.Capacity) return false;
+
+            // 打印调试信息
+            Debug.Log($"尝试分配鬼怪 {ghostId} 到房间 {roomId}");
+
+            if (g == null || r == null)
+            {
+                Debug.LogWarning($"鬼怪 {ghostId} 或房间 {roomId} 未找到！");
+                return false;
+            }
+
+            if (g.State is GhostState.Training)
+            {
+                Debug.LogWarning($"鬼怪 {ghostId} 处于不可分配状态！");
+                return false;
+            }
+
+            if (r.AssignedGhostIds.Count >= r.Capacity)
+            {
+                Debug.LogWarning($"房间 {roomId} 已满，无法分配鬼怪 {ghostId}！");
+                return false;
+            }
 
             // 如果之前分配在别的房间，先移除旧房间中的记录
             foreach (var room in _world.Rooms)
                 room.AssignedGhostIds.Remove(ghostId);
 
-            if (!r.AssignedGhostIds.Contains(ghostId)) r.AssignedGhostIds.Add(ghostId);
-            g.State = GhostState.Working;
-            return true;
+            if (!r.AssignedGhostIds.Contains(ghostId))
+            {
+                r.AssignedGhostIds.Add(ghostId);
+                g.State = GhostState.Working;
+                Debug.Log($"成功将鬼怪 {ghostId} 分配到房间 {roomId}");
+                return true;
+            }
+
+            return false;
         }
 
         public bool UnassignGhost(string ghostId)
         {
             var g = _world.Ghosts.FirstOrDefault(x => x.Id == ghostId);
-            if (g == null) return false;
+            if (g == null)
+            {
+                Debug.LogWarning($"鬼怪 {ghostId} 未找到！");
+                return false;
+            }
+
             var removed = false;
             foreach (var r in _world.Rooms)
                 removed |= r.AssignedGhostIds.Remove(ghostId);
+
             if (g.State == GhostState.Working) g.State = GhostState.Idle;
+
+            if (removed)
+                Debug.Log($"成功移除鬼怪 {ghostId} 的分配！");
+            else
+                Debug.LogWarning($"鬼怪 {ghostId} 没有被分配到任何房间！");
+            
             return removed;
         }
         
         public bool TryAssignGuestToRoom(string guestId, string roomId)
         {
-            var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);   // 假设 World.Guests 有客人列表
+            var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
-            if (g == null || r == null) return false;
-            
+
+            // 打印调试信息
+            Debug.Log($"尝试分配客人 {guestId} 到房间 {roomId}");
+
+            if (g == null || r == null)
+            {
+                Debug.LogWarning($"客人 {guestId} 或房间 {roomId} 未找到！");
+                return false;
+            }
+
             // 一个客人只在一个房间：先从所有房间移除
             foreach (var rr in _world.Rooms) rr.AssignedGuestIds.Remove(guestId);
-            if (!r.AssignedGuestIds.Contains(guestId)) r.AssignedGuestIds.Add(guestId);
-            return true;
+
+            if (!r.AssignedGuestIds.Contains(guestId))
+            {
+                r.AssignedGuestIds.Add(guestId);
+                Debug.Log($"成功将客人 {guestId} 分配到房间 {roomId}");
+                return true;
+            }
+
+            return false;
         }
 
         public bool UnassignGuest(string guestId)
         {
             var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
-            if (g == null) return false;
+            if (g == null)
+            {
+                Debug.LogWarning($"客人 {guestId} 未找到！");
+                return false;
+            }
+
             var removed = false;
             foreach (var r in _world.Rooms) removed |= r.AssignedGuestIds.Remove(guestId);
+
+            if (removed)
+                Debug.Log($"成功移除客人 {guestId} 的分配！");
+            else
+                Debug.LogWarning($"客人 {guestId} 没有被分配到任何房间！");
+
             return removed;
         }
 
@@ -61,6 +124,8 @@ namespace ScreamHotel.Systems
         {
             foreach (var r in _world.Rooms) r.AssignedGhostIds.Clear();
             foreach (var g in _world.Ghosts) if (g.State == GhostState.Working) g.State = GhostState.Idle;
+
+            Debug.Log("所有分配已清除！");
         }
     }
 }

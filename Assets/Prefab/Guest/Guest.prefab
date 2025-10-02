@@ -151,6 +151,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guestId: 
   game: {fileID: 0}
+  _gv: {fileID: 1405231193131883442}
+  guestPrefab: {fileID: 1574427931262770029, guid: 9171ea385eb5943668ff8f3d09d6543a, type: 3}
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 30

@@ -73,8 +73,7 @@ namespace ScreamHotel.Systems
 
                 r.Level = 3;
                 r.Capacity = rules.capacityLv3; // 扩容
-                if (rules.lv3HasTag && r.RoomTag == null) { /* 如需在Lv3强制保留Tag，可按设计处理 */ }
-
+    
                 EventBus.Raise(new GoldChanged(_world.Economy.Gold));
                 EventBus.Raise(new RoomUpgradedEvent(r.Id, r.Level));
                 return true;

@@ -1,4 +1,3 @@
-using ScreamHotel.Core;
 using UnityEngine;
 using ScreamHotel.Domain;
 using ScreamHotel.UI;
@@ -17,11 +16,7 @@ namespace ScreamHotel.Presentation
         public GameObject[] lv1Set;
         public GameObject[] lv2Set;
         public GameObject[] lv3Set;
-
-        [Header("UI (Optional)")]
-        public TextMesh label;
         
-        // RoomView.cs（追加字段）
         [Header("Guest Anchors (optional)")]
         public Transform[] guestAnchors;
 
@@ -34,7 +29,6 @@ namespace ScreamHotel.Presentation
                 // 确保每个实例有独立材质
                 _baseColor = plate.material.color;
             }
-            if (label && string.IsNullOrEmpty(label.text)) label.text = "Room";
         }
 
         public void Bind(Room room)
@@ -42,14 +36,17 @@ namespace ScreamHotel.Presentation
             roomId = room.Id;
             EnsureAnchors(room.Capacity);
             Refresh(room);
+
+            // 在绑定之后设置 RoomDropZone 的 roomId
+            var roomDropZone = GetComponentInParent<RoomDropZone>();
+            if (roomDropZone != null)
+            {
+                roomDropZone.SetRoomId(roomId);  // 设置 RoomDropZone 的 roomId
+            }
         }
 
         public void Refresh(Room room)
         {
-            // 文本
-            var tag = room.RoomTag.HasValue ? room.RoomTag.Value.ToString() : "-";
-            if (label) label.text = $"{room.Id}  Lv{room.Level}  [{tag}]  Cap:{room.Capacity}";
-
             EnsureAnchors(room.Capacity);
             ApplyVisualByLevel(room);
             TintByTag(room);

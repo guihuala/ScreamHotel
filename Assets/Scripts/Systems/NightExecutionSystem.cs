@@ -96,7 +96,7 @@ namespace ScreamHotel.Systems
         }
     }
 
-    // ====== 结果结构（可保持你现有的类型命名） ======
+    // ====== 结果结构 ======
     public class NightResolved : IGameEvent
     {
         public int TotalGold;
