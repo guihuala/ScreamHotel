@@ -1,8 +1,9 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ScreamHotel.Core;
 using ScreamHotel.Domain;
+using UnityEngine;
 
 namespace ScreamHotel.Systems
 {
@@ -19,10 +20,7 @@ namespace ScreamHotel.Systems
 
             foreach (var room in _world.Rooms)
             {
-                // 1) 收集该房间“有效恐惧集合”（鬼 Main/Sub + 房间Tag）
                 var effectiveTags = CollectEffectiveFearTags(room);
-
-                // 2) 针对该房间分配的每位客人逐个结算
                 var rr = new RoomNightResult { RoomId = room.Id, GuestResults = new List<GuestNightResult>() };
 
                 foreach (var guestId in room.AssignedGuestIds)
@@ -51,25 +49,19 @@ namespace ScreamHotel.Systems
                 result.RoomResults.Add(rr);
             }
 
-            // 3) 加钱并返回结果
             _world.Economy.Gold += totalGold;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
             result.TotalGold = totalGold;
 
             EventBus.Raise(result);
+
             return result;
         }
 
-        // ======= Helpers =======
-
-        /// <summary>
-        /// 房间内所有鬼的 Main/Sub ∪ 房间 Tag（若有）
-        /// </summary>
         private HashSet<FearTag> CollectEffectiveFearTags(Room room)
         {
             var set = new HashSet<FearTag>();
 
-            // 鬼
             foreach (var gid in room.AssignedGhostIds)
             {
                 var gh = _world.Ghosts.FirstOrDefault(x => x.Id == gid);
@@ -78,7 +70,6 @@ namespace ScreamHotel.Systems
                 if (gh.Sub.HasValue) set.Add(gh.Sub.Value);
             }
 
-            // 房间 Tag（Lv2/Lv3 可能带装饰恐惧）
             if (room.RoomTag.HasValue) set.Add(room.RoomTag.Value);
 
             return set;
@@ -86,7 +77,6 @@ namespace ScreamHotel.Systems
 
         private HashSet<FearTag> GetGuestVulnerabilities(Guest g)
         {
-            // Domain.Guest.Fears 既已是“怕的东西/易感集合”
             return g.Fears != null ? new HashSet<FearTag>(g.Fears) : new HashSet<FearTag>();
         }
 
@@ -119,4 +109,3 @@ namespace ScreamHotel.Systems
         public List<FearTag> Immunities;    // 客人免疫集合（用于调试展示）
     }
 }
-

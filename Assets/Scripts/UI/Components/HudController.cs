@@ -89,9 +89,7 @@ namespace ScreamHotel.UI
         {
             if (game.State == GameState.NightShow)
             {
-                // 使用随机种子执行黑夜
-                int rngSeed = UnityEngine.Random.Range(0, int.MaxValue);
-                game.StartNightExecution(rngSeed);
+                game.StartNightExecution();
                 
                 // 执行后立即隐藏按钮
                 UpdateExecuteButtonVisibility();
@@ -99,7 +97,7 @@ namespace ScreamHotel.UI
             }
         }
 
-        // 新增：跳过白天按钮点击事件
+        // 跳过白天按钮点击事件
         private void OnSkipDayButtonClicked()
         {
             if (game.State == GameState.Day)
@@ -120,8 +118,7 @@ namespace ScreamHotel.UI
                 executeButton.interactable = shouldShow;
             }
         }
-
-        // 新增：更新跳过白天按钮可见性
+        
         private void UpdateSkipDayButtonVisibility()
         {
             if (skipDayButton != null)

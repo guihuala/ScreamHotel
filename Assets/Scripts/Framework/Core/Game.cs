@@ -23,6 +23,8 @@ namespace ScreamHotel.Core
 
         public GameState State { get; private set; } = GameState.Boot;
         public int DayIndex { get; private set; } = 1;
+        
+        private Material skyboxMaterial;
 
         private AssignmentSystem _assignmentSystem;
         private NightExecutionSystem _executionSystem;
@@ -33,6 +35,7 @@ namespace ScreamHotel.Core
 
         public World World { get; private set; }
 
+ 
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -47,25 +50,20 @@ namespace ScreamHotel.Core
             _buildSystem = new BuildSystem(World);
             _dayPhaseSystem = new DayPhaseSystem(World);
             _progressionSystem = new ProgressionSystem(World);
-            
-            TimeSystem = new TimeSystem();
-            // 初始化为白天状态
+
+            TimeSystem = new TimeSystem(this);
             GoToDay();
         }
-        
-        private Material skyboxMaterial;
 
         private void Start()
         {
             skyboxMaterial = RenderSettings.skybox;
-            UpdateSkyboxTransition();
         }
-
+        
         private void Update()
         {
             TimeSystem.Update(Time.deltaTime);
             UpdateSkyboxTransition();
-            CheckDayNightTransition();
         }
         
         public bool ShopTryReroll()
@@ -113,51 +111,29 @@ namespace ScreamHotel.Core
             return transition;
         }
         
-        private void CheckDayNightTransition()
+        // 直接从白天跳到黑夜展示的快捷方法
+        public void SkipToNightShow()
         {
-            float prev = Mathf.Repeat(
-                TimeSystem.currentTimeOfDay - Time.deltaTime / TimeSystem.dayDurationInSeconds, 1f);
-            float curr = TimeSystem.currentTimeOfDay;
-
-            // 是否跨过阈值（含跨午夜）
-            bool Crossed(float a, float b, float thr)
+            if (State == GameState.Day)
             {
-                if (a <= b) return a < thr && b >= thr;
-                // wrap-around: a > b 表示从接近1跳到接近0
-                return (a < 1f && thr > a) || (thr <= b);
-            }
-
-            if (Crossed(prev, curr, 0.25f))
-            {
-                Debug.Log("[Time] DayStartedEvent @ 0.25");
-                EventBus.Raise(new DayStartedEvent());
-                
-                // 自动从黑夜过渡到白天（包括 Settlement 状态）
-                if (State == GameState.NightShow || State == GameState.Settlement || State == GameState.NightExecute)
-                {
-                    GoToDay();
-                }
-            }
-            if (Crossed(prev, curr, 0.75f))
-            {
-                Debug.Log("[Time] NightStartedEvent @ 0.75");
-                EventBus.Raise(new NightStartedEvent());
-                
-                // 自动从白天过渡到黑夜展示阶段
-                if (State == GameState.Day)
-                {
-                    StartNightShow();
-                }
+                // 设置时间为傍晚，触发黑夜事件
+                TimeSystem.SetNormalizedTime(0.5f);
+                StartNightShow();
             }
         }
         
+        public void StartNightExecution()
+        {
+            TimeSystem.SetNormalizedTime(0.7f);
+            EventBus.Raise(new GameStateChanged(State));
+        }
+
         public void GoToDay()
         {
             State = GameState.Day;
             _dayPhaseSystem.PrepareDay(DayIndex);
             EventBus.Raise(new GameStateChanged(State));
-            
-            // 确保时间系统正常运行
+
             TimeSystem.isPaused = false;
             Debug.Log($"Enter Day {DayIndex}");
         }
@@ -166,51 +142,42 @@ namespace ScreamHotel.Core
         {
             State = GameState.NightShow;
             EventBus.Raise(new GameStateChanged(State));
-            Debug.Log("Enter Night Show phase, waiting for player to execute");
+            Debug.Log("Enter Night Show phase");
         }
-        
-        // 直接从白天跳到黑夜展示的快捷方法
-        public void SkipToNightShow()
-        {
-            if (State == GameState.Day)
-            {
-                // 设置时间为傍晚，触发黑夜事件
-                TimeSystem.SetNormalizedTime(0.75f);
-                StartNightShow();
-            }
-        }
-        
-        public void StartNightExecution(int rngSeed)
-        {
-            if (State != GameState.NightShow)
-            {
-                Debug.LogWarning("Can only execute during Night Show phase!");
-                return;
-            }
 
+        public void StartNightExecute()
+        {
             State = GameState.NightExecute;
             EventBus.Raise(new GameStateChanged(State));
+            Debug.Log("Enter Night Execute phase");
 
-            // 暂停时间
-            TimeSystem.isPaused = true;
-
-            // 调用无参 ResolveNight()
-            var results = _executionSystem.ResolveNight();
-            EventBus.Raise(new NightResolved(results));
-
-            State = GameState.Settlement;
-            EventBus.Raise(new GameStateChanged(State));
-
-            // 天数递增
-            DayIndex++;
-
-            Debug.Log($"Night execution completed, preparing for Day {DayIndex}");
-            
-            // 立即设置时间为接近早晨，让时间自然过渡到白天
-            TimeSystem.SetNormalizedTime(0.24f); // 设置为早晨前一刻
-            TimeSystem.isPaused = false; // 恢复时间流动
+            // 执行夜晚的相关逻辑
+            ExecuteNightActions();
         }
 
+        private void ExecuteNightActions()
+        {
+            Debug.Log("Performing NightExecute actions...");
+
+            // 在此处添加 NightExecute 阶段的具体逻辑，比如结算、清理等
+            var results = _executionSystem.ResolveNight();
+            EventBus.Raise(new NightResolved(results));
+        }
+
+        public void StartSettlement()
+        {
+            State = GameState.Settlement;
+            EventBus.Raise(new GameStateChanged(State));
+            Debug.Log("Enter Settlement phase");
+            
+            // 显示结算面板
+            DisplaySettlementUI();
+        }
+
+        private void DisplaySettlementUI()
+        {
+            Debug.Log("Displaying settlement UI.");
+        }
         
         private void SeedInitialWorld(World w)
         {

@@ -27,7 +27,7 @@ namespace ScreamHotel.Systems
             {
                 string id = $"Guest_{++_seq:0000}";
                 
-                var guest = new ScreamHotel.Domain.Guest
+                var guest = new Guest
                 {
                     Id = id,
                     // 给一点基础数据，避免后续空引用
