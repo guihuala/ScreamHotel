@@ -55,15 +55,13 @@ namespace ScreamHotel.Presentation
             var db = game != null ? game.dataManager?.Database : null;
             if (db == null) return null;
 
-            // 以 TypeId 精准命中（你的数据库里 GuestTypes 用 id 作为 key）
             if (!string.IsNullOrEmpty(g.TypeId) && db.GuestTypes.TryGetValue(g.TypeId, out var cfg))
                 return cfg;
-
-            // 兜底：如果没有 TypeId（老存档/测试），可以按你自定义逻辑去找
+            
             return null;
         }
 
-        // ====== Apply Appearance（与 PawnView 对齐的实现方式） ======
+        // ====== Apply Appearance） ======
         private void ApplyConfigAppearance(GuestTypeConfig cfg)
         {
             if (cfg == null)
@@ -127,6 +125,74 @@ namespace ScreamHotel.Presentation
                 yield return null;
             }
             transform.position = to;
+        }
+        
+        public GameObject BuildVisualPreview(string layerName = "Ignore Raycast")
+        {
+            var previewRoot = new GameObject($"{name}_Preview");
+
+            // 选一个“可视根”做对齐基准：优先 replaceRoot，否则用当前 GuestView 的 transform
+            Transform visualRoot = (replaceRoot != null && replaceRoot.childCount > 0) ? replaceRoot : transform;
+
+            // 1) 预览根对齐到可视根的【世界变换】
+            previewRoot.transform.position = visualRoot.position;
+            previewRoot.transform.rotation = visualRoot.rotation;
+            // 预览根在世界根下，所以直接使用可视根的 lossyScale 作为预览根的 localScale
+            previewRoot.transform.localScale = visualRoot.lossyScale;
+
+            // 设层，避免点击
+            int lyr = LayerMask.NameToLayer(layerName);
+            if (lyr >= 0) SetLayerRecursively(previewRoot, lyr);
+
+            // 2) 克隆：如果有 replaceRoot 的子物体，就把它们按【世界变换】克到预览根下
+            if (replaceRoot != null && replaceRoot.childCount > 0)
+            {
+                for (int i = 0; i < replaceRoot.childCount; i++)
+                {
+                    var child = replaceRoot.GetChild(i).gameObject;
+                    // instantiateInWorldSpace = true 以保留世界姿态
+                    var clone = Instantiate(child, previewRoot.transform, true);
+                    SanitizePreviewNode(clone);
+                }
+                return previewRoot;
+            }
+
+            // 否则按 renderers/body 克
+            var targets = (renderers != null && renderers.Length > 0)
+                ? renderers
+                : (body != null ? new[] { body } : null);
+
+            if (targets != null)
+            {
+                foreach (var r in targets)
+                {
+                    if (!r) continue;
+                    var clone = Instantiate(r.gameObject, previewRoot.transform, true); // 保留世界姿态
+                    SanitizePreviewNode(clone);
+                }
+            }
+
+            return previewRoot;
+        }
+
+        private static void SanitizePreviewNode(GameObject go)
+        {
+            // 禁用碰撞与刚体
+            foreach (var c in go.GetComponentsInChildren<Collider>(true)) c.enabled = false;
+            foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) Destroy(rb);
+
+            // 删除所有非渲染/动画的脚本，避免逻辑运行
+            foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (mb is Animator) continue;
+                Destroy(mb);
+            }
+        }
+
+        private static void SetLayerRecursively(GameObject go, int layer)
+        {
+            go.layer = layer;
+            foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
         }
     }
 }

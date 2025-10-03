@@ -9,23 +9,26 @@ namespace ScreamHotel.Presentation
     {
         [Header("Binding")]
         public Core.Game game;
-        public GameObject ghostPrefab;  // 用于创建虚影的预制件
+        
+        [Header("Preview")]
+        public bool cloneFromSelf = true;
+        public string ignoreRaycastLayer = "Ignore Raycast";
 
         [Header("Drag (XY plane)")]
         public int dragMouseButton = 0;
-        public float dragPlaneZ = 0f;       // 鼠标投射到 z=常量 的平面
-        public float followLerp = 30f;      // 拖拽跟随插值
-        
-        private PawnView _pv;  // 原始鬼怪视图
+        public float dragPlaneZ = 0f;
+        public float followLerp = 30f;
+
+        private PawnView _pv;
         private string ghostId;
-        
+
         private Camera _cam;
         private bool _dragging;
         private Vector3 _targetPos;
         private float _fixedZ;
         private Coroutine _returnCoro;
-        private RoomDropZone _hoverZone;    // 当前悬停的房间区
-        private GameObject _ghostPreview;  // 虚影对象（预制件）
+        private RoomDropZone _hoverZone;
+        private GameObject _ghostPreview;  // 虚影对象
 
         void Awake()
         {
@@ -33,10 +36,9 @@ namespace ScreamHotel.Presentation
             _fixedZ = transform.position.z;
             _targetPos = transform.position;
             if (game == null) game = FindObjectOfType<Core.Game>();
-            
-            if (_pv == null) _pv = GetComponent<PawnView>();  // 获取 PawnView 组件
+            if (_pv == null) _pv = GetComponent<PawnView>();
         }
-        
+
         public void SetGhostId(string id)
         {
             ghostId = id;
@@ -45,14 +47,7 @@ namespace ScreamHotel.Presentation
 
         void Update()
         {
-            // 如果没有虚影，创建虚影预制件
-            if (!_ghostPreview && _dragging)
-            {
-                _ghostPreview = Instantiate(ghostPrefab);
-                _ghostPreview.transform.position = transform.position;
-            }
-
-            // 开始拖拽（点击到自己）
+            // 开始拖拽
             if (Input.GetMouseButtonDown(dragMouseButton) && PointerHitsSelf())
             {
                 _dragging = true;
@@ -60,46 +55,77 @@ namespace ScreamHotel.Presentation
 
                 _targetPos = MouseOnPlaneZ(dragPlaneZ);
                 _targetPos.z = _fixedZ;
-            }
 
-            // 拖拽中：虚影跟随 + 悬停高亮
-            if (_dragging)
-            {
+                // —— 构建虚影（优先克隆自身外观） ——
+                if (_ghostPreview == null)
+                    _ghostPreview = BuildPreviewFromSelfOrPrefab();
                 if (_ghostPreview != null)
                 {
-                    _targetPos = MouseOnPlaneZ(dragPlaneZ);
-                    _targetPos.z = _fixedZ;
-                    _ghostPreview.transform.position = Vector3.Lerp(_ghostPreview.transform.position, _targetPos,
-                        Time.deltaTime * followLerp);
-
-                    var zone = ZoneUnderPointer();
-                    if (zone != _hoverZone)
-                    {
-                        if (_hoverZone) _hoverZone.ClearFeedback();
-                        _hoverZone = zone;
-                    }
-
-                    if (_hoverZone) _hoverZone.ShowHoverFeedback(ghostId);
+                    _ghostPreview.transform.position = transform.position;
+                    _ghostPreview.transform.rotation = transform.rotation;
+                    _ghostPreview.transform.localScale = transform.lossyScale;
                 }
             }
 
-            // 放置时：检查是否可以分配并将虚影附加到锚点
+            // 拖拽中
+            if (_dragging && _ghostPreview != null)
+            {
+                _targetPos = MouseOnPlaneZ(dragPlaneZ);
+                _targetPos.z = _fixedZ;
+                _ghostPreview.transform.position =
+                    Vector3.Lerp(_ghostPreview.transform.position, _targetPos, Time.deltaTime * followLerp);
+
+                var zone = ZoneUnderPointer();
+                if (zone != _hoverZone)
+                {
+                    if (_hoverZone) _hoverZone.ClearFeedback();
+                    _hoverZone = zone;
+                }
+                if (_hoverZone) _hoverZone.ShowHoverFeedback(ghostId);
+            }
+
+            // 结束拖拽
             if (_dragging && Input.GetMouseButtonUp(dragMouseButton))
             {
                 _dragging = false;
 
                 if (_hoverZone != null)
                 {
-                    if (_hoverZone.TryDrop(ghostId, true, out var anchor)) // 传入 true 表示这是鬼怪
+                    if (_hoverZone.TryDrop(ghostId, true, out var anchor))
                     {
-                        if (anchor) _pv.MoveTo(anchor, 0.12f); // 将鬼怪移动到目标锚点
+                        if (anchor) _pv.MoveTo(anchor, 0.12f);
                     }
                     _hoverZone.ClearFeedback();
                     _hoverZone = null;
                 }
 
-                // 放置后销毁虚影
+                CleanupPreview();
+            }
+        }
+        
+        private GameObject BuildPreviewFromSelfOrPrefab()
+        {
+            if (_pv == null) _pv = GetComponent<PawnView>();
+            GameObject preview = null;
+
+            if (cloneFromSelf && _pv != null)
+            {
+                preview = _pv.BuildVisualPreview(ignoreRaycastLayer);
+            }
+            else
+            {
+                Debug.LogWarning("[DraggablePawn] 预览失败：既未开启 cloneFromSelf，也未提供 ghostPrefab。");
+            }
+
+            return preview;
+        }
+
+        private void CleanupPreview()
+        {
+            if (_ghostPreview != null)
+            {
                 Destroy(_ghostPreview);
+                _ghostPreview = null;
             }
         }
 
@@ -113,9 +139,7 @@ namespace ScreamHotel.Presentation
         private Vector3 MouseOnPlaneZ(float planeZ)
         {
             var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            if (Mathf.Abs(ray.direction.z) < 1e-5f)
-                return transform.position; // 射线几乎平行于平面时兜底
-
+            if (Mathf.Abs(ray.direction.z) < 1e-5f) return transform.position;
             float t = (planeZ - ray.origin.z) / ray.direction.z;
             t = Mathf.Max(t, 0f);
             return ray.origin + ray.direction * t;
@@ -129,11 +153,24 @@ namespace ScreamHotel.Presentation
             return null;
         }
 
-        private static T GetSystem<T>(object obj, string field) where T : class
+        // —— 工具：把 fromRoot 里的渲染器材质复制到 toRoot（用于 prefab 回退方案） ——
+        private static void CopyRendererMaterials(Transform fromRoot, Transform toRoot)
         {
-            var f = obj.GetType().GetField(field,
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            return f?.GetValue(obj) as T;
+            var fromR = fromRoot.GetComponentsInChildren<Renderer>(true);
+            var toR   = toRoot.GetComponentsInChildren<Renderer>(true);
+            int n = Mathf.Min(fromR.Length, toR.Length);
+            for (int i = 0; i < n; i++)
+            {
+                // 为避免实例化开支，这里用 sharedMaterials；如需可改成 materials
+                toR[i].sharedMaterials = fromR[i].sharedMaterials;
+                toR[i].enabled = fromR[i].enabled;
+            }
+        }
+
+        private static void SetLayerRecursively(GameObject go, int layer)
+        {
+            go.layer = layer;
+            foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
         }
     }
 }

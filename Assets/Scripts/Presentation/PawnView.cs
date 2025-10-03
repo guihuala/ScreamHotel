@@ -106,5 +106,67 @@ namespace ScreamHotel.Presentation
             }
             transform.position = to;
         }
+        
+        public GameObject BuildVisualPreview(string layerName = "Ignore Raycast")
+        {
+            var previewRoot = new GameObject($"{name}_Preview");
+
+            Transform visualRoot = (replaceRoot != null && replaceRoot.childCount > 0) ? replaceRoot : transform;
+
+            // 1) 预览根对齐到可视根的【世界变换】
+            previewRoot.transform.position = visualRoot.position;
+            previewRoot.transform.rotation = visualRoot.rotation;
+            previewRoot.transform.localScale = visualRoot.lossyScale;
+
+            int lyr = LayerMask.NameToLayer(layerName);
+            if (lyr >= 0) SetLayerRecursively(previewRoot, lyr);
+
+            // 2) 克隆 replaceRoot 子物体（保留世界姿态）
+            if (replaceRoot != null && replaceRoot.childCount > 0)
+            {
+                for (int i = 0; i < replaceRoot.childCount; i++)
+                {
+                    var child = replaceRoot.GetChild(i).gameObject;
+                    var clone = Instantiate(child, previewRoot.transform, true); // 保留世界姿态
+                    SanitizePreviewNode(clone);
+                }
+                return previewRoot;
+            }
+
+            // 否则按 renderers/body 克
+            var targets = (renderers != null && renderers.Length > 0)
+                ? renderers
+                : (body != null ? new[] { body } : null);
+
+            if (targets != null)
+            {
+                foreach (var r in targets)
+                {
+                    if (!r) continue;
+                    var clone = Instantiate(r.gameObject, previewRoot.transform, true); // 保留世界姿态
+                    SanitizePreviewNode(clone);
+                }
+            }
+
+            return previewRoot;
+        }
+
+        private static void SanitizePreviewNode(GameObject go)
+        {
+            foreach (var c in go.GetComponentsInChildren<Collider>(true)) c.enabled = false;
+            foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) Destroy(rb);
+
+            foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (mb is Animator) continue;
+                Destroy(mb);
+            }
+        }
+
+        private static void SetLayerRecursively(GameObject go, int layer)
+        {
+            go.layer = layer;
+            foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
+        }
     }
 }
