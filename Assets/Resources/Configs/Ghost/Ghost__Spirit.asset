@@ -15,5 +15,6 @@ MonoBehaviour:
   id: Ghost_Spirit
   main: 0
   subRestriction: 0
-  baseScare: 35
-  recruitCost: 120
+  overrideMaterial: {fileID: 2100000, guid: 734fa75073481e54aa3c982981ed9689, type: 2}
+  prefabOverride: {fileID: 0}
+  icon: {fileID: 0}

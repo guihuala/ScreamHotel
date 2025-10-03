@@ -11,12 +11,12 @@ namespace ScreamHotel.Systems
         private readonly World _world;
         private readonly DayGuestSpawner _guestSpawner;
         private readonly GhostShopSystem _ghostShop;
-
-        public DayPhaseSystem(World world)
+        
+        public DayPhaseSystem(World world, Data.ConfigDatabase db)
         {
             _world = world;
-            _guestSpawner = new DayGuestSpawner(world);
-            _ghostShop    = new GhostShopSystem(world);
+            _guestSpawner = new DayGuestSpawner(world, db);
+            _ghostShop    = new GhostShopSystem(world, db);
         }
         
         public void PrepareDay(int dayIndex)

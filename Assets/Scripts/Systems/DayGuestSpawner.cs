@@ -1,69 +1,73 @@
 using System.Collections.Generic;
 using System.Linq;
 using ScreamHotel.Core;
+using UnityEngine;
 using ScreamHotel.Domain;
+using ScreamHotel.Data;
 
-namespace ScreamHotel.Systems
+public class DayGuestSpawner
 {
-    public class DayGuestSpawner
+    private readonly World _world;
+    private readonly ConfigDatabase _db;
+    private readonly System.Random _rng = new System.Random();
+    private int _seq;
+
+    public DayGuestSpawner(World world, ConfigDatabase db)
     {
-        private readonly World _world;
-        private readonly System.Random _rng = new();
+        _world = world;
+        _db = db;
+        _seq = _world?.Guests?.Count ?? 0;
+    }
+    
+    public int SpawnGuests(int count)
+    {
+        if (count <= 0) return 0;
 
-        public DayGuestSpawner(World w)
+        // 1) 取所有类型 id（key）
+        var typeIds = _db?.GuestTypes?.Keys?.ToList();
+        if (typeIds == null || typeIds.Count == 0)
         {
-            _world = w;
+            Debug.LogWarning("[DayGuestSpawner] Database.GuestTypes 为空，无法生成客人。");
+            return 0;
         }
-        
-        private int _seq = 0;
-        
-        public int SpawnGuests(int count)
+
+        // 2) 备用：随机弱点（当前结算依赖 g.Fears）
+        var fearValues = (FearTag[])System.Enum.GetValues(typeof(FearTag));
+
+        int spawned = 0;
+        for (int i = 0; i < count; i++)
         {
-            int spawned = 0;
+            string id = $"Guest_{++_seq:0000}";
+            string typeId = typeIds[_rng.Next(typeIds.Count)];
 
-            // 随机恐惧枚举（保留）
-            var fearValues = (FearTag[])System.Enum.GetValues(typeof(FearTag));
+            // 3) 查类型配置（可为空）
+            _db.GuestTypes.TryGetValue(typeId, out var typeCfg);
 
-            // 从配置数据库获取所有 guestType id
-            var guestTypeIds = _world.Config.GuestTypes.Keys.ToList();
-
-            for (int i = 0; i < count; i++)
+            // 4) 生成 Guest，并尽可能从配置带出数值
+            var g = new Guest
             {
-                string id = $"Guest_{++_seq:0000}";
+                Id = id,
+                TypeId = typeId,
 
-                // 随机选一个类型ID
-                string typeId = guestTypeIds[_rng.Next(guestTypeIds.Count)];
+                // 结算所需：给一个弱点
+                Fears = new List<FearTag> { fearValues[_rng.Next(fearValues.Length)] },
 
-                var guest = new Guest
-                {
-                    Id = id,
-                    Fears = new List<FearTag>
-                    {
-                        fearValues[_rng.Next(fearValues.Length)]
-                    },
-                    BarMax = 100f,
-                    RequiredPercent = 0.6f,
-                    BaseFee = 50,
-                    TypeId = typeId
-                };
+                // 数值从配置带出
+                BaseFee = typeCfg != null ? typeCfg.baseFee : 50,
+                BarMax = typeCfg != null ? typeCfg.barMax : 100f,
+                RequiredPercent = typeCfg != null ? typeCfg.requiredPercent : 0.8f,
+            };
 
-                _world.Guests.Add(guest);
-                EventBus.Raise(new GuestSpawnedEvent(id));
-                spawned++;
+            // 5) 免疫从配置带出
+            if (typeCfg != null && typeCfg.immunities != null && typeCfg.immunities.Count > 0)
+            {
+                g.Fears = new List<FearTag>(typeCfg.immunities);
             }
 
-            return spawned;
+            _world.Guests.Add(g);
+            spawned++;
         }
 
-    }
-
-    public readonly struct GuestSpawnedEvent
-    {
-        public readonly string Id;
-
-        public GuestSpawnedEvent(string id)
-        {
-            Id = id;
-        }
+        return spawned;
     }
 }

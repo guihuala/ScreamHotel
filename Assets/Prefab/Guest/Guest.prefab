@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 210128980180084996}
   - component: {fileID: 5902507591843824500}
   - component: {fileID: 5698494083993245043}
-  - component: {fileID: 1405231193131883442}
+  - component: {fileID: 3513860939847209319}
   m_Layer: 0
   m_Name: Guest
   m_TagString: Untagged
@@ -149,14 +149,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92a4214603557403a99bf90b3289aa2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  guestId: 
   game: {fileID: 0}
-  _gv: {fileID: 1405231193131883442}
   guestPrefab: {fileID: 1574427931262770029, guid: 9171ea385eb5943668ff8f3d09d6543a, type: 3}
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 30
---- !u!114 &1405231193131883442
+--- !u!114 &3513860939847209319
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -165,7 +163,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 7714624583527147650}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72a3165f0a4d44661aef236f2ea9a494, type: 3}
+  m_Script: {fileID: 11500000, guid: 81b09b06bd6d5475ea64a10be080bb45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   guestId: 
+  body: {fileID: 5488831912350459067}

@@ -51,7 +51,7 @@ namespace ScreamHotel.Core
             _assignmentSystem = new AssignmentSystem(World);
             _executionSystem = new NightExecutionSystem(World);
             _buildSystem = new BuildSystem(World);
-            _dayPhaseSystem = new DayPhaseSystem(World);
+            _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database);
             _progressionSystem = new ProgressionSystem(World);
 
             TimeSystem = new TimeSystem(this);

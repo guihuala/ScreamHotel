@@ -13,40 +13,57 @@ namespace ScreamHotel.Systems
         private readonly World _world;
         private readonly Random _rng = new();
 
-        public GhostShopSystem(World world)
+        private readonly Data.ConfigDatabase _db;
+
+        public GhostShopSystem(World world, Data.ConfigDatabase db)
         {
             _world = world;
+            _db = db;
         }
-        
+  
         private void GenerateOffers(int dayIndex, int count, bool unique)
         {
             _world.Shop.Offers.Clear();
-            var all = (FearTag[])Enum.GetValues(typeof(FearTag));
-            var pool = all.ToList();
 
+            // 从数据库拿所有鬼的配置id
+            var keys = _db.Ghosts.Keys.ToList();
+            if (keys.Count == 0)
+            {
+                Debug.LogWarning("No GhostConfig in Database."); 
+                _world.Shop.DayLastRefreshed = dayIndex;
+                return;
+            }
+
+            var used = new HashSet<string>();
             for (int i = 0; i < count; i++)
             {
-                FearTag main;
-                if (unique && pool.Count > 0)
+                string cfgId;
+                if (unique)
                 {
-                    int idx = _rng.Next(pool.Count);
-                    main = pool[idx];
-                    pool.RemoveAt(idx);
+                    // 唯一：不重复 configId
+                    var candidates = keys.Where(k => !used.Contains(k)).ToList();
+                    if (candidates.Count == 0) break;
+                    cfgId = candidates[_rng.Next(candidates.Count)];
+                    used.Add(cfgId);
                 }
                 else
                 {
-                    main = all[_rng.Next(all.Length)];
+                    cfgId = keys[_rng.Next(keys.Count)];
                 }
+
+                var cfg = _db.Ghosts[cfgId];
 
                 _world.Shop.Offers.Add(new GhostOffer
                 {
-                    OfferId = $"Offer_{dayIndex}_{i + 1}",
-                    Main = main
+                    OfferId  = $"Offer_{dayIndex}_{i + 1}",
+                    ConfigId = cfgId,
+                    Main     = cfg.main     // 供UI展示；购买时也能一致
                 });
             }
+
             _world.Shop.DayLastRefreshed = dayIndex;
         }
-        
+    
         public void RefreshDaily(int dayIndex, bool force = false)
         {
             var rules = _world.Config?.Rules;
@@ -72,30 +89,34 @@ namespace ScreamHotel.Systems
             GenerateOffers(dayIndex, remaining, unique: rules.ghostShopUniqueMains);
             return true;
         }
-
-
+        
         // 购买指定槽位：扣钱，加入世界鬼列表，并从货架移除
         public bool TryBuy(int slotIndex, out string newGhostId)
         {
-            Debug.Log($"TryBuy {slotIndex}");
             newGhostId = null;
             var rules = _world.Config?.Rules;
             if (rules == null) return false;
             if (slotIndex < 0 || slotIndex >= _world.Shop.Offers.Count) return false;
-            var offer = _world.Shop.Offers[slotIndex];
 
+            var offer = _world.Shop.Offers[slotIndex];
             if (_world.Economy.Gold < rules.ghostShopPrice) return false;
+
+            // 从报价指向的配置生成
+            if (!_db.Ghosts.TryGetValue(offer.ConfigId, out var cfg))
+            {
+                Debug.LogError($"Ghost config not found: {offer.ConfigId}");
+                return false;
+            }
 
             _world.Economy.Gold -= rules.ghostShopPrice;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
 
-            // 生成一只新鬼加入世界
             newGhostId = $"G_shop_{DateTime.UtcNow.Ticks % 1000000:000000}";
             _world.Ghosts.Add(new Ghost
             {
-                Id = newGhostId,
-                Main = offer.Main,
-                Sub = null,
+                Id    = newGhostId,
+                Main  = cfg.main,
+                Sub   = null,
                 State = GhostState.Idle,
                 DaysForcedRest = 0
             });

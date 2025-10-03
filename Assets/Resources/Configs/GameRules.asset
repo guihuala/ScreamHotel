@@ -12,11 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24218c0750fe24e4e859ea0216b9f033, type: 3}
   m_Name: GameRules
   m_EditorClassIdentifier: 
+  dayGuestSpawnCount: 4
   mainBonus: 0.3
   subBonus: 0.15
   roomBonus: 0.1
-  fatiguePerNight: 0.1
-  fatigueRestRecover: 0.3
-  highFatiguePenalty: 0.2
-  forcedRestDaysOnCounter: 2
-  minGoldMultiplier: 0
+  ghostShopSlots: 3
+  ghostShopPrice: 100
+  ghostShopRerollCost: 50
+  ghostShopUniqueMains: 0
+  shopSpawnBaseScare: 10
+  floorBuildBaseCost: 500
+  floorCostGrowth: 1.25
+  roomUpgradeCosts: c800000090010000
+  roomBuyCost: 200
+  capacityLv1: 1
+  capacityLv3: 2
+  lv2HasTag: 1
+  lv3HasTag: 1

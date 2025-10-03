@@ -43,8 +43,9 @@ namespace ScreamHotel.Domain
     // ---- 商店状态与货架条目 ----
     public class GhostOffer
     {
-        public string OfferId;     // "Offer_第几天_序号"
-        public FearTag Main;       // 鬼的主恐惧，作为“品种”
+        public string OfferId;
+        public string ConfigId;
+        public FearTag Main;
     }
     
     public class ShopState

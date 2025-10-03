@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startGold: 9999
   startRoomCount: 8
-  starterGhostMains: 0000000001000000
+  starterGhosts:
+  - {fileID: 11400000, guid: c3365b6df210d40bc88fa0b5146512c5, type: 2}

@@ -12,12 +12,11 @@ namespace ScreamHotel.Presentation
         public string ghostId;
 
         [Header("Render Hooks")]
-        public MeshRenderer[] renderers;   // ← 改成数组，便于多子网格同时上色
-        public Transform replaceRoot;      // ← 若要整体替换外观Prefab，作为父节点（可选）
+        public MeshRenderer[] renderers;
+        public Transform replaceRoot;
 
         [Header("Fallback")]
-        public MeshRenderer body;          // 兼容旧字段：若未设置 renderers，则用它
-        public Color emissionBoost = new Color(0,0,0,0); // 如需发光可用（可选）
+        public MeshRenderer body;
 
         public void BindGhost(Ghost g)
         {
@@ -26,7 +25,7 @@ namespace ScreamHotel.Presentation
             
             GhostConfig cfg = FindGhostConfig(g);
             
-            bool applied = ApplyConfigAppearance(cfg);
+            ApplyConfigAppearance(cfg);
 
             // 把 id 传给可拖拽组件
             var draggable = GetComponentInParent<DraggablePawn>();
@@ -35,11 +34,9 @@ namespace ScreamHotel.Presentation
 
         private GhostConfig FindGhostConfig(Ghost g)
         {
-            // 优先从 DataManager/Database 查找；这里按你的项目结构拿 Game → DataManager → Database
             var game = FindObjectOfType<Game>();
             var db   = game != null ? game.dataManager?.Database : null;
-
-            // 假设 Database 有 Ghosts 字典，按 id 存；若你的 Database 接口不同，替换成你的获取方式即可
+            
             GhostConfig cfg = null;
             if (db != null)
             {
