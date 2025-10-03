@@ -20,19 +20,22 @@ namespace ScreamHotel.Core
     {
         [Header("Entry References")] public DataManager dataManager;
         public InitialSetupConfig initialSetup;
-
+        
+        [SerializeField] private float skyTransitionSpeed = 3f;
+        
         public GameState State { get; private set; } = GameState.Boot;
         public int DayIndex { get; private set; } = 1;
         
         private Material skyboxMaterial;
+        private float _skyTransition;
 
         private AssignmentSystem _assignmentSystem;
         private NightExecutionSystem _executionSystem;
         private BuildSystem _buildSystem;
         private DayPhaseSystem _dayPhaseSystem;
         private ProgressionSystem _progressionSystem;
+        
         public TimeSystem TimeSystem { get; private set; }
-
         public World World { get; private set; }
 
  
@@ -58,8 +61,9 @@ namespace ScreamHotel.Core
         private void Start()
         {
             skyboxMaterial = RenderSettings.skybox;
+            _skyTransition = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
         }
-        
+
         private void Update()
         {
             TimeSystem.Update(Time.deltaTime);
@@ -79,46 +83,33 @@ namespace ScreamHotel.Core
 
         private void UpdateSkyboxTransition()
         {
-            if (skyboxMaterial != null)
-            {
-                float transition = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
-                skyboxMaterial.SetFloat("_CubemapTransition", transition);
-            }
+            if (skyboxMaterial == null) return;
+
+            float target = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
+            _skyTransition = Mathf.MoveTowards(
+                _skyTransition, 
+                target, 
+                skyTransitionSpeed * Time.deltaTime
+            );
+
+            skyboxMaterial.SetFloat("_CubemapTransition", Mathf.Clamp01(_skyTransition));
         }
 
         private float CalculateSkyTransition(float timeOfDay)
         {
-            float transition;
+            float transition = timeOfDay;
 
-            if (timeOfDay < 0.25f)
-            {
-                transition = 1f - (timeOfDay / 0.25f);
-            }
-            else if (timeOfDay < 0.5f)
-            {
-                transition = (timeOfDay - 0.25f) / 0.25f;
-            }
-            else if (timeOfDay < 0.75f)
-            {
-                transition = 1f - ((timeOfDay - 0.5f) / 0.25f);
-            }
-            else // 傍晚到午夜
-            {
-                transition = ((timeOfDay - 0.75f) / 0.25f);
-            }
+            transition = Mathf.SmoothStep(0f, 1f, transition);
             
-            transition = Mathf.SmoothStep(0, 1, transition);
-            return transition;
+            return Mathf.Clamp01(transition);
         }
         
-        // 直接从白天跳到黑夜展示的快捷方法
         public void SkipToNightShow()
         {
             if (State == GameState.Day)
             {
                 // 设置时间为傍晚，触发黑夜事件
                 TimeSystem.SetNormalizedTime(0.5f);
-                StartNightShow();
             }
         }
         
@@ -135,7 +126,6 @@ namespace ScreamHotel.Core
             EventBus.Raise(new GameStateChanged(State));
 
             TimeSystem.isPaused = false;
-            Debug.Log($"Enter Day {DayIndex}");
         }
 
         public void StartNightShow()
