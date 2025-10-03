@@ -60,7 +60,6 @@ namespace ScreamHotel.Presentation
 
                 _targetPos = MouseOnPlaneZ(dragPlaneZ);
                 _targetPos.z = _fixedZ;
-                _ghostPreview.transform.position = _targetPos;
             }
 
             // 拖拽中：虚影跟随 + 悬停高亮

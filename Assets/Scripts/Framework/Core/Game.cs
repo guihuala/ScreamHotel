@@ -206,18 +206,25 @@ namespace ScreamHotel.Core
                 }
             }
 
-            // 开局赠送鬼
             if (w.Ghosts.Count == 0)
             {
                 int idx = 1;
-                foreach (var main in setup.starterGhostMains)
+                
+                if (initialSetup.starterGhosts != null && initialSetup.starterGhosts.Count > 0)
                 {
-                    w.Ghosts.Add(new Ghost
+                    foreach (var cfg in initialSetup.starterGhosts)
                     {
-                        Id = $"G{idx++}",
-                        Main = main,
-                        State = GhostState.Idle
-                    });
+                        if (cfg == null) continue;
+
+                        var ghost = new Ghost
+                        {
+                            Id = $"G{idx++}", // 实例唯一ID
+                            Main = cfg.main, // 从配置读主恐惧
+                            State = GhostState.Idle
+                        };
+
+                        w.Ghosts.Add(ghost);
+                    }
                 }
             }
 

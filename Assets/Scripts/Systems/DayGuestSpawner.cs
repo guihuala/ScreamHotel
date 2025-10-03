@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using ScreamHotel.Core;
 using ScreamHotel.Domain;
 
@@ -18,27 +20,31 @@ namespace ScreamHotel.Systems
         public int SpawnGuests(int count)
         {
             int spawned = 0;
-            
+
+            // 随机恐惧枚举（保留）
             var fearValues = (FearTag[])System.Enum.GetValues(typeof(FearTag));
-            var typeValues =
-                (GuestType[])System.Enum.GetValues(typeof(GuestType));
+
+            // 从配置数据库获取所有 guestType id
+            var guestTypeIds = _world.Config.GuestTypes.Keys.ToList();
 
             for (int i = 0; i < count; i++)
             {
                 string id = $"Guest_{++_seq:0000}";
-                
+
+                // 随机选一个类型ID
+                string typeId = guestTypeIds[_rng.Next(guestTypeIds.Count)];
+
                 var guest = new Guest
                 {
                     Id = id,
-                    // 给一点基础数据，避免后续空引用
-                    Fears = new System.Collections.Generic.List<FearTag>
+                    Fears = new List<FearTag>
                     {
                         fearValues[_rng.Next(fearValues.Length)]
                     },
                     BarMax = 100f,
                     RequiredPercent = 0.6f,
                     BaseFee = 50,
-                    Type = typeValues[_rng.Next(typeValues.Length)]
+                    TypeId = typeId
                 };
 
                 _world.Guests.Add(guest);
@@ -48,6 +54,7 @@ namespace ScreamHotel.Systems
 
             return spawned;
         }
+
     }
 
     public readonly struct GuestSpawnedEvent

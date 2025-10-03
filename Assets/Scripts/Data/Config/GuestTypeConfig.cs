@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using ScreamHotel.Domain;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace ScreamHotel.Data
 {
@@ -14,6 +13,11 @@ namespace ScreamHotel.Data
         public float barMax = 100f;
         [Range(0.5f, 0.99f)] public float requiredPercent = 0.8f;
         public int baseFee = 100;
-        [Header("Counter Rules")] public float counterChance = 0f;
+        
+        [Header("Appearance")]
+        public Color colorTint = Color.white;        // 基础色调
+        public Material overrideMaterial;            // 材质
+        public GameObject prefabOverride;            // 替换模型
+        public Sprite icon;                          // UI显示用图标
     }
 }

@@ -1,26 +1,59 @@
+// GuestView.cs
 using UnityEngine;
 using ScreamHotel.Domain;
+using ScreamHotel.Core;
+using ScreamHotel.Data; // 引入以便查 Game
 
 namespace ScreamHotel.Presentation
 {
     public class GuestView : MonoBehaviour
     {
         public string guestId;
+
+        [Header("Visual")]
+        public MeshRenderer body;
         
         public void BindGuest(string id)
         {
             guestId = id;
-            Debug.Log($"GuestView 绑定了 ID: {guestId}");
-            
-            // 获取 DraggableGuest 并设置 guestId
-            var draggable = GetComponentInParent<DraggableGuest>();
-            if (draggable != null)
+
+            var game = FindObjectOfType<Game>();
+            var g = game?.World?.Guests?.Find(x => x.Id == guestId);
+            if (g == null) return;
+
+            // 查找 GuestTypeConfig
+            var config = game.dataManager.Database.GetGuestType(g.TypeId);
+            if (config != null)
             {
-                draggable.SetGuestId(guestId);  // 在这里设置 guestId
+                ApplyConfig(config);
+            }
+        }
+
+        private void ApplyConfig(GuestTypeConfig config)
+        {
+            if (body != null)
+            {
+                if (config.overrideMaterial != null)
+                    body.material = config.overrideMaterial;
+                else
+                    body.material.color = config.colorTint;
+            }
+            
+            if (config.prefabOverride != null)
+            {
+                foreach (Transform child in transform) Destroy(child.gameObject);
+                Instantiate(config.prefabOverride, transform);
+            }
+
+            // UI 显示用
+            if (config.icon != null)
+            {
+                
             }
         }
 
         public void SnapTo(Vector3 pos) { transform.position = pos; }
+
         public void MoveTo(Transform target, float t = 0.3f)
         {
             StopAllCoroutines();

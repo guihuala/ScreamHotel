@@ -22,7 +22,7 @@ namespace ScreamHotel.Domain
         public float BarMax;
         public float RequiredPercent;
         public int BaseFee;
-        public GuestType Type;
+        public string TypeId;
     }
 
     public class Room
@@ -37,7 +37,6 @@ namespace ScreamHotel.Domain
 
     public class Basement
     {
-     
         public int TrainingSlots;
     }
     
@@ -53,12 +52,10 @@ namespace ScreamHotel.Domain
         public List<GhostOffer> Offers = new(); // 当天货架（长度==规则槽位数）
         public int DayLastRefreshed = -1;       // 上次刷新是哪一天
     }
-
-
+    
     public class Economy
     {
         public int Gold;
-        public int RoomPriceTier;
     }
 
     public class World
