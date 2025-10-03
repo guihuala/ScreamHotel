@@ -34,6 +34,7 @@ namespace ScreamHotel.Core
         private BuildSystem _buildSystem;
         private DayPhaseSystem _dayPhaseSystem;
         private ProgressionSystem _progressionSystem;
+        private GhostTrainer _ghostTrainer;
         
         public TimeSystem TimeSystem { get; private set; }
         public World World { get; private set; }
@@ -53,6 +54,9 @@ namespace ScreamHotel.Core
             _buildSystem = new BuildSystem(World);
             _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database);
             _progressionSystem = new ProgressionSystem(World);
+            
+            _ghostTrainer = new GhostTrainer();
+            _ghostTrainer.Initialize(World); 
 
             TimeSystem = new TimeSystem(this);
             GoToDay();

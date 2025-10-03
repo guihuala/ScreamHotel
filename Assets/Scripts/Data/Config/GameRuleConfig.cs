@@ -34,5 +34,8 @@ namespace ScreamHotel.Data
         public int capacityLv3 = 2;
         [Tooltip("Lv2/3 是否赋予房间恐惧Tag（装饰表现用）")] public bool lv2HasTag = true;
         public bool lv3HasTag = true;
+        
+        [Header("Ghost Training")]
+        public int ghostTrainingTimeDays = 2; // 统一的训练天数（每个鬼怪都相同）
     }
 }

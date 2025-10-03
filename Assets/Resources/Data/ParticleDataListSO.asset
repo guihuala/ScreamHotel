@@ -12,4 +12,118 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 058ca58853a3a453d887ff2ad16f1b28, type: 3}
   m_Name: ParticleDataListSO
   m_EditorClassIdentifier: 
-  particleDataList: []
+  particleDataList:
+  - effectName: CandleLightRed
+    effectPath: Particle/CandleLightRed
+  - effectName: FireFliesYellow
+    effectPath: Particle/FireFliesYellow
+  - effectName: FireworkYellow
+    effectPath: Particle/FireworkYellow
+  - effectName: FireworkYellowCluster
+    effectPath: Particle/FireworkYellowCluster
+  - effectName: FlamethrowerCartoonyFire
+    effectPath: Particle/FlamethrowerCartoonyFire
+  - effectName: GlowOrbYellow
+    effectPath: Particle/GlowOrbYellow
+  - effectName: ItemSkewedGlowYellow
+    effectPath: Particle/ItemSkewedGlowYellow
+  - effectName: ItemSparkleYellow
+    effectPath: Particle/ItemSparkleYellow
+  - effectName: MagicPillarBlastYellow
+    effectPath: Particle/MagicPillarBlastYellow
+  - effectName: MagicShieldYellow
+    effectPath: Particle/MagicShieldYellow
+  - effectName: MagicSphereYellow
+    effectPath: Particle/MagicSphereYellow
+  - effectName: SparkleAreaGreen
+    effectPath: Particle/SparkleAreaGreen
+  - effectName: SpikyFireAdditiveBlue
+    effectPath: Particle/SpikyFireAdditiveBlue
+  - effectName: EmojiAngry
+    effectPath: Particle/Emojis/EmojiAngry
+  - effectName: EmojiClenchTeeth
+    effectPath: Particle/Emojis/EmojiClenchTeeth
+  - effectName: EmojiCool
+    effectPath: Particle/Emojis/EmojiCool
+  - effectName: EmojiCry
+    effectPath: Particle/Emojis/EmojiCry
+  - effectName: EmojiCute
+    effectPath: Particle/Emojis/EmojiCute
+  - effectName: EmojiDerp
+    effectPath: Particle/Emojis/EmojiDerp
+  - effectName: EmojiDisappointed
+    effectPath: Particle/Emojis/EmojiDisappointed
+  - effectName: EmojiDrool
+    effectPath: Particle/Emojis/EmojiDrool
+  - effectName: EmojiHappy
+    effectPath: Particle/Emojis/EmojiHappy
+  - effectName: EmojiHeart
+    effectPath: Particle/Emojis/EmojiHeart
+  - effectName: EmojiKiss
+    effectPath: Particle/Emojis/EmojiKiss
+  - effectName: EmojiLaughSweatdrop
+    effectPath: Particle/Emojis/EmojiLaughSweatdrop
+  - effectName: EmojiNervous
+    effectPath: Particle/Emojis/EmojiNervous
+  - effectName: EmojiPoop
+    effectPath: Particle/Emojis/EmojiPoop
+  - effectName: EmojiPuke
+    effectPath: Particle/Emojis/EmojiPuke
+  - effectName: EmojiQueasy
+    effectPath: Particle/Emojis/EmojiQueasy
+  - effectName: EmojiSad
+    effectPath: Particle/Emojis/EmojiSad
+  - effectName: EmojiShocked
+    effectPath: Particle/Emojis/EmojiShocked
+  - effectName: EmojiAngry2
+    effectPath: Particle/Emojis 2/EmojiAngry2
+  - effectName: EmojiBlush
+    effectPath: Particle/Emojis 2/EmojiBlush
+  - effectName: EmojiCrazy
+    effectPath: Particle/Emojis 2/EmojiCrazy
+  - effectName: EmojiCute
+    effectPath: Particle/Emojis 2/EmojiCute
+  - effectName: EmojiDead
+    effectPath: Particle/Emojis 2/EmojiDead
+  - effectName: EmojiDeadTired
+    effectPath: Particle/Emojis 2/EmojiDeadTired
+  - effectName: EmojiDerpGasp
+    effectPath: Particle/Emojis 2/EmojiDerpGasp
+  - effectName: EmojiEvilLaugh
+    effectPath: Particle/Emojis 2/EmojiEvilLaugh
+  - effectName: EmojiExpressionless
+    effectPath: Particle/Emojis 2/EmojiExpressionless
+  - effectName: EmojiInjured
+    effectPath: Particle/Emojis 2/EmojiInjured
+  - effectName: EmojiKissyface
+    effectPath: Particle/Emojis 2/EmojiKissyface
+  - effectName: EmojiMad
+    effectPath: Particle/Emojis 2/EmojiMad
+  - effectName: EmojiNauseous
+    effectPath: Particle/Emojis 2/EmojiNauseous
+  - effectName: EmojiOwO
+    effectPath: Particle/Emojis 2/EmojiOwO
+  - effectName: EmojiOwOEyebrow
+    effectPath: Particle/Emojis 2/EmojiOwOEyebrow
+  - effectName: EmojiPleading
+    effectPath: Particle/Emojis 2/EmojiPleading
+  - effectName: EmojiSadCry
+    effectPath: Particle/Emojis 2/EmojiSadCry
+  - effectName: EmojiScared
+    effectPath: Particle/Emojis 2/EmojiScared
+  - effectName: EmojiSillyHappy
+    effectPath: Particle/Emojis 2/EmojiSillyHappy
+  - effectName: EmojiSillySmile
+    effectPath: Particle/Emojis 2/EmojiSillySmile
+  - effectName: EmojiSillyWink
+    effectPath: Particle/Emojis 2/EmojiSillyWink
+  - effectName: EmojiSinister
+    effectPath: Particle/Emojis 2/EmojiSinister
+  - effectName: EmojiSleep
+    effectPath: Particle/Emojis 2/EmojiSleep
+  - effectName: EmojiStarstruck
+    effectPath: Particle/Emojis 2/EmojiStarstruck
+  - effectName: EmojiThumbsDown
+    effectPath: Particle/Emojis 2/EmojiThumbsDown
+  - effectName: EmojiThumbsUp
+    effectPath: Particle/Emojis 2/EmojiThumbsUp

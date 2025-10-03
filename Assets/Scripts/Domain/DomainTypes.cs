@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ScreamHotel.Domain
 {
@@ -6,14 +7,19 @@ namespace ScreamHotel.Domain
     public enum GhostState { Idle, Working, Training }
     public enum GuestType { Coward, WhiteCollar, NightOwl, Skeptic, Exorcist }
 
+// Ghost.cs
     public class Ghost
     {
         public string Id;
         public FearTag Main;
         public FearTag? Sub;
         public GhostState State;
-        public int DaysForcedRest;
+        public int DaysForcedRest;  // 强制休息的天数
+        public int TrainingDays;    // 训练期间的天数
+
+        public bool IsTraining => State == GhostState.Training;
     }
+
 
     public class Guest
     {
