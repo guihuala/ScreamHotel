@@ -13,14 +13,10 @@ MonoBehaviour:
   m_Name: GameRules
   m_EditorClassIdentifier: 
   dayGuestSpawnCount: 4
-  mainBonus: 0.3
-  subBonus: 0.15
-  roomBonus: 0.1
   ghostShopSlots: 3
   ghostShopPrice: 100
   ghostShopRerollCost: 50
   ghostShopUniqueMains: 0
-  shopSpawnBaseScare: 10
   floorBuildBaseCost: 500
   floorCostGrowth: 1.25
   roomUpgradeCosts: c800000090010000
@@ -28,4 +24,8 @@ MonoBehaviour:
   capacityLv1: 1
   capacityLv3: 2
   lv2HasTag: 1
-  lv3HasTag: 1
+  ghostTrainingTimeDays: 2
+  dayRatio: 0.7
+  nightShowRatio: 0.1
+  nightExecuteRatio: 0.1
+  settlementRatio: 0.1

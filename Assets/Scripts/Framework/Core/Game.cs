@@ -108,23 +108,62 @@ namespace ScreamHotel.Core
             return Mathf.Clamp01(transition);
         }
         
+        private (float dayEnd, float showEnd, float execEnd) GetPhaseBoundaries()
+        {
+            var rules = World?.Config?.Rules;
+
+            // 默认比例
+            float rDay = 0.50f, rShow = 0.20f, rExec = 0.20f, rSettle = 0.10f;
+
+            if (rules != null)
+            {
+                rDay   = Mathf.Max(0f, rules.dayRatio);
+                rShow  = Mathf.Max(0f, rules.nightShowRatio);
+                rExec  = Mathf.Max(0f, rules.nightExecuteRatio);
+                rSettle= Mathf.Max(0f, rules.settlementRatio);
+                float sum = rDay + rShow + rExec + rSettle;
+                if (sum > 1e-4f)
+                {
+                    rDay   /= sum;
+                    rShow  /= sum;
+                    rExec  /= sum;
+                    rSettle/= sum;
+                }
+                else
+                {
+                    rDay = 0.50f; rShow = 0.20f; rExec = 0.20f; rSettle = 0.10f;
+                }
+            }
+
+            float dayEnd  = rDay;
+            float showEnd = dayEnd + rShow;
+            float execEnd = showEnd + rExec;
+            return (dayEnd, showEnd, execEnd);
+        }
+
         public void SkipToNightShow()
         {
             if (State == GameState.Day)
             {
-                // 设置时间为傍晚，触发黑夜事件
-                TimeSystem.SetNormalizedTime(0.5f);
+                var (dayEnd, _, _) = GetPhaseBoundaries();
+                TimeSystem.SetNormalizedTime(Mathf.Repeat(dayEnd + 0.0001f, 1f));
             }
         }
-        
+
         public void StartNightExecution()
         {
-            TimeSystem.SetNormalizedTime(0.7f);
-            EventBus.Raise(new GameStateChanged(State));
+            var (_, showEnd, _) = GetPhaseBoundaries();
+            TimeSystem.SetNormalizedTime(Mathf.Repeat(showEnd + 0.0001f, 1f));
         }
 
         public void GoToDay()
         {
+            // 如果是从结算阶段返回白天，推进到下一天
+            if (State == GameState.Settlement)
+            {
+                DayIndex++;
+            }
+
             State = GameState.Day;
             _dayPhaseSystem.PrepareDay(DayIndex);
             EventBus.Raise(new GameStateChanged(State));
@@ -152,10 +191,9 @@ namespace ScreamHotel.Core
         private void ExecuteNightActions()
         {
             Debug.Log("Performing NightExecute actions...");
-
-            // 在此处添加 NightExecute 阶段的具体逻辑，比如结算、清理等
-            var results = _executionSystem.ResolveNight();
-            EventBus.Raise(new NightResolved(results));
+            
+            _executionSystem.ResolveNight();
+            
         }
 
         public void StartSettlement()
@@ -231,8 +269,7 @@ namespace ScreamHotel.Core
                     }
                 }
             }
-
-            // 同步金币 UI
+            
             EventBus.Raise(new GoldChanged(w.Economy.Gold));
         }
     }
