@@ -213,10 +213,11 @@ namespace ScreamHotel.Core
         
         public void GoToDay()
         {
-            // 如果是从结算阶段返回白天，推进到下一天
-            if (State == GameState.Settlement)
+            bool fromSettlement = (State == GameState.Settlement);
+            if (fromSettlement)
             {
                 DayIndex++;
+                TimeSystem.SetNormalizedTime(0.0001f);
             }
 
             State = GameState.Day;
@@ -225,6 +226,7 @@ namespace ScreamHotel.Core
 
             TimeSystem.isPaused = false;
         }
+
 
         public void StartNightShow()
         {

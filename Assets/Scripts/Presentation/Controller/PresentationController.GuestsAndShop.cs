@@ -12,9 +12,13 @@ namespace ScreamHotel.Presentation
             foreach (var g in w.Guests)
             {
                 if (_guestViews.ContainsKey(g.Id)) continue;
-                var gv = Instantiate(guestPrefab, guestsRoot);
+                
+                int idx = _guestViews.Count;
+                var pos = GetGuestQueueWorldPos(idx);
+                
+                var gv = Instantiate(guestPrefab, pos, Quaternion.identity, guestsRoot);
                 gv.BindGuest(g.Id);
-                gv.SnapTo(GetGuestQueueWorldPos(_guestViews.Count)); // 生成即站队
+
                 _guestViews[g.Id] = gv;
             }
         }
@@ -23,16 +27,18 @@ namespace ScreamHotel.Presentation
         {
             var w = game.World;
 
-            // 删除不在世界里的旧客人
+            // 删除不在世界里的旧客人（保持不变）
             var alive = new HashSet<string>(w.Guests.Select(g => g.Id));
             var toRemove = _guestViews.Keys.Where(id => !alive.Contains(id)).ToList();
             foreach (var id in toRemove) { SafeDestroy(_guestViews[id]?.gameObject); _guestViews.Remove(id); }
-
-            // 补齐新客
-            foreach (var g in w.Guests)
+            
+            for (int i = 0; i < w.Guests.Count; i++)
             {
+                var g = w.Guests[i];
                 if (_guestViews.ContainsKey(g.Id)) continue;
-                var gv = Instantiate(guestPrefab, guestsRoot);
+
+                var pos = GetGuestQueueWorldPos(i);
+                var gv = Instantiate(guestPrefab, pos, Quaternion.identity, guestsRoot);
                 gv.BindGuest(g.Id);
                 _guestViews[g.Id] = gv;
             }
@@ -49,6 +55,7 @@ namespace ScreamHotel.Presentation
                 }
             }
         }
+
 
         private Vector3 GetGuestQueueWorldPos(int index)
         {

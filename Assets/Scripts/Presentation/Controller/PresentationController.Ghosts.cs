@@ -11,9 +11,12 @@ namespace ScreamHotel.Presentation
             foreach (var g in w.Ghosts)
             {
                 if (_ghostViews.ContainsKey(g.Id)) continue;
-                var pv = Instantiate(ghostPrefab, ghostsRoot);
+                
+                var pos = GetRandomGhostSpawnPos();
+                
+                var pv = Instantiate(ghostPrefab, pos, Quaternion.identity, ghostsRoot);
                 pv.BindGhost(g);
-                pv.SnapTo(GetRandomGhostSpawnPos());
+
                 _ghostViews[g.Id] = pv;
             }
         }
@@ -31,49 +34,6 @@ namespace ScreamHotel.Presentation
             var world = box.transform.TransformPoint(local);
             world.z = spawnFixedZ;
             return world;
-        }
-
-        // 待命位
-        public Transform GetStagingTransform(string ghostId) => GetStagingTransform(ghostId, GetIndexForGhost(ghostId));
-        public Transform GetStagingTransform(string ghostId, int suggestedIndex)
-        {
-            if (_stagingByGhost.TryGetValue(ghostId, out var t) && t) return t;
-            t = new GameObject($"Staging_{ghostId}").transform;
-            t.position = GetStagingPosForIndex(suggestedIndex);
-            _stagingByGhost[ghostId] = t;
-            return t;
-        }
-
-        private Vector3 GetStagingPosForIndex(int index)
-        {
-            float spacing = 2f;
-            var basePos = ghostsRoot ? ghostsRoot.position : Vector3.zero;
-            return basePos + new Vector3(index * spacing, 0, 0);
-        }
-
-        private int GetIndexForGhost(string ghostId)
-        {
-            int i = 0;
-            foreach (var id in game.World.Ghosts)
-            {
-                if (id.Id == ghostId) return i;
-                i++;
-            }
-            return _stagingByGhost.Count;
-        }
-        
-        // 同步
-        public void SyncGhosts()
-        {
-            var w = game.World;
-            foreach (var g in w.Ghosts)
-            {
-                if (_ghostViews.ContainsKey(g.Id)) continue;
-                var pv = Instantiate(ghostPrefab, ghostsRoot);
-                pv.BindGhost(g);
-                pv.SnapTo(GetRandomGhostSpawnPos());
-                _ghostViews[g.Id] = pv;
-            }
         }
     }
 }
