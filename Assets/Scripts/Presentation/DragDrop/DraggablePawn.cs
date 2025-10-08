@@ -29,7 +29,7 @@ namespace ScreamHotel.Presentation
         private Vector3 _targetPos;
         private float _fixedZ;
         private Coroutine _returnCoro;
-        private RoomDropZone _hoverZone;
+        private IDropZone _hoverZone;
         private GameObject _ghostPreview;  // 虚影对象（仅 dragSelf=false 时用）
 
         // 物理/图层状态
@@ -81,9 +81,14 @@ namespace ScreamHotel.Presentation
                     _ghostPreview.transform.position =
                         Vector3.Lerp(_ghostPreview.transform.position, _targetPos, Time.deltaTime * followLerp);
 
+                // 拖拽中
                 var zone = ZoneUnderPointer();
-                if (zone != _hoverZone) { _hoverZone?.ClearFeedback(); _hoverZone = zone; }
-                _hoverZone?.ShowHoverFeedback(ghostId);
+                if (!ReferenceEquals(zone, _hoverZone))
+                {
+                    _hoverZone?.ClearFeedback();
+                    _hoverZone = zone;
+                }
+                _hoverZone?.ShowHoverFeedback(ghostId, /*isGhost*/ true);
             }
 
             // 结束
@@ -91,9 +96,10 @@ namespace ScreamHotel.Presentation
             {
                 _dragging = false;
 
+                // 松手
                 if (_hoverZone != null)
                 {
-                    if (_hoverZone.TryDrop(ghostId, true, out var anchor))
+                    if (_hoverZone.TryDrop(ghostId, /*isGhost*/ true, out var anchor))
                     {
                         if (anchor) _pv?.MoveTo(anchor, 0.12f);
                     }
@@ -174,11 +180,15 @@ namespace ScreamHotel.Presentation
             float t = (planeZ - ray.origin.z) / ray.direction.z; t = Mathf.Max(t, 0f);
             return ray.origin + ray.direction * t;
         }
-        private RoomDropZone ZoneUnderPointer()
+
+        private IDropZone ZoneUnderPointer()
         {
             var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            return Physics.Raycast(ray, out var hit, 1000f) ? hit.collider.GetComponentInParent<RoomDropZone>() : null;
+            if (Physics.Raycast(ray, out var hit, 1000f))
+                return hit.collider.GetComponentInParent<IDropZone>();
+            return null;
         }
+        
         private static void SetLayerRecursively(GameObject go, int layer)
         {
             go.layer = layer;

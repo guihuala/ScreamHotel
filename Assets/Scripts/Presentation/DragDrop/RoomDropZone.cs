@@ -6,7 +6,7 @@ using ScreamHotel.Systems;
 namespace ScreamHotel.Presentation
 {
     [RequireComponent(typeof(Collider))]
-    public class RoomDropZone : MonoBehaviour
+    public class RoomDropZone : MonoBehaviour, IDropZone
     {
         [Header("Binding")] 
         public MeshRenderer plate;
@@ -162,6 +162,13 @@ namespace ScreamHotel.Presentation
         {
             if (plate == null) return;
             plate.material.color = _origColor;
+        }
+        
+        // 统一的反馈接口
+        public void ShowHoverFeedback(string id, bool isGhost)
+        {
+            if (isGhost) ShowHoverFeedback(id);
+            else ShowHoverFeedbackGuest();
         }
 
         private static T GetSystem<T>(object obj, string field) where T : class

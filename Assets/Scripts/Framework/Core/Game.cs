@@ -225,6 +225,10 @@ namespace ScreamHotel.Core
             EventBus.Raise(new GameStateChanged(State));
 
             TimeSystem.isPaused = false;
+            
+            // 每天开始时推进训练
+            var trainer = FindObjectOfType<GhostTrainer>();
+            trainer?.AdvanceOneDay();
         }
 
 

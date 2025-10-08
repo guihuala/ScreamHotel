@@ -8,9 +8,6 @@ namespace ScreamHotel.Presentation
     {
         [Header("Binding")] public Core.Game game;
 
-        [Header("Drag Mode")] [Tooltip("为 true 时拖拽自身；false 退回到预览体逻辑")]
-        public bool dragSelf = true;
-
         [Tooltip("拖拽期间把对象切到该层，避免拦截射线（通常为 Ignore Raycast）")]
         public string ignoreRaycastLayer = "Ignore Raycast";
 
@@ -26,7 +23,7 @@ namespace ScreamHotel.Presentation
         private Camera _cam;
         private bool _dragging;
         private float _fixedZ;
-        private RoomDropZone _hoverZone;
+        private IDropZone _hoverZone;
         private GameObject _ghostPreview; // 虚影对象（仅 dragSelf=false 时使用）
 
         // ——— 抵消重力/物理 & 图层还原 ———
@@ -54,17 +51,7 @@ namespace ScreamHotel.Presentation
             if (Input.GetMouseButtonDown(dragMouseButton) && HitsSelf())
             {
                 _dragging = true;
-                if (dragSelf) BeginSelfDrag();
-                else
-                {
-                    if (_ghostPreview == null) _ghostPreview = BuildPreviewFromSelfOrPrefab();
-                    if (_ghostPreview != null)
-                    {
-                        _ghostPreview.transform.position = transform.position;
-                        _ghostPreview.transform.rotation = transform.rotation;
-                        _ghostPreview.transform.localScale = transform.lossyScale;
-                    }
-                }
+                BeginSelfDrag();
             }
 
             // 拖拽中
@@ -73,20 +60,17 @@ namespace ScreamHotel.Presentation
                 var p = MouseOnPlaneZ(dragPlaneZ);
                 p.z = _fixedZ;
 
-                if (dragSelf)
-                    transform.position = Vector3.Lerp(transform.position, p, Time.deltaTime * followLerp);
-                else if (_ghostPreview != null)
-                    _ghostPreview.transform.position =
-                        Vector3.Lerp(_ghostPreview.transform.position, p, Time.deltaTime * followLerp);
-
+                transform.position = Vector3.Lerp(transform.position, p, Time.deltaTime * followLerp);
+              
+                // 拖拽中
                 var z = ZoneUnderPointer();
-                if (z != _hoverZone)
+                if (!ReferenceEquals(z, _hoverZone))
                 {
                     _hoverZone?.ClearFeedback();
                     _hoverZone = z;
                 }
 
-                _hoverZone?.ShowHoverFeedbackGuest();
+                _hoverZone?.ShowHoverFeedback(guestId, /*isGhost*/ false);
             }
 
             // 结束拖拽
@@ -94,23 +78,26 @@ namespace ScreamHotel.Presentation
             {
                 _dragging = false;
 
+                // 松手
                 if (_hoverZone != null)
                 {
-                    if (_hoverZone.TryDrop(guestId, false, out var anchor))
+                    if (_hoverZone.TryDrop(guestId, /*isGhost*/ false, out var anchor))
                     {
                         if (anchor) _gv?.MoveTo(anchor, 0.12f);
                     }
-                    else if (dragSelf)
+                    else
                     {
-                        // 回到起点
                         var tmp = new GameObject("GuestReturnTmp").transform;
                         tmp.position = _dragStartPos;
                         _gv?.MoveTo(tmp, 0.12f);
                         Destroy(tmp.gameObject, 0.2f);
                     }
+
+                    _hoverZone.ClearFeedback();
+                    _hoverZone = null;
                 }
 
-                if (dragSelf) EndSelfDrag();
+                EndSelfDrag();
                 CleanupPreview();
                 _hoverZone?.ClearFeedback();
                 _hoverZone = null;
@@ -199,16 +186,18 @@ namespace ScreamHotel.Presentation
             return ray.origin + ray.direction * t;
         }
 
-        private RoomDropZone ZoneUnderPointer()
-        {
-            var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            return Physics.Raycast(ray, out var hit, 1000f) ? hit.collider.GetComponentInParent<RoomDropZone>() : null;
-        }
-
         private static void SetLayerRecursively(GameObject go, int layer)
         {
             go.layer = layer;
             foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
+        }
+
+        private IDropZone ZoneUnderPointer()
+        {
+            var ray = _cam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out var hit, 1000f))
+                return hit.collider.GetComponentInParent<IDropZone>();
+            return null;
         }
     }
 }

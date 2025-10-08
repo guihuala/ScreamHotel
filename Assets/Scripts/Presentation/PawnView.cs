@@ -1,9 +1,8 @@
-// PawnView.cs
 using System.Linq;
 using UnityEngine;
 using ScreamHotel.Domain;
 using ScreamHotel.Data;       // 引入 GhostConfig
-using ScreamHotel.Core;       // 便于拿到 Game/DataManager
+using ScreamHotel.Core; 
 
 namespace ScreamHotel.Presentation
 {
