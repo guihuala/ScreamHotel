@@ -36,12 +36,17 @@ namespace ScreamHotel.Core
         private ProgressionSystem _progressionSystem;
         private GhostTrainer _ghostTrainer;
         
+        private int _settleGuestsTotal;
+        private int _settleGuestsScared;
+        private int _settleGoldDelta;
+        
         public TimeSystem TimeSystem { get; private set; }
         public World World { get; private set; }
-
- 
+        
         private void Awake()
         {
+            EventBus.Subscribe<ExecNightResolved>(OnNightResolved);
+            
             Application.targetFrameRate = 60;
             if (dataManager == null) dataManager = FindObjectOfType<DataManager>();
             dataManager.Initialize();
@@ -72,6 +77,11 @@ namespace ScreamHotel.Core
         {
             TimeSystem.Update(Time.deltaTime);
             UpdateSkyboxTransition();
+        }
+        
+        private void OnDestroy()
+        {
+            EventBus.Unsubscribe<ExecNightResolved>(OnNightResolved);
         }
         
         public bool ShopTryReroll()
@@ -149,13 +159,58 @@ namespace ScreamHotel.Core
                 TimeSystem.SetNormalizedTime(Mathf.Repeat(dayEnd + 0.0001f, 1f));
             }
         }
-
+        
         public void StartNightExecution()
         {
             var (_, showEnd, _) = GetPhaseBoundaries();
             TimeSystem.SetNormalizedTime(Mathf.Repeat(showEnd + 0.0001f, 1f));
         }
 
+        public void StartSettlement()
+        {
+            State = GameState.Settlement;
+            EventBus.Raise(new GameStateChanged(State));
+            Debug.Log("Enter Settlement phase");
+
+            // 暂停时间流逝，等待玩家确认
+            TimeSystem.isPaused = true;
+
+            // 显示结算面板（点击后才进入下一天）
+            DisplaySettlementUI();
+        }
+
+        private void DisplaySettlementUI()
+        {
+            Debug.Log("Displaying settlement UI.");
+
+            // 计算完成度
+            float completion = 0f;
+            if (_settleGuestsTotal > 0)
+                completion = (float)_settleGuestsScared / _settleGuestsTotal;
+
+            // 打开UI
+            var panel = UIManager.Instance.OpenPanel(nameof(SettlementPanel)) as SettlementPanel;
+            if (panel != null)
+            {
+                var data = new SettlementPanel.Data
+                {
+                    dayIndex      = DayIndex,
+                    guestsTotal   = _settleGuestsTotal,
+                    guestsScared  = _settleGuestsScared,
+                    goldChange    = _settleGoldDelta,
+                    completion    = completion,
+                    onContinue    = OnSettlementContinue
+                };
+                panel.Init(data);
+            }
+        }
+        
+        private void OnSettlementContinue()
+        {
+            TimeSystem.isPaused = false;
+            GoToDay(); // 这里会自增 DayIndex
+        }
+        
         public void GoToDay()
         {
             // 如果是从结算阶段返回白天，推进到下一天
@@ -190,25 +245,7 @@ namespace ScreamHotel.Core
 
         private void ExecuteNightActions()
         {
-            Debug.Log("Performing NightExecute actions...");
-            
             _executionSystem.ResolveNight();
-        }
-
-        public void StartSettlement()
-        {
-            State = GameState.Settlement;
-            EventBus.Raise(new GameStateChanged(State));
-            Debug.Log("Enter Settlement phase");
-            
-            // 显示结算面板
-            DisplaySettlementUI();
-            // todo.让鬼与客人回到原位
-        }
-
-        private void DisplaySettlementUI()
-        {
-            Debug.Log("Displaying settlement UI.");
         }
         
         private void SeedInitialWorld(World w)
@@ -271,6 +308,13 @@ namespace ScreamHotel.Core
             }
             
             EventBus.Raise(new GoldChanged(w.Economy.Gold));
+        }
+        
+        private void OnNightResolved(ExecNightResolved r)
+        {
+            _settleGuestsTotal = r.GuestsTotal;
+            _settleGuestsScared = r.GuestsScared;
+            _settleGoldDelta = r.TotalGold;
         }
     }
 }

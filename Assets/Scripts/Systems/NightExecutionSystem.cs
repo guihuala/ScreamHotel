@@ -13,36 +13,53 @@ namespace ScreamHotel.Systems
 
         public NightExecutionSystem(World world) => _world = world;
 
-        public NightResolved ResolveNight()
+        public ExecNightResolved ResolveNight()
         {
-            var result = new NightResolved { RoomResults = new List<RoomNightResult>() };
+            var result = new ExecNightResolved
+            {
+                RoomResults = new List<RoomNightResult>()
+            };
+
             int totalGold = 0;
+            int guestsTotal = 0;
+            int guestsScared = 0;
+            HashSet<string> ghostSet = new HashSet<string>();
 
             foreach (var room in _world.Rooms)
             {
                 var effectiveTags = CollectEffectiveFearTags(room);
-                var rr = new RoomNightResult { RoomId = room.Id, GuestResults = new List<GuestNightResult>() };
+                var rr = new RoomNightResult
+                {
+                    RoomId = room.Id,
+                    GuestResults = new List<GuestNightResult>()
+                };
 
+                // 统计鬼怪出场
+                foreach (var gid in room.AssignedGhostIds)
+                    if (!string.IsNullOrEmpty(gid))
+                        ghostSet.Add(gid);
+
+                // 逐客结算
                 foreach (var guestId in room.AssignedGuestIds)
                 {
                     var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
                     if (g == null) continue;
 
+                    guestsTotal++;
                     var vulnerabilities = GetGuestVulnerabilities(g);
                     int hits = effectiveTags.Count(t => vulnerabilities.Contains(t));
                     int baseFee = GetGuestBaseFee(g);
 
                     int gold = (hits >= 1) ? baseFee * hits : 0;
                     totalGold += gold;
+                    if (hits > 0) guestsScared++;
 
                     rr.GuestResults.Add(new GuestNightResult
                     {
                         GuestId = g.Id,
                         Hits = hits,
-                        BaseFee = baseFee,
                         GoldEarned = gold,
                         EffectiveTags = new List<FearTag>(effectiveTags),
-                        Immunities = new List<FearTag>()
                     });
                 }
 
@@ -51,10 +68,16 @@ namespace ScreamHotel.Systems
 
             _world.Economy.Gold += totalGold;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
+
+            // 汇总字段
             result.TotalGold = totalGold;
-
+            result.GuestsTotal = guestsTotal;
+            result.GuestsScared = guestsScared;
+            result.GhostsUsed = ghostSet.Count;
+            result.RoomCount = _world.Rooms.Count;
+            result.ScareRate = guestsTotal > 0 ? (float)guestsScared / guestsTotal : 0f;
+            
             EventBus.Raise(result);
-
             return result;
         }
 
@@ -87,9 +110,14 @@ namespace ScreamHotel.Systems
     }
 
     // ====== 结果结构 ======
-    public class NightResolved : IGameEvent
+    public class ExecNightResolved : IGameEvent
     {
         public int TotalGold;
+        public int GuestsTotal;
+        public int GuestsScared;
+        public int GhostsUsed;
+        public int RoomCount;
+        public float ScareRate;
         public List<RoomNightResult> RoomResults;
     }
 
@@ -103,9 +131,7 @@ namespace ScreamHotel.Systems
     {
         public string GuestId;
         public int Hits;
-        public int BaseFee;
         public int GoldEarned;
         public List<FearTag> EffectiveTags; // 鬼/房间构成的全集
-        public List<FearTag> Immunities;    // 客人免疫集合（用于调试展示）
     }
 }

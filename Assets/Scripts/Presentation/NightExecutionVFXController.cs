@@ -60,16 +60,16 @@ namespace ScreamHotel.Systems
                 .Where(m => m != null && m.vfx != null)
                 .GroupBy(m => m.tag).ToDictionary(g => g.Key, g => g.First().vfx);
 
-            EventBus.Subscribe<NightResolved>(OnNightResolved);
+            EventBus.Subscribe<ExecNightResolved>(OnNightResolved);
         }
         
         private void OnDestroy()
         {
-            EventBus.Unsubscribe<NightResolved>(OnNightResolved);
+            EventBus.Unsubscribe<ExecNightResolved>(OnNightResolved);
             if (_loopRoutine != null) StopCoroutine(_loopRoutine);
         }
 
-        private void OnNightResolved(NightResolved r)
+        private void OnNightResolved(ExecNightResolved r)
         {
             if (_game == null || _game.State != GameState.NightExecute) return;
 
@@ -79,7 +79,7 @@ namespace ScreamHotel.Systems
             _loopRoutine = StartCoroutine(NightExecLoop(r));
         }
 
-        private IEnumerator NightExecLoop(NightResolved result)
+        private IEnumerator NightExecLoop(ExecNightResolved result)
         {
             bool firstLoop = true;
             while (_game != null && _game.State == GameState.NightExecute)
@@ -96,7 +96,7 @@ namespace ScreamHotel.Systems
         }
 
         // 用于“单轮播放”的方法
-        private IEnumerator PlayOneSweep(NightResolved result, bool spawnVfxThisLoop)
+        private IEnumerator PlayOneSweep(ExecNightResolved result, bool spawnVfxThisLoop)
         {
             if (_game == null) yield break;
 
