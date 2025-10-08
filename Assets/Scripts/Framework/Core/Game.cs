@@ -193,7 +193,6 @@ namespace ScreamHotel.Core
             Debug.Log("Performing NightExecute actions...");
             
             _executionSystem.ResolveNight();
-            
         }
 
         public void StartSettlement()
@@ -204,6 +203,7 @@ namespace ScreamHotel.Core
             
             // 显示结算面板
             DisplaySettlementUI();
+            // todo.让鬼与客人回到原位
         }
 
         private void DisplaySettlementUI()

@@ -34,14 +34,22 @@ namespace ScreamHotel.Systems
 
         [Header("Desync Settings")] [Tooltip("同一房内的随机启动延时占比（相对房间预算）；0.4 表示最长延时= roomBudget * 0.4")]
         public float startDelayRoomMax = 0.4f;
+
         [Tooltip("单个实体的节拍抖动百分比（0.15 => ±15%）")] [Range(0f, 0.5f)]
         public float beatJitterPct = 0.15f;
+
         [Tooltip("鬼上前位移的随机抖动幅度（米）")] public float stepJitter = 0.15f;
         [Tooltip("客人后仰幅度的随机抖动幅度（米）")] public float nudgeJitter = 0.1f;
         [Tooltip("位置噪声（Perlin）振幅（米）")] public float noiseWobbleAmp = 0.03f;
         [Tooltip("位置噪声（Perlin）频率（越大摆动越快）")] public float noiseWobbleFreq = 1.7f;
 
+        [Header("Loop Settings")] [Tooltip("单次循环占用夜间执行总时长的比例。0.35 => 一轮大概用掉 35% 的时长，然后继续下一轮")] [Range(0.05f, 1f)]
+        public float sweepShareOfExec = 0.35f;
 
+        [Tooltip("是否只在第一轮播放命中粒子，后续循环仅做位移动作避免刷屏")]
+        public bool vfxOnlyFirstLoop = true;
+
+        private Coroutine _loopRoutine;
         private Game _game;
         private Dictionary<FearTag, ParticleSystem> _tag2Vfx;
 
@@ -54,95 +62,109 @@ namespace ScreamHotel.Systems
 
             EventBus.Subscribe<NightResolved>(OnNightResolved);
         }
-
-        void OnDestroy()
+        
+        private void OnDestroy()
         {
             EventBus.Unsubscribe<NightResolved>(OnNightResolved);
+            if (_loopRoutine != null) StopCoroutine(_loopRoutine);
         }
 
         private void OnNightResolved(NightResolved r)
         {
             if (_game == null || _game.State != GameState.NightExecute) return;
-            StartCoroutine(PlayNightExecutionSequence(r));
+
+            // 如果上一次的循环还在，先停掉
+            if (_loopRoutine != null) StopCoroutine(_loopRoutine);
+            // 开启整段循环：会一直播到离开 NightExecute
+            _loopRoutine = StartCoroutine(NightExecLoop(r));
         }
 
-        private IEnumerator PlayNightExecutionSequence(NightResolved result)
+        private IEnumerator NightExecLoop(NightResolved result)
+        {
+            bool firstLoop = true;
+            while (_game != null && _game.State == GameState.NightExecute)
+            {
+                // 每一轮播放一遍“所有房间”的动作
+                yield return StartCoroutine(PlayOneSweep(result, firstLoop));
+                firstLoop = false;
+
+                // 小让步，避免过于紧凑
+                yield return null;
+            }
+
+            _loopRoutine = null;
+        }
+
+        // 用于“单轮播放”的方法
+        private IEnumerator PlayOneSweep(NightResolved result, bool spawnVfxThisLoop)
         {
             if (_game == null) yield break;
 
+            Debug.Log("PlayOneSweep");
             float execDuration = CalcExecPhaseDurationSeconds(_game);
             float beat = Mathf.Max(0.1f, approachBeat);
 
-            // 缓存可用的 View
+            // 目标：一轮 ≈ 总时长 * sweepShareOfExec
+            int roomCount = Mathf.Max(1, result.RoomResults.Count);
+            float roomBudget = Mathf.Max(beat, execDuration * Mathf.Clamp01(sweepShareOfExec) / roomCount);
+
+            // 缓存视图
             var guestViews = FindObjectsOfType<GuestView>().ToDictionary(g => g.guestId, g => g);
             var allGhostViews = FindObjectsOfType<PawnView>();
 
-            // 房间切片播放（同一房间内并行）
-            int roomCount = Mathf.Max(1, result.RoomResults.Count);
-            float roomBudget = Mathf.Max(beat, execDuration / roomCount);
-
             foreach (var room in result.RoomResults)
             {
-                // 1) 该房间的客人视图
+                // 房内客人与鬼
                 var roomGuestViews = new List<GuestView>();
                 foreach (var gRes in room.GuestResults)
-                {
                     if (guestViews.TryGetValue(gRes.GuestId, out var gv))
                         roomGuestViews.Add(gv);
-                }
 
-                // 2) 只让“本房鬼”动作：与本房任一客人距离 < ghostProximity 视为本房鬼
                 var roomGhosts = SelectGhostsNearGuests(allGhostViews, roomGuestViews, ghostProximity);
 
-                // 3) 并行动画协程
                 var coroutines = new List<Coroutine>();
-                
                 float maxDelay = roomBudget * Mathf.Clamp01(startDelayRoomMax);
 
-                // 3.1 客人反应 + 按Tag粒子
+                // 客人反应 +（可选）粒子
                 foreach (var gRes in room.GuestResults)
                 {
                     if (!guestViews.TryGetValue(gRes.GuestId, out var gv)) continue;
 
                     bool isHit = gRes.Hits > 0;
-
-                    // 针对客人的稳定随机：用 guestId 和当日编号作为种子（DayIndex 可从 _game.DayIndex 获取；若无则用 0）
                     int dayIndex = _game != null ? _game.DayIndex : 0;
-                    int guestKey = !string.IsNullOrEmpty(gRes.GuestId) ? StableHash(gRes.GuestId) : (guestViews.TryGetValue(gRes.GuestId, out var tmp) ? tmp.GetInstanceID() : 0);
+                    int guestKey = !string.IsNullOrEmpty(gRes.GuestId)
+                        ? StableHash(gRes.GuestId)
+                        : gv.GetInstanceID();
                     int seed = guestKey ^ dayIndex;
 
                     float delay = maxDelay * Hash01(seed, 1);
-                    float u     = Hash01(seed, 2);
+                    float u = Hash01(seed, 2);
+
+                    // —— 修复：去掉重复的 PlayGuestReact ——（你文件里这行被误复制了一次）
                     coroutines.Add(StartCoroutine(
                         PlayGuestReact(gv.transform, isHit, roomBudget, gRes.Hits, delay, u)
                     ));
 
-                    coroutines.Add(StartCoroutine(
-                        PlayGuestReact(gv.transform, isHit, roomBudget, gRes.Hits, delay, u)
-                    ));
-                    
-                    // 命中时：按 EffectiveTags 选择对应 VFX，未命中则播默认 Miss
-                    if (isHit && gRes.EffectiveTags != null && gRes.EffectiveTags.Count > 0)
+                    if (spawnVfxThisLoop) // 只在本轮播粒子（后续轮避免刷屏）
                     {
-                        foreach (var tag in gRes.EffectiveTags)
+                        if (isHit && gRes.EffectiveTags != null && gRes.EffectiveTags.Count > 0)
                         {
-                            if (_tag2Vfx.TryGetValue(tag, out var vfxPrefab) && vfxPrefab != null)
+                            foreach (var tag in gRes.EffectiveTags)
                             {
-                                SpawnAndAutoDestroy(vfxPrefab, gv.transform.position + Vector3.up * 1.2f);
-                            }
-                            else if (defaultHitVfx != null)
-                            {
-                                SpawnAndAutoDestroy(defaultHitVfx, gv.transform.position + Vector3.up * 1.2f);
+                                if (_tag2Vfx.TryGetValue(tag, out var vfxPrefab) && vfxPrefab != null)
+                                    SpawnAndAutoDestroy(vfxPrefab, gv.transform.position + Vector3.up * 1.2f);
+                                else if (defaultHitVfx != null)
+                                    SpawnAndAutoDestroy(defaultHitVfx, gv.transform.position + Vector3.up * 1.2f);
                             }
                         }
-                    }
-                    else if (!isHit && defaultMissVfx != null)
-                    {
-                        SpawnAndAutoDestroy(defaultMissVfx, gv.transform.position + Vector3.up * 1.0f);
+                        else if (!isHit && defaultMissVfx != null)
+                        {
+                            SpawnAndAutoDestroy(defaultMissVfx, gv.transform.position + Vector3.up * 1.0f);
+                        }
                     }
                 }
 
-                // 3.2 本房鬼“上前-后退”
+                // 本房的鬼上前-后退
                 foreach (var pv in roomGhosts)
                 {
                     int dayIndex = _game != null ? _game.DayIndex : 0;
@@ -150,19 +172,22 @@ namespace ScreamHotel.Systems
                     int seed = ghostKey ^ dayIndex;
 
                     float delay = maxDelay * Hash01(seed, 11);
-                    float u     = Hash01(seed, 12);
+                    float u = Hash01(seed, 12);
                     coroutines.Add(StartCoroutine(
                         PlayGhostStep(pv.transform, roomBudget, delay, u)
                     ));
                 }
-                
-                // 4) 简单的“预算等待”，保证节奏
+
+                // 房间级节奏控制：等待到本房预算用完
                 float waited = 0f;
-                while (waited < roomBudget)
+                while (_game != null && _game.State == GameState.NightExecute && waited < roomBudget)
                 {
                     waited += Time.deltaTime;
                     yield return null;
                 }
+
+                // 若阶段已切走（结算/白天等），立即结束循环
+                if (_game == null || _game.State != GameState.NightExecute) yield break;
             }
         }
 
@@ -236,11 +261,13 @@ namespace ScreamHotel.Systems
                 t1 += Time.deltaTime / half;
                 float k = Mathf.SmoothStep(0, 1, t1);
 
-                float wob = (Mathf.PerlinNoise((Time.time + 3.1f) * noiseWobbleFreq, u + 0.37f) - 0.5f) * 2f * noiseWobbleAmp;
+                float wob = (Mathf.PerlinNoise((Time.time + 3.1f) * noiseWobbleFreq, u + 0.37f) - 0.5f) * 2f *
+                            noiseWobbleAmp;
                 t.position = Vector3.Lerp(origin + (Vector3.back + Vector3.up * 0.2f) * amp, origin, k)
                              + Vector3.right * wob * (isHit ? 1f : 0.4f);
                 yield return null;
             }
+
             t.position = origin;
         }
 
@@ -275,12 +302,14 @@ namespace ScreamHotel.Systems
             {
                 t1 += Time.deltaTime / half;
                 float k = Mathf.SmoothStep(0, 1, t1);
-                float wob = (Mathf.PerlinNoise((Time.time + 2.3f) * noiseWobbleFreq, u + 0.89f) - 0.5f) * 2f * noiseWobbleAmp;
+                float wob = (Mathf.PerlinNoise((Time.time + 2.3f) * noiseWobbleFreq, u + 0.89f) - 0.5f) * 2f *
+                            noiseWobbleAmp;
 
                 t.position = Vector3.Lerp(origin + Vector3.forward * localStep, origin, k)
                              + Vector3.right * wob;
                 yield return null;
             }
+
             t.position = origin;
         }
 
@@ -325,7 +354,9 @@ namespace ScreamHotel.Systems
             unchecked
             {
                 uint x = (uint)(a * 73856093) ^ (uint)(b * 19349663) ^ 0x9E3779B9u;
-                x ^= x << 13; x ^= x >> 17; x ^= x << 5;
+                x ^= x << 13;
+                x ^= x >> 17;
+                x ^= x << 5;
                 return (x & 0x00FFFFFFu) / 16777216f; // 24bit
             }
         }
@@ -335,14 +366,14 @@ namespace ScreamHotel.Systems
             float r = (u01 * 2f - 1f) * pct; // [-pct, +pct]
             return baseVal * (1f + r);
         }
-        
+
         // 把字符串稳定地转成 int（FNV-1a 32bit）
         private static int StableHash(string s)
         {
             unchecked
             {
                 const uint FNV_OFFSET = 2166136261;
-                const uint FNV_PRIME  = 16777619;
+                const uint FNV_PRIME = 16777619;
                 uint h = FNV_OFFSET;
                 if (!string.IsNullOrEmpty(s))
                 {
@@ -352,10 +383,11 @@ namespace ScreamHotel.Systems
                         h *= FNV_PRIME;
                     }
                 }
+
                 return (int)h;
             }
         }
-        
+
         #endregion
     }
 }
