@@ -12,8 +12,6 @@ GameObject:
   - component: {fileID: 3473545640686341630}
   - component: {fileID: 4918455888985957806}
   - component: {fileID: 9103426191192176490}
-  - component: {fileID: 5087033664178313602}
-  - component: {fileID: 119112972073574308}
   m_Layer: 0
   m_Name: Elevator
   m_TagString: Untagged
@@ -108,41 +106,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 3.1006343, z: 1}
   m_Center: {x: 0, y: -1.0503172, z: 0}
---- !u!114 &5087033664178313602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7173643707485725568}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fe82b9ce78f34486bde56eb19b97819, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  roomId: 1
-  plate: {fileID: 4918455888985957806}
-  ghostAnchors:
-  - {fileID: 8646478625447689243}
-  lv1Set: []
-  lv2Set: []
-  lv3Set: []
-  guestAnchors: []
---- !u!114 &119112972073574308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7173643707485725568}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8764a654d1c934df09958d170cd4b451, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  plate: {fileID: 4918455888985957806}
-  canColor: {r: 0.3, g: 1, b: 0.3, a: 1}
-  fullColor: {r: 1, g: 0.3, b: 0.3, a: 1}
 --- !u!1 &8412511392711932118
 GameObject:
   m_ObjectHideFlags: 0
