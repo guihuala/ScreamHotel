@@ -118,7 +118,7 @@ MonoBehaviour:
     materialsInsideMask: []
     materialsOutsideMask: []
   disableRenderingOnOverride: 1
-  _animationName: 
+  _animationName: idle
   loop: 1
   timeScale: 1
 --- !u!1 &7714624583527147650
@@ -220,8 +220,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   game: {fileID: 0}
-  cloneFromSelf: 1
   ignoreRaycastLayer: Ignore Raycast
+  cloneFromSelf: 1
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 30

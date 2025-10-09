@@ -90,8 +90,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   game: {fileID: 0}
-  cloneFromSelf: 1
+  dragSelf: 1
   ignoreRaycastLayer: Ignore Raycast
+  cloneFromSelf: 1
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 20
@@ -142,7 +143,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e440f4d2b41980740ad9117f69394ef0, type: 2}
+  - {fileID: 2100000, guid: b076220a71d9f411398cc627b40084c5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
