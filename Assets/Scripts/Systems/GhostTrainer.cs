@@ -49,7 +49,7 @@ public class GhostTrainer : MonoBehaviour
 
         // 通知训练室把特效移除、槽位释放
         foreach (var zone in FindObjectsOfType<TrainingRoomZone>())
-            zone.OnTrainingComplete(ghost);
+            zone.OnSlotTrainingComplete(ghost.Id);
 
         // TODO: 训练完成事件
         // EventBus.Raise(new GhostTrainedEvent(ghost.Id, ghost.Sub ?? FearTag.Darkness));

@@ -1,42 +1,29 @@
 using UnityEngine;
-using ScreamHotel.Systems;
 
 namespace ScreamHotel.Presentation
 {
     [RequireComponent(typeof(Collider))]
     public class DraggablePawn : MonoBehaviour
     {
-        [Header("Binding")]
         public Core.Game game;
-        
-        [Header("Drag Mode")]
         public bool dragSelf = true;
         public string ignoreRaycastLayer = "Ignore Raycast";
-
-        [Header("Preview (fallback)")]
-        public bool cloneFromSelf = true;
-
-        [Header("Drag (XY plane)")]
         public int dragMouseButton = 0;
         public float dragPlaneZ = 0f;
         public float followLerp = 30f;
 
         private PawnView _pv;
         private string ghostId;
-
         private Camera _cam;
         private bool _dragging;
         private Vector3 _targetPos;
         private float _fixedZ;
-        private Coroutine _returnCoro;
         private IDropZone _hoverZone;
-        private GameObject _ghostPreview;  // 虚影对象（仅 dragSelf=false 时用）
+        private int _origLayer;
 
-        // 物理/图层状态
         private Rigidbody[] _rbs;
         private bool[] _rbUseGravity, _rbKinematic;
         private Vector3 _dragStartPos;
-        private int _origLayer;
 
         void Awake()
         {
@@ -51,71 +38,85 @@ namespace ScreamHotel.Presentation
 
         void Update()
         {
-            // 开始
             if (Input.GetMouseButtonDown(dragMouseButton) && PointerHitsSelf())
             {
-                _dragging = true;
-                if (_returnCoro != null) { StopCoroutine(_returnCoro); _returnCoro = null; }
-
-                if (dragSelf) BeginSelfDrag();
-                else
+                if (IsLockedByTrainingSlot())
                 {
-                    if (_ghostPreview == null) _ghostPreview = BuildPreviewFromSelfOrPrefab();
-                    if (_ghostPreview != null)
-                    {
-                        _ghostPreview.transform.position = transform.position;
-                        _ghostPreview.transform.rotation = transform.rotation;
-                        _ghostPreview.transform.localScale = transform.lossyScale;
-                    }
+                    Debug.Log($"[DraggablePawn] {ghostId} 已固定在训练槽位，禁止拖拽。");
+                    return;
                 }
+
+                _dragging = true;
+                BeginSelfDrag();
             }
 
-            // 拖拽中
             if (_dragging)
             {
                 _targetPos = MouseOnPlaneZ(dragPlaneZ); _targetPos.z = _fixedZ;
+                if (dragSelf) transform.position = Vector3.Lerp(transform.position, _targetPos, Time.deltaTime * followLerp);
 
-                if (dragSelf)
-                    transform.position = Vector3.Lerp(transform.position, _targetPos, Time.deltaTime * followLerp);
-                else if (_ghostPreview != null)
-                    _ghostPreview.transform.position =
-                        Vector3.Lerp(_ghostPreview.transform.position, _targetPos, Time.deltaTime * followLerp);
-
-                // 拖拽中
                 var zone = ZoneUnderPointer();
                 if (!ReferenceEquals(zone, _hoverZone))
                 {
                     _hoverZone?.ClearFeedback();
                     _hoverZone = zone;
                 }
-                _hoverZone?.ShowHoverFeedback(ghostId, /*isGhost*/ true);
+                _hoverZone?.ShowHoverFeedback(ghostId, true);
             }
 
-            // 结束
             if (_dragging && Input.GetMouseButtonUp(dragMouseButton))
             {
                 _dragging = false;
 
-                // 松手
                 if (_hoverZone != null)
                 {
-                    if (_hoverZone.TryDrop(ghostId, /*isGhost*/ true, out var anchor))
+                    if (_hoverZone.TryDrop(ghostId, true, out var anchor) && anchor != null)
                     {
-                        if (anchor) _pv?.MoveTo(anchor, 0.12f);
+                        // 先硬贴到锚点，完全消除偏移/飞走
+                        var rb = GetComponent<Rigidbody>();
+                        if (rb) { rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+                        transform.position = anchor.position;
+
+                        // 再做一个非常短的 MoveTo（若你的 PawnView 需要）
+                        _pv?.MoveTo(anchor, 0.08f);
                     }
-                    else if (dragSelf)
+                    else
                     {
+                        // 回到起点
                         var tmp = new GameObject("PawnReturnTmp").transform; tmp.position = _dragStartPos;
                         _pv?.MoveTo(tmp, 0.12f);
                         Destroy(tmp.gameObject, 0.2f);
                     }
+
                     _hoverZone.ClearFeedback();
                     _hoverZone = null;
                 }
 
-                if (dragSelf) EndSelfDrag();
-                CleanupPreview();
+                EndSelfDrag();
             }
+        }
+
+        private bool PointerHitsSelf()
+        {
+            var ray = _cam.ScreenPointToRay(Input.mousePosition);
+            return Physics.Raycast(ray, out var hit, 1000f)
+                   && (hit.collider.gameObject == gameObject || hit.collider.transform.IsChildOf(transform));
+        }
+
+        private Vector3 MouseOnPlaneZ(float planeZ)
+        {
+            var ray = _cam.ScreenPointToRay(Input.mousePosition);
+            if (Mathf.Abs(ray.direction.z) < 1e-5f) return transform.position;
+            float t = (planeZ - ray.origin.z) / ray.direction.z; t = Mathf.Max(t, 0f);
+            return ray.origin + ray.direction * t;
+        }
+
+        private IDropZone ZoneUnderPointer()
+        {
+            var ray = _cam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out var hit, 1000f))
+                return hit.collider.GetComponentInParent<IDropZone>();
+            return null;
         }
 
         private void BeginSelfDrag()
@@ -151,44 +152,23 @@ namespace ScreamHotel.Presentation
                 for (int i = 0; i < _rbs.Length; i++)
                 {
                     if (_rbs[i] == null) continue;
-                    _rbs[i].useGravity = _rbUseGravity != null && i < _rbUseGravity.Length ? _rbUseGravity[i] : _rbs[i].useGravity;
-                    _rbs[i].isKinematic = _rbKinematic != null && i < _rbKinematic.Length ? _rbKinematic[i] : _rbs[i].isKinematic;
+                    _rbs[i].useGravity = _rbUseGravity[i];
+                    _rbs[i].isKinematic = _rbKinematic[i];
                 }
             }
         }
 
-        // 预览体兜底
-        private GameObject BuildPreviewFromSelfOrPrefab()
+        // 被训练槽位固定则拒绝拖拽
+        private bool IsLockedByTrainingSlot()
         {
-            if (_pv == null) _pv = GetComponent<PawnView>();
-            if (cloneFromSelf && _pv != null) return _pv.BuildVisualPreview(ignoreRaycastLayer);
-            Debug.LogWarning("[DraggablePawn] 预览失败：既未开启 cloneFromSelf，也未提供 ghostPrefab。");
-            return null;
-        }
-        private void CleanupPreview() { if (_ghostPreview != null) { Destroy(_ghostPreview); _ghostPreview = null; } }
-
-        private bool PointerHitsSelf()
-        {
-            var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            return Physics.Raycast(ray, out var hit, 1000f)
-                   && (hit.collider.gameObject == gameObject || hit.collider.transform.IsChildOf(transform));
-        }
-        private Vector3 MouseOnPlaneZ(float planeZ)
-        {
-            var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            if (Mathf.Abs(ray.direction.z) < 1e-5f) return transform.position;
-            float t = (planeZ - ray.origin.z) / ray.direction.z; t = Mathf.Max(t, 0f);
-            return ray.origin + ray.direction * t;
+            if (string.IsNullOrEmpty(ghostId)) return false;
+            var slots = FindObjectsOfType<TrainingSlot>(true);
+            foreach (var s in slots)
+                if (s && s.IsOccupied && s.GhostId == ghostId)
+                    return true;
+            return false;
         }
 
-        private IDropZone ZoneUnderPointer()
-        {
-            var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out var hit, 1000f))
-                return hit.collider.GetComponentInParent<IDropZone>();
-            return null;
-        }
-        
         private static void SetLayerRecursively(GameObject go, int layer)
         {
             go.layer = layer;

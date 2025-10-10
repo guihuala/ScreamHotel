@@ -27,7 +27,7 @@ namespace ScreamHotel.Presentation
         {
             var w = game.World;
 
-            // 删除不在世界里的旧客人（保持不变）
+            // 删除不在世界里的旧客人
             var alive = new HashSet<string>(w.Guests.Select(g => g.Id));
             var toRemove = _guestViews.Keys.Where(id => !alive.Contains(id)).ToList();
             foreach (var id in toRemove) { SafeDestroy(_guestViews[id]?.gameObject); _guestViews.Remove(id); }

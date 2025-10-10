@@ -47,9 +47,7 @@ GameObject:
   - component: {fileID: 7576434100413152562}
   - component: {fileID: 8550646113226167418}
   - component: {fileID: 8949783915282241044}
-  - component: {fileID: 1612459217523048995}
   - component: {fileID: 3476268552713856806}
-  - component: {fileID: 3511328995665874252}
   m_Layer: 0
   m_Name: TrainingRoom
   m_TagString: Untagged
@@ -123,27 +121,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1612459217523048995
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6441142444391047946}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 12.55, y: 4, z: 5}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &3476268552713856806
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -156,21 +133,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a7c6efbf3d9a4ee6b07774c5e481a76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3511328995665874252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6441142444391047946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1c6a820e98d544dabf6661091453440, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  plate: {fileID: 8949783915282241044}
-  canColor: {r: 0.3, g: 1, b: 0.3, a: 1}
-  fullColor: {r: 1, g: 0.3, b: 0.3, a: 1}
 --- !u!1001 &2742577228031737815
 PrefabInstance:
   m_ObjectHideFlags: 0

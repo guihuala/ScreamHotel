@@ -1,7 +1,7 @@
 using UnityEngine;
 using ScreamHotel.Domain;
 
-namespace ScreamHotel.Presentation.Shop
+namespace ScreamHotel.Presentation
 {
     public class GhostIconView : MonoBehaviour
     {

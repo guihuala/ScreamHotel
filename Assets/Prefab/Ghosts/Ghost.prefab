@@ -181,7 +181,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4369380177762264235}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e9dea3ef9f044912b0d72ef561786d8, type: 3}
   m_Name: 
@@ -208,6 +208,9 @@ MonoBehaviour:
   groundRayOffset: {x: 0, y: 0.1, z: 0}
   forwardRayOffset: {x: 0, y: 0.1, z: 0}
   turnCooldown: 0.3
+  spineAnim: {fileID: 0}
+  walkAnim: walk
+  idleAnim: idle
   drawGizmos: 1
 --- !u!1001 &3713149862900878572
 PrefabInstance:
