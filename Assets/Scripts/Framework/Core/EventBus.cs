@@ -97,4 +97,16 @@ namespace ScreamHotel.Core
     public readonly struct DayStartedEvent { }
     
     public readonly struct NightStartedEvent { }
+    
+    public readonly struct OpenFearPickUIEvent : IGameEvent
+    {
+        public readonly string GhostId;
+        public readonly int SlotIndex;
+
+        public OpenFearPickUIEvent(string ghostId, int slotIndex)
+        {
+            GhostId = ghostId;
+            SlotIndex = slotIndex;
+        }
+    }
 }

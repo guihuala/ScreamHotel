@@ -3,91 +3,80 @@ using System.Linq;
 using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Domain;
+using ScreamHotel.Presentation;
+using ScreamHotel.UI;
 
 public class TrainingRoomZone : MonoBehaviour, IDropZone
 {
-    [Header("Visual")]
-    public MeshRenderer plate;
-    public Color canColor  = new Color(0.3f, 1f, 0.3f, 1f);
-    public Color fullColor = new Color(1f, 0.3f, 0.3f, 1f);
-
-    [Header("Slots")]
-    [Tooltip("五个训练槽位锚点（世界空间或相对本物体）")]
-    public Transform[] slotAnchors = new Transform[5];
-
-    [Header("VFX/Prefabs")]
-    public ParticleSystem trainingVfxPrefab;
-    public GameObject remainTextPrefab;
-
     private Game _game;
-    private Color _origColor;
-    private readonly List<string> _slotGhostIds = new(); // 长度<=5，对应 slotAnchors
-    private readonly Dictionary<string, (ParticleSystem vfx, TextMesh remain)> _slotVfx = new();
+    private TrainingRoomView _view;
+    
+    private readonly List<TrainingSlot> _slots = new List<TrainingSlot>();
+    private readonly Dictionary<string, TrainingSlot> _ghostSlotMap = new Dictionary<string, TrainingSlot>();
 
     void Awake()
     {
         _game = FindObjectOfType<Game>();
-        if (plate) _origColor = plate.material.color;
-
-        // 统一长度/初始化
-        if (slotAnchors == null || slotAnchors.Length != 5)
-        {
-            var arr = new Transform[5];
-            for (int i = 0; i < 5; i++)
-            {
-                arr[i] = (slotAnchors != null && i < slotAnchors.Length && slotAnchors[i] != null)
-                         ? slotAnchors[i]
-                         : CreateAnchor(i);
-            }
-            slotAnchors = arr;
-        }
-        _slotGhostIds.Clear();
-        _slotGhostIds.AddRange(Enumerable.Repeat<string>(null, 5));
+        _view = GetComponentInChildren<TrainingRoomView>();
+        
+        // 获取所有槽位
+        _slots.Clear();
+        _slots.AddRange(GetComponentsInChildren<TrainingSlot>());
+        _ghostSlotMap.Clear();
     }
 
-    private Transform CreateAnchor(int i)
-    {
-        var t = new GameObject($"TrainSlot{i}").transform;
-        t.SetParent(transform, false);
-        t.localPosition = new Vector3(-0.8f + i * 0.4f, 0.55f, 0);
-        return t;
-    }
-
-    // ==== 拖拽反馈（与 RoomDropZone 接口风格一致） ====
+    // ==== 拖拽反馈 ====
     public void ShowHoverFeedback(string ghostId)
     {
-        if (plate == null) return;
-        var c = CanAccept(ghostId, true) ? canColor : fullColor;
-        plate.material.color = Color.Lerp(plate.material.color, c, 0.5f);
+        // 让所有槽位显示悬停反馈
+        foreach (var slot in _slots)
+        {
+            slot.ShowHoverFeedback(ghostId);
+        }
+    }
+
+    public void ShowHoverFeedback(string id, bool isGhost)
+    {
+        ShowHoverFeedback(id);
     }
 
     public void ClearFeedback()
     {
-        if (plate == null) return;
-        plate.material.color = _origColor;
+        // 清除所有槽位的悬停反馈
+        foreach (var slot in _slots)
+        {
+            slot.ClearHoverFeedback();
+        }
     }
 
     public bool TryDrop(string ghostId, bool isGhost, out Transform targetAnchor)
     {
         targetAnchor = null;
+        
         if (!CanAccept(ghostId, isGhost))
         {
-            Flash(fullColor);
+            _view?.Flash(_view.fullColor);
             return false;
         }
 
-        int slot = FirstEmptySlot();
-        if (slot < 0) { Flash(fullColor); return false; }
+        // 查找第一个可用的槽位
+        var availableSlot = _slots.FirstOrDefault(slot => slot.CanAccept(ghostId));
+        if (availableSlot == null)
+        {
+            _view?.Flash(_view.fullColor);
+            return false;
+        }
 
-        // 锁定：占位 + 返回锚点给表现层
-        _slotGhostIds[slot] = ghostId;
-        targetAnchor = slotAnchors[slot];
+        // 锁定槽位
+        if (availableSlot.TryDrop(ghostId, out targetAnchor))
+        {
+            // 弹出"选择恐惧属性"的小面板
+            OpenPickFearUI(ghostId, availableSlot);
+            _view?.Flash(_view.canColor);
+            return true;
+        }
 
-        // 弹出“选择恐惧属性”的小面板
-        OpenPickFearUI(ghostId, slot);
-
-        Flash(canColor);
-        return true;
+        return false;
     }
 
     public bool CanAccept(string ghostId, bool isGhost)
@@ -97,102 +86,111 @@ public class TrainingRoomZone : MonoBehaviour, IDropZone
         var g = _game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId);
         if (g == null) return false;
 
-        // 训练中不可重复放置；槽满不可放
+        // 训练中不可重复放置；检查是否有可用槽位
         if (g.State == GhostState.Training) return false;
-        if (FirstEmptySlot() < 0) return false;
-
-        return true;
+        
+        return _slots.Any(slot => slot.CanAccept(ghostId));
     }
-
-    private int FirstEmptySlot() => _slotGhostIds.FindIndex(id => string.IsNullOrEmpty(id));
-
-    private void Flash(Color c)
-    {
-        if (!plate) return;
-        plate.material.color = c;
-        CancelInvoke(nameof(Revert)); Invoke(nameof(Revert), 0.25f);
-    }
-    private void Revert() { if (plate) plate.material.color = _origColor; }
 
     // === 选择恐惧属性 UI ===
-    private void OpenPickFearUI(string ghostId, int slotIndex)
+    private void OpenPickFearUI(string ghostId, TrainingSlot slot)
     {
-        var ui = new GameObject("PickFearUI").AddComponent<PickFearUI>();
-        ui.transform.SetParent(transform, false);
-        ui.Init((FearTag picked) =>
+        var hoverController = FindObjectOfType<HoverUIController>();
+        if (hoverController != null && !hoverController.IsPickFearPanelActive())
         {
-            StartTraining(ghostId, picked, slotIndex);
-        });
+            hoverController.OpenPickFearPanel(ghostId, GetSlotIndex(slot), OnFearTagSelected);
+        }
+        else
+        {
+            // 备用方案：直接创建面板
+            var ui = new GameObject("PickFearPanel").AddComponent<PickFearPanel>();
+            ui.transform.SetParent(transform, false);
+            ui.Init(ghostId, GetSlotIndex(slot), OnFearTagSelected);
+        }
+    }
+
+    private int GetSlotIndex(TrainingSlot slot)
+    {
+        return _slots.IndexOf(slot);
+    }
+
+    private TrainingSlot GetSlotByIndex(int index)
+    {
+        return (index >= 0 && index < _slots.Count) ? _slots[index] : null;
+    }
+
+    private void OnFearTagSelected(string ghostId, FearTag tag, int slotIndex)
+    {
+        var slot = GetSlotByIndex(slotIndex);
+        if (slot != null)
+        {
+            StartTraining(ghostId, tag, slot);
+        }
     }
 
     // === 启动训练 ===
-    private void StartTraining(string ghostId, FearTag tag, int slotIndex)
+    private void StartTraining(string ghostId, FearTag tag, TrainingSlot slot)
     {
         var g = _game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId);
         if (g == null) return;
 
-        // 将目标训练属性临时记在 ghost 的一个扩展字段（或你也可以在 GhostTrainer 里用字典管理）
+        // 更新鬼魂状态
         g.State = GhostState.Training;
         g.TrainingDays = 0;
-        g.Sub = tag; // 训练完成后获得/覆盖 Sub，也可先缓存，完成时再赋值
+        g.Sub = tag;
 
-        // 视觉：开训练环/粒子 + 文本
-        if (trainingVfxPrefab && slotAnchors[slotIndex])
-        {
-            var v = Instantiate(trainingVfxPrefab, slotAnchors[slotIndex].position, Quaternion.identity, slotAnchors[slotIndex]);
-            v.Play();
-            TextMesh t = null;
-            if (remainTextPrefab)
-            {
-                var go = Instantiate(remainTextPrefab, slotAnchors[slotIndex]);
-                go.transform.localPosition = new Vector3(0, 0.65f, 0);
-                t = go.GetComponent<TextMesh>();
-            }
-            _slotVfx[ghostId] = (v, t);
-            UpdateRemainDaysUI(ghostId); // 初次刷新
-        }
+        // 启动槽位训练
+        slot.StartTraining(ghostId, tag);
+        
+        // 记录映射关系
+        _ghostSlotMap[ghostId] = slot;
 
         // 通知 GhostTrainer
         var trainer = FindObjectOfType<GhostTrainer>();
-        if (trainer) trainer.StartTraining(g); // 内部会置 Training 状态并清天数
+        if (trainer) trainer.StartTraining(ghostId, tag);
     }
 
-    public void OnTrainingDayAdvanced() // 供 GhostTrainer 每天调用刷新一次 UI
+    public void OnTrainingDayAdvanced()
     {
-        foreach (var id in _slotGhostIds.Where(s => !string.IsNullOrEmpty(s)))
-            UpdateRemainDaysUI(id);
-    }
-    
-    public void ShowHoverFeedback(string id, bool isGhost)
-    {
-        ShowHoverFeedback(id);
-    }
-
-    public void OnTrainingComplete(Ghost ghost) // 供 GhostTrainer 回调
-    {
-        // 清 FX/文字 + 释放槽位
-        if (_slotVfx.TryGetValue(ghost.Id, out var pack))
+        // 让所有训练中的槽位推进一天
+        foreach (var slot in _slots)
         {
-            if (pack.vfx) Destroy(pack.vfx.gameObject);
-            if (pack.remain) Destroy(pack.remain.gameObject);
+            if (slot.IsTraining)
+            {
+                slot.AdvanceTrainingDay();
+            }
         }
-        _slotVfx.Remove(ghost.Id);
+    }
 
-        int idx = _slotGhostIds.FindIndex(x => x == ghost.Id);
-        if (idx >= 0) _slotGhostIds[idx] = null;
+    public void OnSlotTrainingComplete(string ghostId)
+    {
+        // 从映射中移除
+        if (_ghostSlotMap.ContainsKey(ghostId))
+        {
+            _ghostSlotMap.Remove(ghostId);
+        }
+
+        // 通知训练完成
+        var ghost = _game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId);
+        if (ghost != null)
+        {
+            ghost.State = GhostState.Idle;
+            
+            // 通知其他系统
+            var trainer = FindObjectOfType<GhostTrainer>();
+            if (trainer)
+            {
+                // 这里可以调用训练完成的通用方法
+            }
+        }
 
         // 闪一下表示完成
-        Flash(canColor);
+        _view?.Flash(_view.canColor);
     }
 
-    private void UpdateRemainDaysUI(string ghostId)
+    // 兼容旧的接口（供GhostTrainer调用）
+    public void OnTrainingComplete(Ghost ghost)
     {
-        if (!_slotVfx.TryGetValue(ghostId, out var pack)) return;
-        var g = _game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId);
-        if (g == null) return;
-
-        int need = _game.World.Config.Rules.ghostTrainingTimeDays;
-        int remain = Mathf.Max(0, need - g.TrainingDays);
-        if (pack.remain) pack.remain.text = $"剩余 {remain} 天";
+        OnSlotTrainingComplete(ghost.Id);
     }
 }

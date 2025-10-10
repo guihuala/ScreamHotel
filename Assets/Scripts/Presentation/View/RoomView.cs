@@ -100,7 +100,6 @@ namespace ScreamHotel.Presentation
         public bool TryGetGuestAnchor(int index, out Transform anchor)
         {
             anchor = null;
-            // 如果你之前有 public Transform[] guestAnchors; 这里直接利用它
             if (guestAnchors != null && guestAnchors.Length > 0)
             {
                 index = Mathf.Clamp(index, 0, guestAnchors.Length - 1);

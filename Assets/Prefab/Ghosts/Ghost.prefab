@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3846706319776199229}
   - component: {fileID: 6234012452756781130}
   - component: {fileID: 7547106320000477341}
+  - component: {fileID: 7781718498769488414}
   m_Layer: 0
   m_Name: Ghost
   m_TagString: Untagged
@@ -173,6 +174,41 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4369380177762264235}
   m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &7781718498769488414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4369380177762264235}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e9dea3ef9f044912b0d72ef561786d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useWidthFromStart: 1
+  width: 6
+  leftPoint: {fileID: 0}
+  rightPoint: {fileID: 0}
+  speed: 2
+  pauseAtEnds: 1
+  pauseRange: {x: 0.2, y: 0.6}
+  startMovingRight: 0
+  rotateYInsteadOfScale: 1
+  visualRoot: {fileID: 0}
+  lockOnlyYRotation: 1
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 8
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 8
+  edgeCheckDistance: 0.6
+  wallCheckDistance: 0.3
+  groundRayOffset: {x: 0, y: 0.1, z: 0}
+  forwardRayOffset: {x: 0, y: 0.1, z: 0}
+  turnCooldown: 0.3
+  drawGizmos: 1
 --- !u!1001 &3713149862900878572
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System.Linq;
 using ScreamHotel.Core;
 using UnityEngine;
 using ScreamHotel.Domain;
@@ -5,17 +6,20 @@ using ScreamHotel.Domain;
 public class GhostTrainer : MonoBehaviour
 {
     private World _world;
+    private Game _game;
 
     public void Initialize(World world) { _world = world; }
-
-    public void StartTraining(Ghost ghost)
+    
+    public void StartTraining(string ghostId, FearTag tag)
     {
-        if (ghost.State == GhostState.Training) return;
+        var ghost = _game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId);
+        if (ghost == null) return;
+    
         ghost.State = GhostState.Training;
         ghost.TrainingDays = 0;
-        Debug.Log($"Training started for ghost: {ghost.Id}");
+        ghost.Sub = tag; // 直接设置选择的属性
     }
-
+    
     // 由 Game 在“进入新的一天”时调用
     public void AdvanceOneDay()
     {
@@ -47,7 +51,7 @@ public class GhostTrainer : MonoBehaviour
         foreach (var zone in FindObjectsOfType<TrainingRoomZone>())
             zone.OnTrainingComplete(ghost);
 
-        // TODO: 你也可以在这里 Raise 一个“训练完成事件”，用于弹提示/飘字
+        // TODO: 训练完成事件
         // EventBus.Raise(new GhostTrainedEvent(ghost.Id, ghost.Sub ?? FearTag.Darkness));
     }
 }
