@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ScreamHotel.UI
 {
-    public enum HoverKind { None, Room, Roof, ShopSlot, ShopReroll, TrainingRoom, TrainingRemain }
+    public enum HoverKind { None, Room, Roof, ShopSlot, ShopReroll, TrainingRoom, TrainingRemain, Character }
 
     public struct HoverInfo
     {

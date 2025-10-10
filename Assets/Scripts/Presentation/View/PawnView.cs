@@ -1,12 +1,14 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ScreamHotel.Domain;
-using ScreamHotel.Data;       // 引入 GhostConfig
-using ScreamHotel.Core; 
+using ScreamHotel.Data;
+using ScreamHotel.Core;
+using ScreamHotel.UI;
 
 namespace ScreamHotel.Presentation
 {
-    public class PawnView : MonoBehaviour
+    public class PawnView : MonoBehaviour, IHoverInfoProvider
     {
         public string ghostId;
 
@@ -167,5 +169,49 @@ namespace ScreamHotel.Presentation
             go.layer = layer;
             foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
         }
+        
+        public List<FearTag> GetFearTags()
+        {
+            var list = new List<FearTag>();
+            var game = FindObjectOfType<Game>();
+            var g = game?.World?.Ghosts?.Find(x => x.Id == ghostId);
+            if (g == null) return list;
+
+            // 常见：Ghost.Main / Ghost.Sub；再兼容 Tags/Fears 集合
+            if (TryGetEnum<FearTag>(g, "Main", out var main)) list.Add(main);
+            if (TryGetEnum<FearTag>(g, "Sub", out var sub))   list.Add(sub);
+            TryAddList(g, "Tags", list);
+            TryAddList(g, "Fears", list);
+
+            // 去重
+            for (int i = list.Count - 1; i >= 0; --i)
+                if (i > 0 && list.GetRange(0, i).Contains(list[i])) list.RemoveAt(i);
+
+            return list;
+        }
+        
+        static bool TryGetEnum<T>(object obj, string prop, out T value) where T : struct
+        {
+            value = default;
+            var p = obj.GetType().GetProperty(prop);
+            if (p != null && p.PropertyType.IsEnum)
+            {
+                var v = p.GetValue(obj);
+                if (v != null) { value = (T)v; return true; }
+            }
+            return false;
+        }
+        static void TryAddList(object obj, string prop, List<FearTag> outList)
+        {
+            var p = obj.GetType().GetProperty(prop);
+            if (p != null && typeof(System.Collections.IEnumerable).IsAssignableFrom(p.PropertyType))
+            {
+                var en = (System.Collections.IEnumerable)p.GetValue(obj);
+                if (en == null) return;
+                foreach (var x in en) if (x is FearTag t) outList.Add(t);
+            }
+        }
+        
+        public HoverInfo GetHoverInfo() => new HoverInfo { Kind = HoverKind.Character };
     }
 }

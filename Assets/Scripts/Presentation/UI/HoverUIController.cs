@@ -5,7 +5,6 @@ using ScreamHotel.Core;
 using ScreamHotel.Presentation.Shop;
 using UnityEngine.UI;
 using ScreamHotel.Presentation;
-using TMPro;
 
 namespace ScreamHotel.UI
 {
@@ -19,6 +18,7 @@ namespace ScreamHotel.UI
         public ShopRerollHoverPanel shopRerollPanel;
         public PickFearPanel pickFearPanel;
         public TrainingRemainPanel trainingRemainPanel;
+        public FearIconsPanel fearIconsPanel;
 
         [Header("Raycast")]
         public LayerMask interactMask = ~0;
@@ -60,6 +60,40 @@ namespace ScreamHotel.UI
             var provider = hit.collider.GetComponentInParent<IHoverInfoProvider>();
             if (provider == null) { HideAll(); return; }
             var info = provider.GetHoverInfo();
+
+            // 如果是角色（鬼/客人），交给 FearIconsPanel
+            if (info.Kind == HoverKind.Character)
+            {
+                // 拿 PawnView 或 GuestView（任意其一）
+                var pawn  = hit.collider.GetComponentInParent<PawnView>();
+                var guest = hit.collider.GetComponentInParent<GuestView>();
+
+                // 取恐惧标签列表
+                System.Collections.Generic.List<Domain.FearTag> tags = null;
+                Transform target = null;
+                
+                if (pawn != null) { tags = pawn.GetFearTags(); target = pawn.transform; }
+                else if (guest != null) { tags = guest.GetFearTags(); target = guest.transform; }
+                if (fearIconsPanel != null && target != null)
+                {
+                    roomPanel?.Hide();
+                    roofPanel?.Hide();
+                    shopPanel?.Hide();
+                    shopRerollPanel?.Hide();
+                    trainingRemainPanel?.Hide();
+
+                    fearIconsPanel.worldOffset = fearIconsPanel.worldOffset;
+                    fearIconsPanel.Show(target, tags);
+                }
+                else
+                {
+                    fearIconsPanel?.Hide();
+                }
+
+                _lastKind = HoverKind.Character;
+                _lastRoomId = null;
+                return; // 已处理完本帧
+            }
 
             // 3) 检查是否是训练槽位
             var trainingSlot = hit.collider.GetComponentInParent<TrainingSlot>();
@@ -180,6 +214,7 @@ namespace ScreamHotel.UI
             shopPanel?.Hide();
             shopRerollPanel?.Hide();
             trainingRemainPanel?.Hide();
+            fearIconsPanel?.Hide(); // ←
             _lastKind = HoverKind.None;
             _lastRoomId = null;
             _currentTrainingSlot = null;

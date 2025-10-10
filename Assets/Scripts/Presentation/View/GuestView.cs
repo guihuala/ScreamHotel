@@ -1,12 +1,14 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ScreamHotel.Domain;
 using ScreamHotel.Core;
 using ScreamHotel.Data;
+using ScreamHotel.UI;
 
 namespace ScreamHotel.Presentation
 {
-    public class GuestView : MonoBehaviour
+    public class GuestView : MonoBehaviour, IHoverInfoProvider
     {
         [Header("Identity")]
         public string guestId;
@@ -194,5 +196,47 @@ namespace ScreamHotel.Presentation
             go.layer = layer;
             foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
         }
+        
+        public List<FearTag> GetFearTags()
+        {
+            var list = new List<FearTag>();
+            var game = FindObjectOfType<Game>();
+            var g = game?.World?.Guests?.Find(x => x.Id == guestId);
+            if (g == null) return list;
+
+            // 常见做法：Guest 可能有 Main/Sub/Tags；按需采集
+            TryAddTagByProperty(g, "Main", list);
+            TryAddTagByProperty(g, "Sub", list);
+            TryAddListByProperty(g, "Tags", list);
+            TryAddListByProperty(g, "Fears", list); // 兼容命名
+
+            // 去重
+            for (int i = list.Count - 1; i >= 0; --i)
+                if (i > 0 && list.GetRange(0, i).Contains(list[i])) list.RemoveAt(i);
+
+            return list;
+        }
+        
+        static void TryAddTagByProperty(object obj, string prop, List<FearTag> outList)
+        {
+            var p = obj.GetType().GetProperty(prop);
+            if (p != null && p.PropertyType.IsEnum)
+            {
+                var v = p.GetValue(obj);
+                if (v != null) outList.Add((FearTag)v);
+            }
+        }
+        static void TryAddListByProperty(object obj, string prop, List<FearTag> outList)
+        {
+            var p = obj.GetType().GetProperty(prop);
+            if (p != null && typeof(System.Collections.IEnumerable).IsAssignableFrom(p.PropertyType))
+            {
+                var en = (System.Collections.IEnumerable)p.GetValue(obj);
+                if (en == null) return;
+                foreach (var x in en) if (x is FearTag t) outList.Add(t);
+            }
+        }
+        
+        public HoverInfo GetHoverInfo() => new HoverInfo { Kind = HoverKind.Character };
     }
 }
