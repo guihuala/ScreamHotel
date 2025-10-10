@@ -10,11 +10,7 @@ namespace ScreamHotel.UI
         public Canvas canvas;
         public RectTransform root;
         public TextMeshProUGUI remainText;
-        public Image background;
-
-        [Header("Panel Position")]
-        public Vector2 panelOffset = new Vector2(50f, 50f);
-
+        
         private Camera _mainCamera;
         private Transform _targetSlot;
 
@@ -57,7 +53,7 @@ namespace ScreamHotel.UI
             if (!canvas || _targetSlot == null) return;
 
             // 计算面板的世界位置（槽位位置 + 偏移）
-            Vector3 worldPosition = _targetSlot.position + new Vector3(panelOffset.x, panelOffset.y, 0);
+            Vector3 worldPosition = _targetSlot.position;
             
             // 转换为屏幕坐标
             Vector3 screenPosition = _mainCamera.WorldToScreenPoint(worldPosition);

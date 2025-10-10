@@ -15,7 +15,6 @@ namespace ScreamHotel.Presentation.Shop
             {
                 Kind = HoverKind.ShopReroll,
                 Cost = cost,
-                WorldPosition = transform.position,
             };
         }
         

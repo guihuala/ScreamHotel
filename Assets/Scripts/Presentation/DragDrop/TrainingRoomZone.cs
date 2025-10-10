@@ -9,7 +9,6 @@ using ScreamHotel.UI;
 public class TrainingRoomZone : MonoBehaviour
 {
     private Game _game;
-    private TrainingRoomView _view;
     
     private readonly List<TrainingSlot> _slots = new List<TrainingSlot>();
     private readonly Dictionary<string, TrainingSlot> _ghostSlotMap = new Dictionary<string, TrainingSlot>();
@@ -17,8 +16,6 @@ public class TrainingRoomZone : MonoBehaviour
     void Awake()
     {
         _game = FindObjectOfType<Game>();
-        _view = GetComponentInChildren<TrainingRoomView>();
-        
         _slots.Clear();
         _slots.AddRange(GetComponentsInChildren<TrainingSlot>());
         _ghostSlotMap.Clear();
@@ -30,13 +27,7 @@ public class TrainingRoomZone : MonoBehaviour
         var hoverController = FindObjectOfType<HoverUIController>();
         if (hoverController != null && !hoverController.IsPickFearPanelActive())
         {
-            hoverController.OpenPickFearPanel(ghostId, GetSlotIndex(slot), OnFearTagSelected);
-        }
-        else
-        {
-            var ui = new GameObject("PickFearPanel").AddComponent<PickFearPanel>();
-            ui.transform.SetParent(transform, false);
-            ui.Init(ghostId, GetSlotIndex(slot), OnFearTagSelected);
+            hoverController.OpenPickFearPanel(ghostId, slot.transform, GetSlotIndex(slot), OnFearTagSelected);
         }
     }
 

@@ -35,10 +35,8 @@ namespace ScreamHotel.Presentation
             return new HoverInfo
             {
                 Kind = HoverKind.ShopSlot,
-                ShopSlotIndex = slotIndex,
                 ShopMain = main,
                 ShopPrice = price,
-                WorldPosition = transform.position,
             };
         }
 

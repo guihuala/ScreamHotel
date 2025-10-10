@@ -131,7 +131,7 @@ namespace ScreamHotel.UI
             switch (info.Kind)
             {
                 case HoverKind.Roof:
-                    roofPanel?.Show(info.NextFloor, info.Cost, Input.mousePosition);
+                    roofPanel?.Show(info.NextFloor, info.Cost);
                     _lastKind = HoverKind.Roof;
                     _lastRoomId = null;
                     break;
@@ -161,6 +161,11 @@ namespace ScreamHotel.UI
                     _lastKind = HoverKind.TrainingRoom;
                     _lastRoomId = null;
                     break;
+                
+                case HoverKind.TrainingRemain:
+                    _lastKind = HoverKind.TrainingRoom;
+                    _lastRoomId = null;
+                    break;
 
                 default:
                     HideAll();
@@ -185,7 +190,7 @@ namespace ScreamHotel.UI
         /// <summary>
         /// 打开恐惧标签选择面板（从TrainingRoomZone调用）
         /// </summary>
-        public void OpenPickFearPanel(string ghostId, int slotIndex, System.Action<string, Domain.FearTag, int> onFearSelected)
+        public void OpenPickFearPanel(string ghostId, Transform transform,int slotIndex, System.Action<string, Domain.FearTag, int> onFearSelected)
         {
             if (pickFearPanel == null)
             {
@@ -196,7 +201,7 @@ namespace ScreamHotel.UI
             if (pickFearPanel != null)
             {
                 _isPickFearPanelActive = true;
-                pickFearPanel.Init(ghostId, slotIndex, (selectedGhostId, tag, selectedSlotIndex) =>
+                pickFearPanel.Init(ghostId, slotIndex, transform,(selectedGhostId, tag, selectedSlotIndex) =>
                 {
                     // 面板关闭时恢复悬停逻辑
                     _isPickFearPanelActive = false;
@@ -221,57 +226,7 @@ namespace ScreamHotel.UI
             
             panelObj.AddComponent<GraphicRaycaster>();
         }
-
-        /// <summary>
-        /// 动态创建训练剩余天数面板
-        /// </summary>
-        private void CreateTrainingRemainPanel()
-        {
-            var panelObj = new GameObject("TrainingRemainPanel");
-            panelObj.transform.SetParent(transform, false);
-            trainingRemainPanel = panelObj.AddComponent<TrainingRemainPanel>();
-            
-            // 设置Canvas
-            var canvas = panelObj.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 90; // 在恐惧面板之下
-            
-            panelObj.AddComponent<GraphicRaycaster>();
-
-            // 创建UI元素
-            CreateTrainingRemainUI(panelObj);
-        }
-
-        private void CreateTrainingRemainUI(GameObject panelObj)
-        {
-            // 创建根节点
-            var root = new GameObject("Root").AddComponent<RectTransform>();
-            root.SetParent(panelObj.transform, false);
-            root.sizeDelta = new Vector2(200, 80);
-            trainingRemainPanel.root = root;
-
-            // 创建背景
-            var background = new GameObject("Background").AddComponent<Image>();
-            background.transform.SetParent(root, false);
-            background.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);
-            background.rectTransform.anchorMin = Vector2.zero;
-            background.rectTransform.anchorMax = Vector2.one;
-            background.rectTransform.sizeDelta = Vector2.zero;
-            trainingRemainPanel.background = background;
-
-            // 创建文本
-            var text = new GameObject("RemainText").AddComponent<TextMeshProUGUI>();
-            text.transform.SetParent(root, false);
-            text.text = "0 days remain";
-            text.color = Color.white;
-            text.alignment = TMPro.TextAlignmentOptions.Center;
-            text.fontSize = 14;
-            text.rectTransform.anchorMin = Vector2.zero;
-            text.rectTransform.anchorMax = Vector2.one;
-            text.rectTransform.sizeDelta = Vector2.zero;
-            trainingRemainPanel.remainText = text;
-        }
-
+        
         /// <summary>
         /// 检查是否有激活的恐惧标签面板
         /// </summary>

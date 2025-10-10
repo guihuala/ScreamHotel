@@ -42,7 +42,6 @@ namespace ScreamHotel.Presentation
             Kind = HoverKind.Roof,
             NextFloor = GetNextFloor(),
             Cost = GetNextFloorCost(),
-            WorldPosition = transform.position
         };
     }
 }

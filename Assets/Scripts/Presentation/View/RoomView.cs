@@ -154,7 +154,6 @@ namespace ScreamHotel.Presentation
         {
             Kind = HoverKind.Room,
             RoomId = roomId,
-            WorldPosition = transform.position
         };
     }
 }

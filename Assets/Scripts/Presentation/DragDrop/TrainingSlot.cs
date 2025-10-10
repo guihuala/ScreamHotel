@@ -174,7 +174,6 @@ namespace ScreamHotel.Presentation
         public HoverInfo GetHoverInfo() => new HoverInfo
         {
             Kind = HoverKind.TrainingRoom,
-            WorldPosition = transform.position
         };
 
         // === IDropZone ===
