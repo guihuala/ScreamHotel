@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6234012452756781130}
   - component: {fileID: 7547106320000477341}
   - component: {fileID: 7781718498769488414}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Ghost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,6 @@ MonoBehaviour:
   game: {fileID: 0}
   dragSelf: 1
   ignoreRaycastLayer: Ignore Raycast
-  cloneFromSelf: 1
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 20
@@ -116,13 +115,13 @@ Rigidbody:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!23 &6234012452756781130
 MeshRenderer:
@@ -220,9 +219,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2112012008436491161}
     m_Modifications:
+    - target: {fileID: 105884, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 120358, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_Name
       value: LightningFloorBlueTrail
+      objectReference: {fileID: 0}
+    - target: {fileID: 120358, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 138830, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 165520, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 439160, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_LocalPosition.x

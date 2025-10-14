@@ -24,7 +24,6 @@ namespace ScreamHotel.Presentation
         private bool _dragging;
         private float _fixedZ;
         private IDropZone _hoverZone;
-        private GameObject _ghostPreview; // 虚影对象（仅 dragSelf=false 时使用）
 
         // ——— 抵消重力/物理 & 图层还原 ———
         private Rigidbody[] _rbs;
@@ -98,7 +97,6 @@ namespace ScreamHotel.Presentation
                 }
 
                 EndSelfDrag();
-                CleanupPreview();
                 _hoverZone?.ClearFeedback();
                 _hoverZone = null;
             }
@@ -149,24 +147,6 @@ namespace ScreamHotel.Presentation
                         ? _rbKinematic[i]
                         : _rbs[i].isKinematic;
                 }
-            }
-        }
-
-        // === 预览体兜底（dragSelf=false 时用） ===
-        private GameObject BuildPreviewFromSelfOrPrefab()
-        {
-            if (_gv == null) _gv = GetComponent<GuestView>();
-            if (cloneFromSelf && _gv != null) return _gv.BuildVisualPreview(ignoreRaycastLayer);
-            Debug.LogWarning("[DraggableGuest] 预览失败：既未开启 cloneFromSelf，也未提供 guestPrefab。");
-            return null;
-        }
-
-        private void CleanupPreview()
-        {
-            if (_ghostPreview != null)
-            {
-                Destroy(_ghostPreview);
-                _ghostPreview = null;
             }
         }
 

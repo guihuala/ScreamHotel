@@ -1,75 +1,96 @@
 
 guest1.png
-size: 1851,584
+size: 1742,904
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 body
-  rotate: false
-  xy: 2, 52
+  rotate: true
+  xy: 462, 33
   size: 262, 530
   orig: 264, 532
   offset: 1, 1
   index: -1
-guest2/body
+body-shock
   rotate: true
-  xy: 1263, 325
+  xy: 1101, 49
+  size: 262, 530
+  orig: 264, 532
+  offset: 0, 2
+  index: -1
+guest2/body
+  rotate: false
+  xy: 1276, 316
   size: 257, 586
   orig: 262, 591
   offset: 3, 5
   index: -1
+guest2/body-shock
+  rotate: false
+  xy: 1014, 313
+  size: 260, 589
+  orig: 264, 589
+  offset: 0, 0
+  index: -1
 guest2/leftleg
-  rotate: true
-  xy: 553, 15
+  rotate: false
+  xy: 1535, 609
   size: 107, 293
   orig: 107, 294
   offset: 0, 1
   index: -1
 guest2/rightleg
   rotate: true
-  xy: 266, 14
+  xy: 2, 2
   size: 108, 285
   orig: 108, 286
   offset: 0, 0
   index: -1
 guest3/body
-  rotate: true
-  xy: 1244, 20
+  rotate: false
+  xy: 462, 297
   size: 275, 605
   orig: 275, 605
   offset: 0, 0
   index: -1
+guest3/body-shock
+  rotate: false
+  xy: 739, 299
+  size: 273, 603
+  orig: 273, 603
+  offset: 0, 0
+  index: -1
 guest3/leftleg
   rotate: false
-  xy: 1058, 292
+  xy: 1644, 612
   size: 96, 290
   orig: 99, 290
   offset: 2, 0
   index: -1
 guest3/rightleg
   rotate: false
-  xy: 1156, 297
+  xy: 994, 12
   size: 105, 285
   orig: 111, 285
   offset: 2, 0
   index: -1
 leftleg
   rotate: false
-  xy: 1138, 2
+  xy: 1633, 29
   size: 104, 288
   orig: 104, 288
   offset: 0, 0
   index: -1
 rightleg
-  rotate: true
-  xy: 848, 17
+  rotate: false
+  xy: 1535, 319
   size: 105, 288
   orig: 108, 288
   offset: 0, 0
   index: -1
 背景
-  rotate: true
-  xy: 266, 124
+  rotate: false
+  xy: 2, 112
   size: 458, 790
   orig: 460, 792
   offset: 1, 1

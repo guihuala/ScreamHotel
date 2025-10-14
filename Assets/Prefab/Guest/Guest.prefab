@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7857466318720220112}
   - component: {fileID: 9008860824029310462}
   - component: {fileID: 580979021929288510}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Spine GameObject (guest1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 5698494083993245043}
   - component: {fileID: 3513860939847209319}
   - component: {fileID: 4658408324706859204}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Guest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -200,7 +200,7 @@ Rigidbody:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
@@ -249,7 +249,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7714624583527147650}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e9dea3ef9f044912b0d72ef561786d8, type: 3}
   m_Name: 
