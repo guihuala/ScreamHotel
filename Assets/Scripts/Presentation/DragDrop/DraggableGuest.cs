@@ -89,7 +89,7 @@ namespace ScreamHotel.Presentation
                     _hoverZone = z;
                 }
 
-                _hoverZone?.ShowHoverFeedback(guestId, /*isGhost*/ false);
+                _hoverZone?.ShowHoverFeedback(guestId, false);
             }
 
             // 结束拖拽
@@ -97,28 +97,49 @@ namespace ScreamHotel.Presentation
             {
                 _dragging = false;
 
-                // 松手
                 if (_hoverZone != null)
                 {
-                    if (_hoverZone.TryDrop(guestId, /*isGhost*/ false, out var anchor))
+                    if (_hoverZone.TryDrop(guestId, false, out var anchor))
                     {
                         if (anchor) _gv?.MoveTo(anchor, 0.12f);
+                        // 放进房间成功，固定住以免再自己走出
+                        PinInRoomAfterDrop();
                     }
                     else
                     {
-                        var tmp = new GameObject("GuestReturnTmp").transform;
-                        tmp.position = _dragStartPos;
-                        _gv?.MoveTo(tmp, 0.12f);
-                        Destroy(tmp.gameObject, 0.2f);
+                        HandleNoDropZoneRelease();
                     }
-
                     _hoverZone.ClearFeedback();
                     _hoverZone = null;
+                }
+                else
+                {
+                    HandleNoDropZoneRelease();
                 }
 
                 EndSelfDrag();
                 _hoverZone?.ClearFeedback();
                 _hoverZone = null;
+            }
+        }
+        
+        // 根据是否白天决定解绑或回弹
+        private void HandleNoDropZoneRelease()
+        {
+            bool isDay = (game && game.State == GameState.Day);
+            if (isDay)
+            {
+                var assign = GetSystem<Systems.AssignmentSystem>(game, "_assignmentSystem");
+                if (!string.IsNullOrEmpty(guestId)) assign?.UnassignGuest(guestId);
+                Debug.Log($"[DraggableGuest] 白天无 DropZone，已清除 {guestId} 分配");
+                // 不回弹，停在玩家松手处
+                UnpinForFreeMove(); // 允许它重新自由走动
+            }
+            else
+            {
+                var tmp = new GameObject("GuestReturnTmp").transform; tmp.position = _dragStartPos;
+                _gv?.MoveTo(tmp, 0.12f);
+                Destroy(tmp.gameObject, 0.2f);
             }
         }
 
@@ -198,6 +219,38 @@ namespace ScreamHotel.Presentation
             if (Physics.Raycast(ray, out var hit, 1000f))
                 return hit.collider.GetComponentInParent<IDropZone>();
             return null;
+        }
+        
+        private static T GetSystem<T>(object obj, string field) where T : class
+        {
+            var f = obj.GetType().GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return f?.GetValue(obj) as T;
+        }
+        
+        // 放到房间后：固定在锚点 & 停掉自由移动
+        private void PinInRoomAfterDrop()
+        {
+            // 1) 关掉自由移动
+            var patrol = GetComponent<PatrolWalker>();
+            if (patrol) patrol.enabled = false;
+
+            // 2) 刚体固定住
+            var rb = GetComponent<Rigidbody>();
+            if (rb)
+            {
+                rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
+                rb.isKinematic = true;
+            }
+        }
+
+        // 从房间解除后,恢复自由移动
+        private void UnpinForFreeMove()
+        {
+            var patrol = GetComponent<PatrolWalker>();
+            if (patrol) patrol.enabled = true;
+
+            var rb = GetComponent<Rigidbody>();
+            if (rb) rb.isKinematic = false; // 让物理恢复
         }
     }
 }
