@@ -67,6 +67,7 @@ namespace ScreamHotel.Domain
 
     public class World
     {
+        public int Suspicion = 0; // 全局累计怀疑值（每天结算后不清零）
         public readonly List<Ghost> Ghosts = new();
         public readonly List<Guest> Guests = new();
         public readonly List<Room> Rooms = new();

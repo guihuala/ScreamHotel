@@ -8,6 +8,7 @@ public enum GameScene
 {
     MainMenu = 0,   // 主菜单
     Game = 1,   // 游戏场景
+    EndingComic = 2,
 }
 
 public class SceneLoader : SingletonPersistent<SceneLoader>

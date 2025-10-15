@@ -205,12 +205,6 @@ namespace ScreamHotel.Core
             }
         }
         
-        private void OnSettlementContinue()
-        {
-            TimeSystem.isPaused = false;
-            GoToDay(); // 这里会自增 DayIndex
-        }
-        
         public void GoToDay()
         {
             bool fromSettlement = (State == GameState.Settlement);
@@ -315,12 +309,59 @@ namespace ScreamHotel.Core
             
             EventBus.Raise(new GoldChanged(w.Economy.Gold));
         }
-        
+
         private void OnNightResolved(ExecNightResolved r)
         {
-            _settleGuestsTotal = r.GuestsTotal;
+            _settleGuestsTotal  = r.GuestsTotal;
             _settleGuestsScared = r.GuestsScared;
-            _settleGoldDelta = r.TotalGold;
+            _settleGoldDelta    = r.TotalGold;
+
+            // === 新增：怀疑值结算 ===
+            var rules = World?.Config?.Rules;
+            if (rules != null)
+            {
+                int delta = r.AssignedFails * Mathf.Max(0, rules.suspicionPerFailedGuest)
+                            + r.UnservedGuests * Mathf.Max(0, rules.suspicionPerUnservedGuest);
+
+                if (delta != 0)
+                {
+                    World.Suspicion += delta;
+                    EventBus.Raise(new SuspicionChanged(World.Suspicion, delta));
+                }
+
+                if (World.Suspicion >= Mathf.Max(1, rules.suspicionThreshold))
+                {
+                    EndGame(false, "怀疑值达到上限，旅馆的秘密被揭穿");
+                    return;
+                }
+            }
+        }
+
+        private void OnSettlementContinue()
+        {
+            TimeSystem.isPaused = false;
+
+            // 成功结局判定
+            var rules = World?.Config?.Rules;
+            if (rules != null && DayIndex >= Mathf.Max(1, rules.totalDays))
+            {
+                // 坚持到最后一天且怀疑值未满
+                EndGame(true, "成功经营至最后一天，未被揭穿");
+                return;
+            }
+
+            GoToDay(); // 进入下一天（这里会自增 DayIndex）
+        }
+        
+        private void EndGame(bool success, string reason)
+        {
+            Debug.Log($"Game Ended. Success={success}. Reason={reason}");
+            TimeSystem.isPaused = true;
+            EventBus.Raise(new GameEnded(success, reason, DayIndex));
+
+            // 如果你有 EndingPanel，可在此打开：
+            // var panel = UIManager.Instance.OpenPanel(nameof(EndingPanel)) as EndingPanel;
+            // panel?.Init(new EndingPanel.Data { success = success, reason = reason, dayIndex = DayIndex, suspicion = World.Suspicion });
         }
     }
 }

@@ -8,6 +8,14 @@ namespace ScreamHotel.Data
     [CreateAssetMenu(menuName = "ScreamHotel/GameRules", fileName = "GameRules")]
     public class GameRuleConfig : ScriptableObject
     {
+        [Header("Suspicion & Ending")] [Tooltip("怀疑值上限，达到或超过时立即触发失败结局")]
+        public int suspicionThreshold = 100;
+        [Tooltip("每位【吓人失败】的已接待客人增加的怀疑值")] public int suspicionPerFailedGuest = 1;
+        [Tooltip("每位【未接待】的客人增加的怀疑值（当晚直接算失败）")] public int suspicionPerUnservedGuest = 1;
+        [Tooltip("本局总天数（坚持到最后一天且未满怀疑值 = 成功结局）")]
+        public int totalDays = 14;
+
+        
         [Header("Day Spawns")]
         [Tooltip("每天白天刷新的客人数")]
         public int dayGuestSpawnCount = 4;

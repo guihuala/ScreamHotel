@@ -1,8 +1,7 @@
-using System;
-using ScreamHotel.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ScreamHotel.Core;
 
 namespace ScreamHotel.UI
 {
@@ -15,6 +14,12 @@ namespace ScreamHotel.UI
         public TextMeshProUGUI goldText;
         public TextMeshProUGUI dayText;
         public TextMeshProUGUI timeText;
+        
+        [Header("Suspicion UI")]
+        public TextMeshProUGUI suspicionText;
+        public Slider suspicionSlider;
+
+        private int suspicionThresholdCached = 100;
 
         private void Awake()
         {
@@ -22,17 +27,21 @@ namespace ScreamHotel.UI
 
             pauseButton.onClick.AddListener(OnPauseButtonClicked);
             executeButton.onClick.AddListener(OnExecuteButtonClicked);
-            skipDayButton.onClick.AddListener(OnSkipDayButtonClicked); // 新增
-            
-            // 初始隐藏执行按钮
+            skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
+
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
+
+            // 读取阈值（有则用规则，没有就保底100）
+            var rules = game?.World?.Config?.Rules;
+            if (rules != null) suspicionThresholdCached = Mathf.Max(1, rules.suspicionThreshold);
         }
 
         private void Start()
         {
             RefreshGoldUI();
             RefreshDayUI();
+            RefreshSuspicionUI(); // 初始刷新
         }
 
         private void OnEnable()
@@ -41,6 +50,9 @@ namespace ScreamHotel.UI
             EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
             EventBus.Subscribe<DayStartedEvent>(OnDayStarted);
             EventBus.Subscribe<NightStartedEvent>(OnNightStarted);
+
+            // === 新增订阅：怀疑值变化 ===
+            EventBus.Subscribe<SuspicionChanged>(OnSuspicionChanged);
         }
 
         private void OnDisable()
@@ -49,19 +61,17 @@ namespace ScreamHotel.UI
             EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
             EventBus.Unsubscribe<DayStartedEvent>(OnDayStarted);
             EventBus.Unsubscribe<NightStartedEvent>(OnNightStarted);
+
+            // === 取消订阅 ===
+            EventBus.Unsubscribe<SuspicionChanged>(OnSuspicionChanged);
         }
 
-        private void Update()
-        {
-            // 更新时间显示
-            UpdateTimeDisplay();
-        }
+        private void Update() => UpdateTimeDisplay();
 
         private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();
 
         private void OnGameStateChanged(GameStateChanged e)
         {
-            // 当游戏状态改变时更新按钮可见性
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
             RefreshDayUI();
@@ -72,6 +82,9 @@ namespace ScreamHotel.UI
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
             RefreshDayUI();
+
+            // 每天开始也刷新一次（防止UI不同步）
+            RefreshSuspicionUI();
         }
 
         private void OnNightStarted(NightStartedEvent e)
@@ -80,24 +93,25 @@ namespace ScreamHotel.UI
             UpdateSkipDayButtonVisibility();
         }
 
-        private void OnPauseButtonClicked()
+        // === 新增：怀疑值事件回调 ===
+        private void OnSuspicionChanged(SuspicionChanged e)
         {
-            UIManager.Instance.OpenPanel("PausePanel");
+            suspicionThresholdCached = Mathf.Max(1, suspicionThresholdCached);
+            RefreshSuspicionUI();
         }
+
+        private void OnPauseButtonClicked() => UIManager.Instance.OpenPanel("PausePanel");
 
         private void OnExecuteButtonClicked()
         {
             if (game.State == GameState.NightShow)
             {
                 game.StartNightExecution();
-                
-                // 执行后立即隐藏按钮
                 UpdateExecuteButtonVisibility();
                 UpdateSkipDayButtonVisibility();
             }
         }
 
-        // 跳过白天按钮点击事件
         private void OnSkipDayButtonClicked()
         {
             if (game.State == GameState.Day)
@@ -110,24 +124,18 @@ namespace ScreamHotel.UI
 
         private void UpdateExecuteButtonVisibility()
         {
-            if (executeButton != null)
-            {
-                // 只在黑夜展示阶段显示执行按钮
-                bool shouldShow = game.State == GameState.NightShow;
-                executeButton.gameObject.SetActive(shouldShow);
-                executeButton.interactable = shouldShow;
-            }
+            if (executeButton == null) return;
+            bool show = game.State == GameState.NightShow;
+            executeButton.gameObject.SetActive(show);
+            executeButton.interactable = show;
         }
-        
+
         private void UpdateSkipDayButtonVisibility()
         {
-            if (skipDayButton != null)
-            {
-                // 只在白天显示跳过按钮
-                bool shouldShow = game.State == GameState.Day;
-                skipDayButton.gameObject.SetActive(shouldShow);
-                skipDayButton.interactable = shouldShow;
-            }
+            if (skipDayButton == null) return;
+            bool show = game.State == GameState.Day;
+            skipDayButton.gameObject.SetActive(show);
+            skipDayButton.interactable = show;
         }
 
         private void RefreshGoldUI()
@@ -137,31 +145,47 @@ namespace ScreamHotel.UI
 
         private void RefreshDayUI()
         {
-            if (dayText != null) 
+            if (dayText == null) return;
+            string stateText = game.State switch
             {
-                string stateText = game.State switch
-                {
-                    GameState.Day => "Day",
-                    GameState.NightShow => "Night Show",
-                    GameState.NightExecute => "Night Execute",
-                    GameState.Settlement => "Settlement",
-                    _ => "Preparing"
-                };
-        
-                dayText.text = $"Day {game.DayIndex} - {stateText}";
-            }
+                GameState.Day => "Day",
+                GameState.NightShow => "Night Show",
+                GameState.NightExecute => "Night Execute",
+                GameState.Settlement => "Settlement",
+                _ => "Preparing"
+            };
+            dayText.text = $"Day {game.DayIndex} - {stateText}";
         }
 
         private void UpdateTimeDisplay()
         {
-            if (timeText != null && game.TimeSystem != null)
+            if (timeText == null || game.TimeSystem == null) return;
+            float t = game.TimeSystem.currentTimeOfDay;
+            int h = Mathf.FloorToInt(t * 24f);
+            int m = Mathf.FloorToInt((t * 24f - h) * 60f);
+            timeText.text = $"{h:D2}:{m:D2}";
+        }
+
+        // 新增：刷新怀疑值 UI
+        private void RefreshSuspicionUI()
+        {
+            var world = game?.World;
+            if (world == null) return;
+
+            // 阈值优先读当前规则
+            var rules = world.Config?.Rules;
+            int threshold = rules != null ? Mathf.Max(1, rules.suspicionThreshold) : suspicionThresholdCached;
+            int current = Mathf.Max(0, world.Suspicion);
+            float pct = Mathf.Clamp01((float)current / threshold);
+
+            if (suspicionText != null)
+                suspicionText.text = $"Sus: {current} / {threshold}";
+
+            if (suspicionSlider != null)
             {
-                // 将时间转换为24小时制显示
-                float timeOfDay = game.TimeSystem.currentTimeOfDay;
-                int hours = Mathf.FloorToInt(timeOfDay * 24f);
-                int minutes = Mathf.FloorToInt((timeOfDay * 24f - hours) * 60f);
-                
-                timeText.text = $"{hours:D2}:{minutes:D2}";
+                suspicionSlider.minValue = 0f;
+                suspicionSlider.maxValue = 1f;
+                suspicionSlider.value = pct;
             }
         }
     }

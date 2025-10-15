@@ -109,4 +109,22 @@ namespace ScreamHotel.Core
             SlotIndex = slotIndex;
         }
     }
+    
+    public readonly struct SuspicionChanged
+    {
+        public readonly int Total;
+        public readonly int Delta;
+        public SuspicionChanged(int total, int delta) { Total = total; Delta = delta; }
+    }
+
+    public readonly struct GameEnded
+    {
+        public readonly bool Success;
+        public readonly string Reason;
+        public readonly int DayIndex;
+        public GameEnded(bool success, string reason, int dayIndex)
+        {
+            Success = success; Reason = reason; DayIndex = dayIndex;
+        }
+    }
 }

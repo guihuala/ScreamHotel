@@ -24,6 +24,7 @@ namespace ScreamHotel.Systems
             int guestsTotal = 0;
             int guestsScared = 0;
             HashSet<string> ghostSet = new HashSet<string>();
+            HashSet<string> servedGuestSet = new HashSet<string>(); // 已接待集合
 
             foreach (var room in _world.Rooms)
             {
@@ -34,14 +35,13 @@ namespace ScreamHotel.Systems
                     GuestResults = new List<GuestNightResult>()
                 };
 
-                // 统计鬼怪出场
                 foreach (var gid in room.AssignedGhostIds)
                     if (!string.IsNullOrEmpty(gid))
                         ghostSet.Add(gid);
 
-                // 逐客结算
                 foreach (var guestId in room.AssignedGuestIds)
                 {
+                    servedGuestSet.Add(guestId); // 记录已接待
                     var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
                     if (g == null) continue;
 
@@ -69,18 +69,23 @@ namespace ScreamHotel.Systems
             _world.Economy.Gold += totalGold;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
 
-            // 汇总字段
+            // === 失败数 & 未接待数 ===
+            int assignedFails = Mathf.Max(0, guestsTotal - guestsScared);
+
             result.TotalGold = totalGold;
             result.GuestsTotal = guestsTotal;
             result.GuestsScared = guestsScared;
             result.GhostsUsed = ghostSet.Count;
             result.RoomCount = _world.Rooms.Count;
             result.ScareRate = guestsTotal > 0 ? (float)guestsScared / guestsTotal : 0f;
-            
+
+            // 新字段
+            result.AssignedFails = assignedFails;
+
             EventBus.Raise(result);
             return result;
         }
-
+        
         private HashSet<FearTag> CollectEffectiveFearTags(Room room)
         {
             var set = new HashSet<FearTag>();
@@ -119,6 +124,10 @@ namespace ScreamHotel.Systems
         public int RoomCount;
         public float ScareRate;
         public List<RoomNightResult> RoomResults;
+
+        // 新增
+        public int AssignedFails; // 已接待但未被吓到的数量
+        public int UnservedGuests; // 今日未接待的客人数
     }
 
     public class RoomNightResult
