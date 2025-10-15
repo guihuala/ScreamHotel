@@ -44,9 +44,6 @@ public class GhostTrainer : MonoBehaviour
         ghost.State = GhostState.Idle;
         Debug.Log($"Training complete for ghost: {ghost.Id}");
 
-        // 如果你想在完成时才真正赋予 Sub，这里做：
-        // ghost.Sub = ghost.Sub ?? PickedTagCache[ghost.Id];
-
         // 通知训练室把特效移除、槽位释放
         foreach (var zone in FindObjectsOfType<TrainingRoomZone>())
             zone.OnSlotTrainingComplete(ghost.Id);

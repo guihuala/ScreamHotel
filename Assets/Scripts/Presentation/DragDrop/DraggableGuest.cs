@@ -1,3 +1,4 @@
+using ScreamHotel.Core;
 using UnityEngine;
 using ScreamHotel.Systems;
 
@@ -30,6 +31,24 @@ namespace ScreamHotel.Presentation
         private bool[] _rbUseGravity, _rbKinematic;
         private Vector3 _dragStartPos;
         private int _origLayer;
+        
+        private bool _dragLocked;
+
+        void OnEnable()
+        {
+            EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
+            if (!game) game = FindObjectOfType<Core.Game>();
+            if (game) _dragLocked = (game.State == GameState.NightExecute); // 初始化
+        }
+        void OnDisable()
+        {
+            EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
+        }
+
+        private void OnGameStateChanged(GameStateChanged e)
+        {
+            if (e.State is GameState s) _dragLocked = (s == GameState.NightExecute);
+        }
 
         void Awake()
         {
@@ -49,6 +68,7 @@ namespace ScreamHotel.Presentation
             // 开始拖拽
             if (Input.GetMouseButtonDown(dragMouseButton) && HitsSelf())
             {
+                if (_dragLocked) { Debug.Log("[DraggableGuest] NightExecute 阶段禁止拖拽"); return; }
                 _dragging = true;
                 BeginSelfDrag();
             }

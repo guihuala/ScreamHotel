@@ -1,3 +1,4 @@
+using ScreamHotel.Core;
 using UnityEngine;
 
 namespace ScreamHotel.Presentation
@@ -24,7 +25,25 @@ namespace ScreamHotel.Presentation
         private Rigidbody[] _rbs;
         private bool[] _rbUseGravity, _rbKinematic;
         private Vector3 _dragStartPos;
+        
+        private bool _dragLocked;
 
+        void OnEnable()
+        {
+            EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
+            if (!game) game = FindObjectOfType<Core.Game>();
+            if (game) _dragLocked = (game.State == GameState.NightExecute); // 初始化
+        }
+        void OnDisable()
+        {
+            EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
+        }
+
+        private void OnGameStateChanged(GameStateChanged e)
+        {
+            if (e.State is GameState s) _dragLocked = (s == GameState.NightExecute);
+        }
+        
         void Awake()
         {
             _cam = Camera.main;
@@ -38,14 +57,11 @@ namespace ScreamHotel.Presentation
 
         void Update()
         {
+            // 开始拖拽分支（夜间锁判断）
             if (Input.GetMouseButtonDown(dragMouseButton) && PointerHitsSelf())
             {
-                if (IsLockedByTrainingSlot())
-                {
-                    Debug.Log($"[DraggablePawn] {ghostId} 已固定在训练槽位，禁止拖拽。");
-                    return;
-                }
-
+                if (_dragLocked) { Debug.Log("[DraggablePawn] NightExecute 阶段禁止拖拽"); return; }
+                if (IsLockedByTrainingSlot()) { Debug.Log($"[DraggablePawn] {ghostId} 已固定在训练槽位"); return; }
                 _dragging = true;
                 BeginSelfDrag();
             }

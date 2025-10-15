@@ -155,21 +155,7 @@ namespace ScreamHotel.Presentation
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
             return !IsOccupied && ghost != null && ghost.State != GhostState.Training;
         }
-
-        public bool TryDrop(string ghostId, out Transform anchor)
-        {
-            anchor = null;
-            if (!CanAccept(ghostId)) return false;
-
-            _ghostId = ghostId;
-            _slotState = GhostState.Idle;
-            _trainingDays = 0;
-
-            anchor = ghostAnchor; // 世界坐标由 DraggablePawn 直接读取
-            UpdateVisuals();
-            return true;
-        }
-
+        
         // === IHoverInfoProvider ===
         public HoverInfo GetHoverInfo() => new HoverInfo
         {
@@ -193,7 +179,22 @@ namespace ScreamHotel.Presentation
             if (zone != null) zone.OpenPickFearUI(id, this);
             return true;
         }
+        
+        public bool TryDrop(string ghostId, out Transform anchor)
+        {
+            anchor = null;
+            if (!CanAccept(ghostId)) return false;
 
+            _ghostId = ghostId;
+            _slotState = GhostState.Idle;
+            _trainingDays = 0;
+
+            anchor = ghostAnchor;
+    
+            UpdateVisuals();
+            return true;
+        }
+        
         void IDropZone.ShowHoverFeedback(string id, bool isGhost)
         {
             if (!isGhost) { ShowCantAccept(); return; }
