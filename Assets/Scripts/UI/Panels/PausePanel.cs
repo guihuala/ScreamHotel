@@ -11,7 +11,19 @@ public class PausePanel : BasePanel
     
     public Button resumeButton;
     public Button mainmenuButton;
+    
+    private void OnEnable()
+    {
+        // 打开面板即暂停
+        TimeManager.Instance?.PauseTime();
+    }
 
+    private void OnDisable()
+    {
+        // 关闭面板即恢复
+        TimeManager.Instance?.ResumeTime();
+    }
+    
     private void Start()
     {
         bgmVolumeSlider.value = AudioManager.Instance.bgmVolumeFactor;
@@ -22,7 +34,6 @@ public class PausePanel : BasePanel
 
         resumeButton.onClick.AddListener(OnResumeButtonClick);
         mainmenuButton.onClick.AddListener(OnMainmenuButtonClick);
-        
     }
 
     #region 音量设置
@@ -57,11 +68,15 @@ public class PausePanel : BasePanel
     private void OnMainmenuButtonClick()
     {
         SaveSettings();
+        TimeManager.Instance?.ResumeTime();
+        UIManager.Instance.ClosePanel(panelName);
+        SceneLoader.Instance.LoadScene(GameScene.MainMenu);
     }
 
     private void OnResumeButtonClick()
     {
         SaveSettings();
+        TimeManager.Instance?.ResumeTime();
         UIManager.Instance.ClosePanel(panelName);
     }
 }

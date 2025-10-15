@@ -1,59 +1,51 @@
 using UnityEngine;
 
-public class TimeManager : Singleton<TimeManager>
+[DefaultExecutionOrder(-10000)] // 很早执行，确保比场景物体更早 Awake
+public sealed class TimeManager : MonoBehaviour
 {
-    // 当前时间倍率
+    public static TimeManager Instance { get; private set; }
+
     public float TimeFactor { get; private set; } = 1f;
-
-    // 用于处理暂停、恢复等功能的状态
     public bool IsPaused { get; private set; }
+    private float _baseFixedDeltaTime;
 
-    // 获取当前帧的时间（经过时间倍率调整）
-    public float DeltaTime
+    // 供“局内时间”使用的 dt（受暂停/倍速控制）
+    public float DeltaTime => IsPaused ? 0f : Time.unscaledDeltaTime * TimeFactor;
+
+    // —— 在任何场景加载前就自举一个 TimeManager —— //
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Bootstrap()
     {
-        get
-        {
-            // 如果暂停，返回0，否则按时间倍率调整
-            return IsPaused ? 0f : Time.unscaledDeltaTime * TimeFactor;
-        }
+        if (Instance != null) return;
+
+        var go = new GameObject("TimeManager");
+        go.hideFlags = HideFlags.DontSave;
+        go.AddComponent<TimeManager>();
+        DontDestroyOnLoad(go);
     }
 
-    // 获取固定更新的时间（经过时间倍率调整）
-    public float FixedDeltaTime
+    private void Awake()
     {
-        get
+        if (Instance != null && Instance != this)
         {
-            // 固定时间间隔也按时间倍率调整
-            return IsPaused ? 0f : 0.02f * TimeFactor; // 0.02f 是默认的 fixedDeltaTime
+            Destroy(gameObject);
+            return;
         }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        _baseFixedDeltaTime = Time.fixedDeltaTime;
     }
 
-    // 更新时间
     private void Update()
     {
-        if (!IsPaused)
-        {
-            // 手动更新deltaTime
-            Time.fixedDeltaTime = FixedDeltaTime;
-            Time.timeScale = DeltaTime;
-        }
+        // 正确设置全局缩放（暂停/倍速）
+        Time.timeScale = IsPaused ? 0f : Mathf.Max(0f, TimeFactor);
+        Time.fixedDeltaTime = _baseFixedDeltaTime * Time.timeScale;
     }
 
-    // 设置时间倍率
-    public void SetTimeFactor(float factor)
-    {
-        TimeFactor = factor;
-    }
-
-    // 暂停时间
-    public void PauseTime()
-    {
-        IsPaused = true;
-    }
-
-    // 恢复时间
-    public void ResumeTime()
-    {
-        IsPaused = false;
-    }
+    public void SetTimeFactor(float factor) => TimeFactor = Mathf.Max(0f, factor);
+    public void PauseTime()  { IsPaused = true;  Debug.Log("[TimeManager] paused"); }
+    public void ResumeTime() { IsPaused = false; Debug.Log("[TimeManager] resumed"); }
+    public void SetPaused(bool paused) => IsPaused = paused;
 }

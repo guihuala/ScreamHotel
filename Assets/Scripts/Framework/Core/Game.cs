@@ -75,8 +75,21 @@ namespace ScreamHotel.Core
 
         private void Update()
         {
-            TimeSystem.Update(Time.deltaTime);
+            if (TimeManager.Instance == null) return;
+            float dt = TimeManager.Instance.DeltaTime;     // 统一由 TimeManager 控制暂停/倍速
+            TimeSystem.Update(dt);
             UpdateSkyboxTransition();
+        }
+
+        public void StartSettlement()
+        {
+            State = GameState.Settlement;
+            EventBus.Raise(new GameStateChanged(State));
+            Debug.Log("Enter Settlement phase");
+            
+            TimeManager.Instance?.PauseTime();
+
+            DisplaySettlementUI();
         }
         
         private void OnDestroy()
@@ -165,20 +178,7 @@ namespace ScreamHotel.Core
             var (_, showEnd, _) = GetPhaseBoundaries();
             TimeSystem.SetNormalizedTime(Mathf.Repeat(showEnd + 0.0001f, 1f));
         }
-
-        public void StartSettlement()
-        {
-            State = GameState.Settlement;
-            EventBus.Raise(new GameStateChanged(State));
-            Debug.Log("Enter Settlement phase");
-
-            // 暂停时间流逝，等待玩家确认
-            TimeSystem.isPaused = true;
-
-            // 显示结算面板（点击后才进入下一天）
-            DisplaySettlementUI();
-        }
-
+        
         private void DisplaySettlementUI()
         {
             Debug.Log("Displaying settlement UI.");
@@ -218,14 +218,13 @@ namespace ScreamHotel.Core
             _dayPhaseSystem.PrepareDay(DayIndex);
             EventBus.Raise(new GameStateChanged(State));
 
-            TimeSystem.isPaused = false;
-            
-            // 每天开始时推进训练
+            // 由 TimeManager 控制恢复
+            TimeManager.Instance?.ResumeTime();
+
             var trainer = FindObjectOfType<GhostTrainer>();
             trainer?.AdvanceOneDay();
         }
-
-
+        
         public void StartNightShow()
         {
             State = GameState.NightShow;
@@ -315,8 +314,7 @@ namespace ScreamHotel.Core
             _settleGuestsTotal  = r.GuestsTotal;
             _settleGuestsScared = r.GuestsScared;
             _settleGoldDelta    = r.TotalGold;
-
-            // === 新增：怀疑值结算 ===
+            
             var rules = World?.Config?.Rules;
             if (rules != null)
             {
@@ -339,29 +337,25 @@ namespace ScreamHotel.Core
 
         private void OnSettlementContinue()
         {
-            TimeSystem.isPaused = false;
+            // 由 TimeManager 控制恢复
+            TimeManager.Instance?.ResumeTime();
 
-            // 成功结局判定
             var rules = World?.Config?.Rules;
             if (rules != null && DayIndex >= Mathf.Max(1, rules.totalDays))
             {
-                // 坚持到最后一天且怀疑值未满
                 EndGame(true, "成功经营至最后一天，未被揭穿");
                 return;
             }
-
-            GoToDay(); // 进入下一天（这里会自增 DayIndex）
+            GoToDay();
         }
         
         private void EndGame(bool success, string reason)
         {
             Debug.Log($"Game Ended. Success={success}. Reason={reason}");
-            TimeSystem.isPaused = true;
-            EventBus.Raise(new GameEnded(success, reason, DayIndex));
 
-            // 如果你有 EndingPanel，可在此打开：
-            // var panel = UIManager.Instance.OpenPanel(nameof(EndingPanel)) as EndingPanel;
-            // panel?.Init(new EndingPanel.Data { success = success, reason = reason, dayIndex = DayIndex, suspicion = World.Suspicion });
+            // 结束时统一暂停
+            TimeManager.Instance?.PauseTime();
+            EventBus.Raise(new GameEnded(success, reason, DayIndex));
         }
     }
 }
