@@ -1,0 +1,27 @@
+
+goust1.png
+size: 310,175
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: true
+  xy: 2, 15
+  size: 158, 201
+  orig: 162, 206
+  offset: 2, 3
+  index: -1
+eye1
+  rotate: false
+  xy: 205, 2
+  size: 103, 37
+  orig: 103, 37
+  offset: 0, 0
+  index: -1
+eye2
+  rotate: true
+  xy: 205, 41
+  size: 132, 95
+  orig: 133, 95
+  offset: 0, 0
+  index: -1
