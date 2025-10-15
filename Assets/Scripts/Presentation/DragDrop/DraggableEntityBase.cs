@@ -5,8 +5,10 @@ using ScreamHotel.Systems;
 
 namespace ScreamHotel.Presentation
 {
+    public interface IDraggableEntity { bool IsGhostEntity { get; } }
+
     [RequireComponent(typeof(Collider))]
-    public abstract class DraggableEntityBase<TView> : MonoBehaviour where TView : Component
+    public abstract class DraggableEntityBase<TView> : MonoBehaviour, IDraggableEntity where TView : Component
     {
         [Header("Binding")] public Core.Game game;
 
@@ -17,6 +19,8 @@ namespace ScreamHotel.Presentation
         public float dragPlaneZ = 0f;
         public float followLerp = 30f;
         public bool dragSelf = true;
+        
+        public bool IsGhostEntity => IsGhost;
 
         // —— 由子类设置的标识 —— 
         protected string entityId;
@@ -75,7 +79,7 @@ namespace ScreamHotel.Presentation
         protected virtual void Update()
         {
             // 开始拖拽
-            if (Input.GetMouseButtonDown(dragMouseButton) && PointerHitsSelf())
+            if (Input.GetMouseButtonDown(dragMouseButton) && PointerHitsTopMostSelf())
             {
                 if (_dragLocked) { Debug.Log($"[{GetType().Name}] NightExecute 阶段禁止拖拽"); return; }
                 if (IsExternallyLocked()) { Debug.Log($"[{GetType().Name}] 实体被外部系统锁定，禁止拖拽"); return; }
@@ -216,13 +220,48 @@ namespace ScreamHotel.Presentation
         }
 
         // —— Raycast / Helpers —— 
-        private bool PointerHitsSelf()
+// 用 RaycastAll 只挑“顶层（最近）且是可拖拽实体”的对象；可选优先拾取鬼
+        private bool PointerHitsTopMostSelf()
         {
             var ray = _cam.ScreenPointToRay(Input.mousePosition);
-            return Physics.Raycast(ray, out var hit, 1000f)
-                && (hit.collider.gameObject == gameObject || hit.collider.transform.IsChildOf(transform));
-        }
+            var hits = Physics.RaycastAll(ray, 1000f, ~0, QueryTriggerInteraction.Collide);
+            if (hits == null || hits.Length == 0) return false;
 
+            // 按距离近->远排序
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            // 先在命中序列里找“可拖拽实体”
+            Component topAny = null;
+            Component topGhost = null;
+
+            foreach (var h in hits)
+            {
+                // 在碰撞体的父层级中找“任何可拖拽实体”
+                var candidate = h.collider.GetComponentInParent<IDraggableEntity>() as Component;
+                if (candidate == null) continue;
+
+                // 记录“最近的任何实体”
+                if (topAny == null) topAny = candidate;
+
+                // 记录“最近的鬼”
+                var ent = candidate as IDraggableEntity;
+                if (ent != null && ent.IsGhostEntity)
+                {
+                    topGhost = candidate;
+                    break; // 已经是最近的鬼，直接结束
+                }
+
+                // 注意：不要在这里 break；要继续找有没有更近的“鬼”
+            }
+
+            // 选择最终目标：优先鬼，否则最近的任意实体
+            var picked = topGhost != null ? topGhost : topAny;
+            if (picked == null) return false;
+
+            // 只允许“被选中的那个实体”开始拖拽
+            return picked.gameObject == gameObject || picked.transform.IsChildOf(transform);
+        }
+        
         private Vector3 MouseOnPlaneZ(float z0)
         {
             var ray = _cam.ScreenPointToRay(Input.mousePosition);

@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6234012452756781130}
   - component: {fileID: 7547106320000477341}
   - component: {fileID: 7781718498769488414}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Ghost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -91,11 +91,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   game: {fileID: 0}
-  dragSelf: 1
   ignoreRaycastLayer: Ignore Raycast
   dragMouseButton: 0
   dragPlaneZ: 0
   followLerp: 20
+  dragSelf: 1
 --- !u!54 &3846706319776199229
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -115,7 +115,7 @@ Rigidbody:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 1
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
@@ -221,7 +221,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 105884, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 120358, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_Name
@@ -229,15 +229,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 120358, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 138830, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 165520, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 439160, guid: e75cf0dba269ca24e943482d44f3011f, type: 3}
       propertyPath: m_LocalPosition.x
