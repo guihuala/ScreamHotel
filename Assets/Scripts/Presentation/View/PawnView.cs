@@ -5,6 +5,7 @@ using ScreamHotel.Domain;
 using ScreamHotel.Data;
 using ScreamHotel.Core;
 using ScreamHotel.UI;
+using Spine.Unity;
 
 namespace ScreamHotel.Presentation
 {
@@ -12,13 +13,8 @@ namespace ScreamHotel.Presentation
     {
         public string ghostId;
 
-        [Header("Render Hooks")]
-        public MeshRenderer[] renderers;
         public Transform replaceRoot;
-
-        [Header("Fallback")]
-        public MeshRenderer body;
-
+        
         public void BindGhost(Ghost g)
         {
             ghostId = g.Id;
@@ -51,46 +47,32 @@ namespace ScreamHotel.Presentation
             return cfg;
         }
 
-        private bool ApplyConfigAppearance(GhostConfig cfg)
+        private void ApplyConfigAppearance(GhostConfig cfg)
         {
-            if (cfg == null) return false;
-            
+            if (cfg == null) return;
+
             if (cfg.prefabOverride != null && replaceRoot != null)
             {
+                // 清空旧的
                 for (int i = replaceRoot.childCount - 1; i >= 0; i--)
                     Destroy(replaceRoot.GetChild(i).gameObject);
-                Instantiate(cfg.prefabOverride, replaceRoot);
-            }
-            
-            var targets = (renderers != null && renderers.Length > 0)
-                            ? renderers
-                            : (body != null ? new[] { body } : null);
 
-            if (targets != null)
-            {
-                foreach (var r in targets)
+                // 实例化新的 prefab
+                GameObject instance = Instantiate(cfg.prefabOverride, replaceRoot);
+                
+                var walker = GetComponentInChildren<PatrolWalker>(true);
+                if (walker != null)
                 {
-                    if (!r) continue;
-
-                    if (cfg.overrideMaterial != null)
-                        r.material = cfg.overrideMaterial;
-
-                    if (cfg.colorTint.HasValue && r.material.HasProperty("_Color"))
-                        r.material.color = cfg.colorTint.Value;
-
-                    if (cfg.colorTint.HasValue && r.material.HasProperty("_EmissionColor"))
+                    // 从新实例里取 SkeletonAnimation
+                    var spine = instance.GetComponentInChildren<SkeletonAnimation>(true);
+                    if (spine != null)
                     {
-                        r.material.EnableKeyword("_EMISSION");
-                        r.material.SetColor("_EmissionColor", cfg.colorTint.Value * 0f); // 需要发光可加系数
+                        walker.spineAnim = spine;
                     }
                 }
             }
-
-            // 只要配置里有任一外观项，就认为已应用成功
-            return cfg.overrideMaterial || cfg.colorTint.HasValue || cfg.prefabOverride;
         }
         
-        public void SnapTo(Vector3 target) { transform.position = target; }
         public void MoveTo(Transform target, float dur = 0.5f)
         {
             StopAllCoroutines();
@@ -106,68 +88,6 @@ namespace ScreamHotel.Presentation
                 yield return null;
             }
             transform.position = to;
-        }
-        
-        public GameObject BuildVisualPreview(string layerName = "Ignore Raycast")
-        {
-            var previewRoot = new GameObject($"{name}_Preview");
-
-            Transform visualRoot = (replaceRoot != null && replaceRoot.childCount > 0) ? replaceRoot : transform;
-
-            // 1) 预览根对齐到可视根的【世界变换】
-            previewRoot.transform.position = visualRoot.position;
-            previewRoot.transform.rotation = visualRoot.rotation;
-            previewRoot.transform.localScale = visualRoot.lossyScale;
-
-            int lyr = LayerMask.NameToLayer(layerName);
-            if (lyr >= 0) SetLayerRecursively(previewRoot, lyr);
-
-            // 2) 克隆 replaceRoot 子物体（保留世界姿态）
-            if (replaceRoot != null && replaceRoot.childCount > 0)
-            {
-                for (int i = 0; i < replaceRoot.childCount; i++)
-                {
-                    var child = replaceRoot.GetChild(i).gameObject;
-                    var clone = Instantiate(child, previewRoot.transform, true); // 保留世界姿态
-                    SanitizePreviewNode(clone);
-                }
-                return previewRoot;
-            }
-
-            // 否则按 renderers/body 克
-            var targets = (renderers != null && renderers.Length > 0)
-                ? renderers
-                : (body != null ? new[] { body } : null);
-
-            if (targets != null)
-            {
-                foreach (var r in targets)
-                {
-                    if (!r) continue;
-                    var clone = Instantiate(r.gameObject, previewRoot.transform, true); // 保留世界姿态
-                    SanitizePreviewNode(clone);
-                }
-            }
-
-            return previewRoot;
-        }
-
-        private static void SanitizePreviewNode(GameObject go)
-        {
-            foreach (var c in go.GetComponentsInChildren<Collider>(true)) c.enabled = false;
-            foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) Destroy(rb);
-
-            foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
-            {
-                if (mb is Animator) continue;
-                Destroy(mb);
-            }
-        }
-
-        private static void SetLayerRecursively(GameObject go, int layer)
-        {
-            go.layer = layer;
-            foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
         }
         
         public List<FearTag> GetFearTags()

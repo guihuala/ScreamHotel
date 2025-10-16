@@ -15,9 +15,6 @@ namespace ScreamHotel.Data
         public int baseFee = 100;
         
         [Header("Appearance")]
-        public Color colorTint = Color.white;        // 基础色调
-        public Material overrideMaterial;            // 材质
-        public GameObject prefabOverride;            // 替换模型
-        public Sprite icon;                          // UI显示用图标
+        public GameObject prefabOverride;
     }
 }

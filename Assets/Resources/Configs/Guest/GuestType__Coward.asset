@@ -13,11 +13,8 @@ MonoBehaviour:
   m_Name: GuestType__Coward
   m_EditorClassIdentifier: 
   id: Coward
-  immunities: 
+  immunities: 03000000
   barMax: 90
   requiredPercent: 0.75
   baseFee: 80
-  colorTint: {r: 1, g: 1, b: 1, a: 1}
-  overrideMaterial: {fileID: 2100000, guid: c7e85fec4d3d7364cb46b26b0525efd8, type: 2}
-  prefabOverride: {fileID: 0}
-  icon: {fileID: 0}
+  prefabOverride: {fileID: 7106032176820751855, guid: aee0c326817c946228c61c62d2b9209c, type: 3}

@@ -1,3 +1,4 @@
+using ScreamHotel.Presentation;
 using UnityEngine;
 using Spine;
 using Spine.Unity;
@@ -13,15 +14,27 @@ public class PatrolWalker : MonoBehaviour
     public Transform rightPoint;
 
     [Header("Movement")]
-    public float speed = 2f;
+    public float speed = 2f;                              // 基础速度（随机关闭时使用）
     public bool pauseAtEnds = true;
     public Vector2 pauseRange = new Vector2(0.3f, 0.7f);
     public bool startMovingRight = false;
 
+    [Header("Randomize Movement")]
+    public bool randomizeStartDirection = false;          // 开：随机起始朝向
+    public bool randomizeSpeed = true;                    // 开：速度抖动
+    public Vector2 speedRange = new Vector2(1.2f, 2.6f);  // 速度范围
+    public Vector2 shuffleIntervalRange = new Vector2(1.5f, 3.5f);
+    public bool randomMidPause = true;
+    [Tooltip("每秒发生一次中途停顿的概率")]
+    [Range(0f, 1f)] public float midPausePerSecond = 0.12f;
+    public Vector2 midPauseRange = new Vector2(0.15f, 0.45f);
+    public bool randomTurnWithoutObstacle = true;
+    [Tooltip("每秒发生一次“无障碍掉头”的概率")]
+    [Range(0f, 1f)] public float turnPerSecond = 0.04f;
+
     [Header("Facing")]
     public bool rotateYInsteadOfScale = true;
     public Transform visualRoot;
-    public bool lockOnlyYRotation = true;
 
     [Header("Collision Layers")]
     public LayerMask groundMask;
@@ -53,7 +66,13 @@ public class PatrolWalker : MonoBehaviour
     Vector3 _initialScale;
     Quaternion _initialRot;
 
+    // 动画可用性
+    bool _hasWalk;
     bool _isWalking;
+
+    // 随机移动状态
+    float _curSpeed;
+    float _shuffleTimer;
 
     void Awake()
     {
@@ -63,9 +82,7 @@ public class PatrolWalker : MonoBehaviour
         _initialScale = visualRoot.localScale;
         _initialRot = visualRoot.localRotation;
 
-        // 自动查找 SkeletonAnimation
-        if (!spineAnim)
-            spineAnim = GetComponentInChildren<SkeletonAnimation>();
+        _hasWalk = GetComponent<GuestView>() != null;
     }
 
     void Start()
@@ -86,19 +103,32 @@ public class PatrolWalker : MonoBehaviour
             _rightX = Mathf.Max(l, r);
         }
 
-        _movingRight = startMovingRight;
+        _movingRight = randomizeStartDirection ? (Random.value < 0.5f) : startMovingRight;
         ApplyFacing(_movingRight ? +1 : -1);
 
+        // 初始速度&洗牌计时
+        _curSpeed = GetNextSpeed();
+        _shuffleTimer = GetShuffleInterval();
+        
         PlayIdle();
     }
 
     void FixedUpdate()
     {
+        // 处理暂停
         if (_pauseTimer > 0f)
         {
             _pauseTimer -= Time.fixedDeltaTime;
-            if (_isWalking) PlayIdle();
+            if (_isWalking) PlayIdleIfAvailable();
             return;
+        }
+
+        // 随机速度洗牌
+        _shuffleTimer -= Time.fixedDeltaTime;
+        if (randomizeSpeed && _shuffleTimer <= 0f)
+        {
+            _curSpeed = GetNextSpeed();
+            _shuffleTimer = GetShuffleInterval();
         }
 
         _turnTimer -= Time.fixedDeltaTime;
@@ -119,12 +149,29 @@ public class PatrolWalker : MonoBehaviour
             return;
         }
 
+        // 随机中途停顿
+        if (randomMidPause && Random.value < midPausePerSecond * Time.fixedDeltaTime)
+        {
+            _pauseTimer = Random.Range(midPauseRange.x, midPauseRange.y);
+            PlayIdleIfAvailable();
+            return;
+        }
+
+        // 无障碍随机掉头
+        if (randomTurnWithoutObstacle && _turnTimer <= 0f &&
+            Random.value < turnPerSecond * Time.fixedDeltaTime)
+        {
+            TurnAround(false);
+            return;
+        }
+
         // 位移
-        Vector3 move = new Vector3(dir * speed * Time.fixedDeltaTime, 0f, 0f);
+        float useSpeed = randomizeSpeed ? _curSpeed : speed;
+        Vector3 move = new Vector3(dir * useSpeed * Time.fixedDeltaTime, 0f, 0f);
         rb.MovePosition(rb.position + move);
         ApplyFacing(dir);
 
-        if (!_isWalking) PlayWalk();
+        if (!_isWalking) PlayWalkIfAvailable();
     }
 
     bool ShouldTurn(int dir)
@@ -147,7 +194,7 @@ public class PatrolWalker : MonoBehaviour
         if (pauseAtEnds && reachedEnd)
         {
             _pauseTimer = Random.Range(pauseRange.x, pauseRange.y);
-            PlayIdle();
+            PlayIdleIfAvailable();
         }
     }
 
@@ -170,27 +217,64 @@ public class PatrolWalker : MonoBehaviour
     }
 
     // ---------- Spine 动画控制 ----------
-    void PlayWalk()
+    void PlayWalkIfAvailable()
     {
-        if (spineAnim == null) return;
+        if (!_hasWalk || spineAnim == null) return;
         spineAnim.AnimationState.SetAnimation(0, walkAnim, true);
         _isWalking = true;
     }
 
-    void PlayIdle()
+    void PlayIdleIfAvailable()
     {
-        if (spineAnim == null) return;
+        if (spineAnim == null) { _isWalking = false; return; }
         spineAnim.AnimationState.SetAnimation(0, idleAnim, true);
         _isWalking = false;
     }
-    // ----------------------------------
+
+    void PlayIdle() => PlayIdleIfAvailable();
+    // ---------------------------------------------------
+
+    // 速度/洗牌周期
+    float GetNextSpeed()
+    {
+        if (!randomizeSpeed) return speed;
+        float min = Mathf.Min(speedRange.x, speedRange.y);
+        float max = Mathf.Max(speedRange.x, speedRange.y);
+        return Random.Range(min, max);
+    }
+
+    float GetShuffleInterval()
+    {
+        float min = Mathf.Max(0.05f, Mathf.Min(shuffleIntervalRange.x, shuffleIntervalRange.y));
+        float max = Mathf.Max(shuffleIntervalRange.x, shuffleIntervalRange.y);
+        return Random.Range(min, max);
+    }
 
     void OnDrawGizmosSelected()
     {
         if (!drawGizmos) return;
         Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(new Vector3(_leftX, transform.position.y, transform.position.z),
-                        new Vector3(_rightX, transform.position.y, transform.position.z));
+        float left = _leftX, right = _rightX;
+        if (!Application.isPlaying)
+        {
+            // 编辑器下的可视化预估
+            var pos = transform.position;
+            if (useWidthFromStart)
+            {
+                float half = Mathf.Abs(width) * 0.5f;
+                left = pos.x - half;
+                right = pos.x + half;
+            }
+            else
+            {
+                float l = leftPoint ? leftPoint.position.x : pos.x - 3f;
+                float r = rightPoint ? rightPoint.position.x : pos.x + 3f;
+                left = Mathf.Min(l, r);
+                right = Mathf.Max(l, r);
+            }
+        }
+        Gizmos.DrawLine(new Vector3(left, transform.position.y, transform.position.z),
+                        new Vector3(right, transform.position.y, transform.position.z));
 
         int dir = _movingRight ? +1 : -1;
         Vector3 edgeOrigin = transform.position + groundRayOffset + new Vector3(dir * edgeCheckDistance, 0f, 0f);

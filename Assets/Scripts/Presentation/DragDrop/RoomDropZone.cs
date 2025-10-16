@@ -30,18 +30,12 @@ namespace ScreamHotel.Presentation
 
             // 获取 RoomView 组件
             _rv = GetComponent<RoomView>();
-            if (_rv != null)
-            {
-                // 等待 Bind 方法设置 roomId
-                Debug.Log("等待 RoomView 完成绑定...");
-            }
         }
 
         // 用于在 RoomView 绑定完成后设置 roomId
         public void SetRoomId(string newRoomId)
         {
             roomId = newRoomId;
-            Debug.Log($"RoomDropZone 设置 roomId 为 {roomId}");
         }
 
         public bool CanAccept(string id, bool isGhost = true)
