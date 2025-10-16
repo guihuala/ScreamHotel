@@ -10,8 +10,8 @@ namespace ScreamHotel.Presentation.Shop
 
         public void SetContent(Domain.FearTag main, int price)
         {
-            if (titleText) titleText.text = $"鬼（{main}）";
-            if (priceText) priceText.text = $"价格：{price}";
+            if (titleText) titleText.text = $"{main}";
+            if (priceText) priceText.text = $"Price:{price}";
         }
         
         public void Show(Domain.FearTag main, int price, Vector3 screenPos)

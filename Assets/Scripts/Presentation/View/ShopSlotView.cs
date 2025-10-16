@@ -82,17 +82,35 @@ namespace ScreamHotel.Presentation
                 Destroy(child.gameObject);
             }
 
-            // 2) 生成 Pawn
+            // 2) 生成 Pawn（从 World.Shop.Offers 里拿到该槽位真实的 OfferId / Main）
             if (pawnPrefab)
             {
-                var pawn = Instantiate(pawnPrefab, visualRoot);
+                var game   = FindObjectOfType<Game>();
+                var offers = game?.World?.Shop?.Offers;
+                GhostOffer offer = null;
 
+                if (offers != null && slotIndex >= 0 && slotIndex < offers.Count)
+                    offer = offers[slotIndex];
+
+                var pawn = Instantiate(pawnPrefab, visualRoot);
                 pawn.transform.localPosition = pawnLocalOffset;
                 pawn.transform.localRotation = Quaternion.identity;
                 pawn.transform.localScale    = Vector3.one * Mathf.Max(0.01f, pawnLocalScale);
 
-                var fake = new Ghost { Id = $"Offer_{slotIndex}_{main}", Main = main };
-                pawn.BindGhost(fake);
+                // 若能拿到 Offer，用 OfferId 作为临时 Ghost 的 Id（形如 "{cfgId}@offer_day_slot"）
+                // PawnView 将按 '@' 前缀解析出 cfgId 并匹配到正确的 GhostConfig。
+                if (offer != null && !string.IsNullOrEmpty(offer.OfferId))
+                {
+                    var fake = new Ghost { Id = offer.OfferId, Main = offer.Main };
+                    pawn.BindGhost(fake);
+                }
+                else
+                {
+                    // 兜底：保留旧行为，仍可显示一个基于 FearTag 的占位预览
+                    var fallbackId = $"preview@offer_{slotIndex}_{main}";
+                    var fake = new Ghost { Id = fallbackId, Main = main };
+                    pawn.BindGhost(fake);
+                }
             }
         }
     }

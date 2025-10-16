@@ -56,7 +56,6 @@ namespace ScreamHotel.Presentation
             }
         }
 
-
         private Vector3 GetGuestQueueWorldPos(int index)
         {
             if (!guestQueueRoot)
@@ -147,7 +146,6 @@ namespace ScreamHotel.Presentation
             //  3) 同步刷新按钮可见性：有货可见；全卖空隐藏/禁用
             UpdateShopRerollButton();
         }
-
         
         private void UpdateShopRerollButton()
         {

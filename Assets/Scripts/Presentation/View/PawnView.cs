@@ -29,6 +29,12 @@ namespace ScreamHotel.Presentation
             if (draggable != null) draggable.SetGhostId(ghostId);
         }
 
+        /// <summary>
+        /// 解析运行时 Id，按分隔符('#', '@', ':')截取前缀作为配置 id，再到数据库匹配。
+        /// 约定：
+        ///   - 购买生成："{cfg.id}#shop_..."   （真实实例）
+        ///   - 商店预览："{cfg.id}@offer_..." （预览实例）
+        /// </summary>
         private GhostConfig FindGhostConfig(Ghost g)
         {
             var game = FindObjectOfType<Game>();
@@ -45,6 +51,10 @@ namespace ScreamHotel.Presentation
                     if (db.Ghosts.TryGetValue(baseId, out var cfgBase))
                         return cfgBase;
                 }
+
+                // 若没有分隔符，就当作完整配置 id 尝试一次
+                if (db.Ghosts.TryGetValue(key, out var cfgFull))
+                    return cfgFull;
             }
 
             return null;
