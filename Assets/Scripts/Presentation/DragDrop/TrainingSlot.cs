@@ -20,7 +20,11 @@ namespace ScreamHotel.Presentation
         [Header("VFX")]
         public ParticleSystem trainingVfx;
         
+        [Header("Training Settings")]
+        public int trainingTimeDays = 2; // 可配置的训练时长
+        
         private TrainingRoomZone _trainingZone;
+        private Game _game;
         private string _ghostId;
         private GhostState _slotState = GhostState.Idle;
         private int _trainingDays = 0;
@@ -29,25 +33,99 @@ namespace ScreamHotel.Presentation
         public bool IsOccupied => !string.IsNullOrEmpty(_ghostId);
         public bool IsTraining => _slotState == GhostState.Training;
         public string GhostId => _ghostId;
+        public int TrainingDays => _trainingDays;
+        public int TotalTrainingTime => trainingTimeDays;
 
-        public int RemainDays
+        public int RemainDays => Mathf.Max(0, trainingTimeDays - _trainingDays);
+
+        public void Initialize(Game game)
         {
-            get
-            {
-                if (!IsTraining) return 0;
-                var game = FindObjectOfType<Game>();
-                if (game == null) return 0;
-                int trainingTime = game.World.Config.Rules.ghostTrainingTimeDays;
-                return Mathf.Max(0, trainingTime - _trainingDays);
-            }
+            _game = game;
+            SetEmptyState();
         }
 
         void Awake()
         {
             _trainingZone = GetComponentInParent<TrainingRoomZone>();
+            if (_game == null)
+                _game = FindObjectOfType<Game>();
+        }
+
+        // === 状态管理 ===
+        public void SetEmptyState()
+        {
+            _ghostId = null;
+            _slotState = GhostState.Idle;
+            _trainingDays = 0;
+            _isHovering = false;
+            UpdateVisuals();
+            
+            if (trainingVfx) 
+                trainingVfx.Stop();
+        }
+
+        public void StartTraining(string ghostId, FearTag tag)
+        {
+            _ghostId = ghostId;
+            _slotState = GhostState.Training;
+            _trainingDays = 0;
+
+            if (trainingVfx) 
+                trainingVfx.Play();
+                
+            UpdateVisuals();
+            UpdateTrainingDisplay();
+        }
+
+        public void AdvanceTrainingDay()
+        {
+            if (!IsTraining) return;
+
+            _trainingDays++;
+            
+            // 更新鬼魂数据
+            var ghost = _game?.World.Ghosts.FirstOrDefault(x => x.Id == _ghostId);
+            if (ghost != null)
+            {
+                ghost.TrainingDays = _trainingDays;
+            }
+
+            UpdateTrainingDisplay();
+
+            // 检查训练是否完成
+            if (_trainingDays >= trainingTimeDays)
+            {
+                CompleteTraining();
+            }
+        }
+
+        public void UpdateTrainingDisplay()
+        {
+            // 更新UI显示，但不推进天数
+            UpdateVisuals();
+        }
+
+        public void CompleteTraining()
+        {
+            _slotState = GhostState.Idle;
+            if (trainingVfx) trainingVfx.Stop();
+            
+            // 通知训练区域训练完成
+            _trainingZone?.OnSlotTrainingComplete(_ghostId, this);
+            
             SetEmptyState();
         }
 
+        // === 视觉更新 ===
+        private void UpdateVisuals()
+        {
+            if (!slotIndicator) return;
+            
+            slotIndicator.material.color =
+                IsTraining ? trainingColor :
+                IsOccupied ? occupiedColor : emptyColor;
+        }
+        
         void OnValidate()
         {
             // 保障 ghostAnchor 有效，避免(0,0,0) 导致“飞走”
@@ -63,58 +141,6 @@ namespace ScreamHotel.Presentation
                 }
                 else ghostAnchor = t;
             }
-        }
-
-        // === 状态管理 ===
-        public void SetEmptyState()
-        {
-            _ghostId = null;
-            _slotState = GhostState.Idle;
-            _trainingDays = 0;
-
-            _isHovering = false;
-            UpdateVisuals();
-        }
-
-        public void StartTraining(string ghostId, FearTag tag)
-        {
-            _ghostId = ghostId;
-            _slotState = GhostState.Training;
-            _trainingDays = 0;
-
-            if (trainingVfx) trainingVfx.Play();
-            UpdateVisuals();
-        }
-
-        public void AdvanceTrainingDay()
-        {
-            if (!IsTraining) return;
-
-            _trainingDays++;
-            var game = FindObjectOfType<Game>();
-            if (game != null)
-            {
-                int trainingTime = game.World.Config.Rules.ghostTrainingTimeDays;
-                if (_trainingDays >= trainingTime) CompleteTraining();
-            }
-        }
-
-        private void CompleteTraining()
-        {
-            _slotState = GhostState.Idle;
-            if (trainingVfx) trainingVfx.Stop();
-            _trainingZone?.OnSlotTrainingComplete(_ghostId);
-            SetEmptyState();
-        }
-
-        // === 视觉（仅拖拽中点亮） ===
-        private void UpdateVisuals()
-        {
-            if (!slotIndicator) return;
-            
-            slotIndicator.material.color =
-                IsTraining ? trainingColor :
-                IsOccupied ? occupiedColor : emptyColor;
         }
 
         // === 拖拽反馈 ===
@@ -155,6 +181,7 @@ namespace ScreamHotel.Presentation
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
             return !IsOccupied && ghost != null && ghost.State != GhostState.Training;
         }
+        
         
         // === IHoverInfoProvider ===
         public HoverInfo GetHoverInfo() => new HoverInfo
