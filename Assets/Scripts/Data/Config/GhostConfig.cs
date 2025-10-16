@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ScreamHotel.Domain;
 using UnityEngine;
 
@@ -12,9 +11,8 @@ namespace ScreamHotel.Data
 
         [Header("Fear Profile")]
         public FearTag main;
-        public FearTag subRestriction;
 
         [Header("Appearance (Optional)")]
-        public GameObject prefabOverride;            // 整体外观替换（模型）
+        public GameObject prefabOverride;
     }
 }

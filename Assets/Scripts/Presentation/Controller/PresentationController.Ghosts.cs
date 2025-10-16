@@ -1,3 +1,5 @@
+using ScreamHotel.Data;
+using ScreamHotel.Domain;
 using UnityEngine;
 using Random = UnityEngine.Random;
 

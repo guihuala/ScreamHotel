@@ -56,7 +56,6 @@ namespace ScreamHotel.Presentation
         private readonly Dictionary<string, PawnView> _ghostViews = new();
         private readonly Dictionary<string, GuestView> _guestViews = new();
         private readonly Dictionary<string, Transform> _shopOfferViews = new();
-        private readonly Dictionary<string, Transform> _stagingByGhost = new();
 
         // ===== Lifecycle =====
         void OnEnable()

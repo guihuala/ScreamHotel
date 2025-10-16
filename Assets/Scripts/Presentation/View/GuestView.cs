@@ -43,8 +43,7 @@ namespace ScreamHotel.Presentation
             var draggable = GetComponentInParent<DraggableGuest>();
             if (draggable != null) draggable.SetGuestId(guestId);
         }
-
-        // ====== Config Lookup ======
+        
         private GuestTypeConfig FindGuestTypeConfig(Guest g)
         {
             var game = FindObjectOfType<Game>();

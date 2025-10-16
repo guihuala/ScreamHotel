@@ -32,19 +32,22 @@ namespace ScreamHotel.Presentation
         private GhostConfig FindGhostConfig(Ghost g)
         {
             var game = FindObjectOfType<Game>();
-            var db   = game != null ? game.dataManager?.Database : null;
-            
-            GhostConfig cfg = null;
-            if (db != null)
-            {
-                // 按 id 精确匹配
-                if (db.Ghosts != null && db.Ghosts.TryGetValue(g.Id, out var byId)) cfg = byId;
+            var db = game != null ? game.dataManager?.Database : null;
+            if (db == null) return null;
 
-                // 兜底：按主 FearTag 找第一条（当 Ghost 的 id 不等于配置 id 时）
-                if (cfg == null && db.Ghosts != null)
-                    cfg = db.Ghosts.Values.FirstOrDefault(x => x != null && x.main == g.Main);
+            var key = g.Id;
+            if (!string.IsNullOrEmpty(key))
+            {
+                int cut = key.IndexOfAny(new[] { '#', '@', ':' });
+                if (cut > 0)
+                {
+                    var baseId = key.Substring(0, cut);
+                    if (db.Ghosts.TryGetValue(baseId, out var cfgBase))
+                        return cfgBase;
+                }
             }
-            return cfg;
+
+            return null;
         }
 
         private void ApplyConfigAppearance(GhostConfig cfg)

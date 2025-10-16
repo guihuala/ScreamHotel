@@ -1,0 +1,41 @@
+
+goust2.png
+size: 971,440
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: false
+  xy: 611, 25
+  size: 180, 189
+  orig: 180, 190
+  offset: 0, 0
+  index: -1
+eye
+  rotate: true
+  xy: 793, 121
+  size: 93, 26
+  orig: 248, 267
+  offset: 85, 151
+  index: -1
+hair
+  rotate: false
+  xy: 822, 181
+  size: 147, 257
+  orig: 147, 257
+  offset: 0, 0
+  index: -1
+hair2
+  rotate: false
+  xy: 611, 216
+  size: 209, 222
+  orig: 210, 224
+  offset: 0, 0
+  index: -1
+背景
+  rotate: true
+  xy: 2, 2
+  size: 436, 607
+  orig: 438, 609
+  offset: 1, 1
+  index: -1

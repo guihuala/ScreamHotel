@@ -1,13 +1,10 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace ScreamHotel.Domain
 {
     public enum FearTag { Darkness, Blood, Noise, Rot, Gaze }
     public enum GhostState { Idle, Working, Training }
-    public enum GuestType { Coward, WhiteCollar, NightOwl, Skeptic, Exorcist }
-
-// Ghost.cs
+    
     public class Ghost
     {
         public string Id;

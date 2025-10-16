@@ -296,7 +296,7 @@ namespace ScreamHotel.Core
 
                         var ghost = new Ghost
                         {
-                            Id = $"G{idx++}", // 实例唯一ID
+                            Id = string.IsNullOrEmpty(cfg.id) ? $"G{idx++}" : $"{cfg.id}#{idx++}", // 实例唯一ID
                             Main = cfg.main, // 从配置读主恐惧
                             State = GhostState.Idle
                         };
