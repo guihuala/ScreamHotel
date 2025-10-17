@@ -13,8 +13,5 @@ MonoBehaviour:
   m_Name: Ghost__Spirit
   m_EditorClassIdentifier: 
   id: Ghost_Spirit
-  main: 0
-  subRestriction: 0
-  overrideMaterial: {fileID: 2100000, guid: 734fa75073481e54aa3c982981ed9689, type: 2}
-  prefabOverride: {fileID: 0}
-  icon: {fileID: 0}
+  main: 1
+  prefabOverride: {fileID: 6904672651348245444, guid: 3dc7e6b0a54144fc390eb9d6d922594e, type: 3}

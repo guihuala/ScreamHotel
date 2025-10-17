@@ -7,17 +7,28 @@ namespace ScreamHotel.UI
 {
     public class HudController : MonoBehaviour
     {
-        [Header("References")] private Game game;
+        [Header("References")]
+        private Game game;
+
         public Button pauseButton;
         public Button executeButton;
         public Button skipDayButton;
+
+        [Header("HUD Text (optional)")]
         public TextMeshProUGUI goldText;
         public TextMeshProUGUI dayText;
-        public TextMeshProUGUI timeText;
-        
-        [Header("Suspicion UI")]
-        public TextMeshProUGUI suspicionText;
-        public Slider suspicionSlider;
+
+        [Header("Analog Clock")]
+        [Tooltip("时针（RectTransform，围绕其Z轴旋转）")]
+        public RectTransform hourHand;
+        [Tooltip("分针（RectTransform，围绕其Z轴旋转）")]
+        public RectTransform minuteHand;
+
+        [Header("Suspicion UI (Image Fill)")]
+        [Tooltip("用于显示怀疑值的填充图片（Image.type = Filled）")]
+        public Image suspicionFillImage;
+        [Tooltip("当未从规则读取到阈值时使用的保底阈值")]
+        public int suspicionFallbackThreshold = 100;
 
         private int suspicionThresholdCached = 100;
 
@@ -25,16 +36,23 @@ namespace ScreamHotel.UI
         {
             game = FindObjectOfType<Game>();
 
-            pauseButton.onClick.AddListener(OnPauseButtonClicked);
-            executeButton.onClick.AddListener(OnExecuteButtonClicked);
-            skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
+            if (pauseButton)   pauseButton.onClick.AddListener(OnPauseButtonClicked);
+            if (executeButton) executeButton.onClick.AddListener(OnExecuteButtonClicked);
+            if (skipDayButton) skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
 
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
 
-            // 读取阈值（有则用规则，没有就保底100）
+            // 读取阈值（有则用规则，没有就保底）
             var rules = game?.World?.Config?.Rules;
-            if (rules != null) suspicionThresholdCached = Mathf.Max(1, rules.suspicionThreshold);
+            suspicionThresholdCached = Mathf.Max(1, rules != null ? rules.suspicionThreshold : suspicionFallbackThreshold);
+
+            // 确保怀疑值图片是 Filled 模式（运行时兜底一次）
+            if (suspicionFillImage != null)
+            {
+                if (suspicionFillImage.type != Image.Type.Filled)
+                    suspicionFillImage.type = Image.Type.Filled;
+            }
         }
 
         private void Start()
@@ -42,6 +60,7 @@ namespace ScreamHotel.UI
             RefreshGoldUI();
             RefreshDayUI();
             RefreshSuspicionUI(); // 初始刷新
+            UpdateTimeDisplay();  // 初始时钟
         }
 
         private void OnEnable()
@@ -50,8 +69,6 @@ namespace ScreamHotel.UI
             EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
             EventBus.Subscribe<DayStartedEvent>(OnDayStarted);
             EventBus.Subscribe<NightStartedEvent>(OnNightStarted);
-
-            // === 新增订阅：怀疑值变化 ===
             EventBus.Subscribe<SuspicionChanged>(OnSuspicionChanged);
         }
 
@@ -61,12 +78,13 @@ namespace ScreamHotel.UI
             EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
             EventBus.Unsubscribe<DayStartedEvent>(OnDayStarted);
             EventBus.Unsubscribe<NightStartedEvent>(OnNightStarted);
-
-            // === 取消订阅 ===
             EventBus.Unsubscribe<SuspicionChanged>(OnSuspicionChanged);
         }
 
-        private void Update() => UpdateTimeDisplay();
+        private void Update()
+        {
+            UpdateTimeDisplay(); // 驱动模拟表盘
+        }
 
         private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();
 
@@ -82,9 +100,7 @@ namespace ScreamHotel.UI
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
             RefreshDayUI();
-
-            // 每天开始也刷新一次（防止UI不同步）
-            RefreshSuspicionUI();
+            RefreshSuspicionUI(); // 每天开始也刷新一次
         }
 
         private void OnNightStarted(NightStartedEvent e)
@@ -93,9 +109,9 @@ namespace ScreamHotel.UI
             UpdateSkipDayButtonVisibility();
         }
 
-        // === 新增：怀疑值事件回调 ===
         private void OnSuspicionChanged(SuspicionChanged e)
         {
+            // 若规则临时变化，兜底阈值仍保持 >=1
             suspicionThresholdCached = Mathf.Max(1, suspicionThresholdCached);
             RefreshSuspicionUI();
         }
@@ -140,7 +156,7 @@ namespace ScreamHotel.UI
 
         private void RefreshGoldUI()
         {
-            if (goldText != null) goldText.text = $"Gold: {game.World.Economy.Gold}";
+            if (goldText != null) goldText.text = $"$ {game.World.Economy.Gold}";
         }
 
         private void RefreshDayUI()
@@ -156,36 +172,48 @@ namespace ScreamHotel.UI
             };
             dayText.text = $"Day {game.DayIndex} - {stateText}";
         }
-
+        
         private void UpdateTimeDisplay()
         {
-            if (timeText == null || game.TimeSystem == null) return;
-            float t = game.TimeSystem.currentTimeOfDay;
-            int h = Mathf.FloorToInt(t * 24f);
-            int m = Mathf.FloorToInt((t * 24f - h) * 60f);
-            timeText.text = $"{h:D2}:{m:D2}";
-        }
+            var ts = game?.TimeSystem;
+            if (ts == null) return;
 
-        // 新增：刷新怀疑值 UI
+            float t = Mathf.Repeat(ts.currentTimeOfDay, 1f); // 0..1
+            float hoursFloat = t * 24f;                      // 0..24
+            int   hoursInt   = Mathf.FloorToInt(hoursFloat); // 地板小时（数字显示用）
+            float minutes    = (hoursFloat - hoursInt) * 60f;
+
+            // 分针角度（0-360）
+            float minuteAngle = (minutes / 60f) * 360f;
+
+            // 时针角度：基于 12 小时制并包含分钟偏移
+            float hours12     = Mathf.Repeat(hoursFloat, 12f);
+            float hourAngle   = (hours12 / 12f) * 360f + (minutes / 60f) * (360f / 12f);
+
+            // 应用到指针
+            if (minuteHand != null)
+                minuteHand.localRotation = Quaternion.Euler(0f, 0f, -minuteAngle); // UI Z 轴顺时针为负
+
+            if (hourHand != null)
+                hourHand.localRotation = Quaternion.Euler(0f, 0f, -hourAngle);
+        }
+        
         private void RefreshSuspicionUI()
         {
             var world = game?.World;
             if (world == null) return;
 
-            // 阈值优先读当前规则
             var rules = world.Config?.Rules;
-            int threshold = rules != null ? Mathf.Max(1, rules.suspicionThreshold) : suspicionThresholdCached;
-            int current = Mathf.Max(0, world.Suspicion);
-            float pct = Mathf.Clamp01((float)current / threshold);
+            int threshold = Mathf.Max(1, rules != null ? rules.suspicionThreshold : suspicionThresholdCached);
+            int current   = Mathf.Max(0, world.Suspicion);
+            float pct     = Mathf.Clamp01((float)current / threshold);
 
-            if (suspicionText != null)
-                suspicionText.text = $"Sus: {current} / {threshold}";
-
-            if (suspicionSlider != null)
+            if (suspicionFillImage != null)
             {
-                suspicionSlider.minValue = 0f;
-                suspicionSlider.maxValue = 1f;
-                suspicionSlider.value = pct;
+                if (suspicionFillImage.type != Image.Type.Filled)
+                    suspicionFillImage.type = Image.Type.Filled;
+
+                suspicionFillImage.fillAmount = pct;
             }
         }
     }

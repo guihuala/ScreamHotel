@@ -1,0 +1,55 @@
+
+goust3.png
+size: 1024,219
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: true
+  xy: 422, 2
+  size: 215, 295
+  orig: 215, 296
+  offset: 0, 1
+  index: -1
+head
+  rotate: true
+  xy: 719, 9
+  size: 208, 221
+  orig: 208, 221
+  offset: 0, 0
+  index: -1
+mouth
+  rotate: false
+  xy: 942, 8
+  size: 38, 32
+  orig: 38, 32
+  offset: 0, 0
+  index: -1
+mouthunder
+  rotate: false
+  xy: 942, 42
+  size: 41, 175
+  orig: 41, 176
+  offset: 0, 1
+  index: -1
+normaleye
+  rotate: true
+  xy: 985, 79
+  size: 67, 37
+  orig: 69, 38
+  offset: 1, 1
+  index: -1
+redeye
+  rotate: true
+  xy: 985, 148
+  size: 69, 37
+  orig: 69, 38
+  offset: 0, 1
+  index: -1
+背景
+  rotate: true
+  xy: 2, 4
+  size: 213, 418
+  orig: 215, 420
+  offset: 1, 1
+  index: -1

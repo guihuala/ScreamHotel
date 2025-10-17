@@ -19,7 +19,6 @@ Material:
   - _MK_DETAIL_BLEND_MIX
   - _MK_ENVIRONMENT_REFLECTIONS_ADVANCED
   - _MK_LIGHT_CEL
-  - _MK_NORMAL_MAP
   - _MK_OUTLINE_DATA_UV7
   - _MK_OUTLINE_HULL_ORIGIN
   - _MK_RECEIVE_SHADOWS
@@ -123,7 +122,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
-        m_Texture: {fileID: 2800000, guid: 06e6b2458a47542428bca89ee8a27e44, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -270,7 +269,7 @@ Material:
     - _Roughness: 0.5
     - _Saturation: 1
     - _SketchMapScale: 1
-    - _Smoothness: 0.5
+    - _Smoothness: 0
     - _SmoothnessStrength: 1
     - _Specular: 1
     - _SpecularIntensity: 1.5
