@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24218c0750fe24e4e859ea0216b9f033, type: 3}
   m_Name: GameRules
   m_EditorClassIdentifier: 
+  suspicionThreshold: 100
+  suspicionPerFailedGuest: 1
+  suspicionPerUnservedGuest: 1
+  totalDays: 2
   dayGuestSpawnCount: 4
   ghostShopSlots: 3
   ghostShopPrice: 100
@@ -25,7 +29,7 @@ MonoBehaviour:
   capacityLv3: 2
   lv2HasTag: 1
   ghostTrainingTimeDays: 2
-  dayRatio: 0.7
-  nightShowRatio: 0.1
+  dayRatio: 0.4
+  nightShowRatio: 0.4
   nightExecuteRatio: 0.1
   settlementRatio: 0.1

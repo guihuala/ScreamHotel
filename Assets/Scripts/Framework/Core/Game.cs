@@ -354,7 +354,6 @@ namespace ScreamHotel.Core
             Debug.Log($"Game Ended. Success={success}. Reason={reason}");
 
             // 结束时统一暂停
-            TimeManager.Instance?.PauseTime();
             EventBus.Raise(new GameEnded(success, reason, DayIndex));
         }
     }
