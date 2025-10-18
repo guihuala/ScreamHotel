@@ -25,16 +25,14 @@ public class DayGuestSpawner
             Debug.LogWarning("[DayGuestSpawner] SpawnGuests called with count <= 0");
             return 0;
         }
-
-        var typeIds = _db?.GuestTypes?.Keys?.ToList();
+        
+        var typeIds = _db?.GuestTypes?.Values?.Select(t => t.id)?.ToList();
         if (typeIds == null || typeIds.Count == 0)
         {
             Debug.LogWarning("[DayGuestSpawner] Database.GuestTypes 为空，无法生成客人。");
             return 0;
         }
-
-        Debug.Log($"[DayGuestSpawner] 准备生成 {count} 位客人，可用客人类型数量: {typeIds.Count}");
-
+        
         int spawned = 0;
         for (int i = 0; i < count; i++)
         {
@@ -57,15 +55,8 @@ public class DayGuestSpawner
 
             _world.Guests.Add(g);
             spawned++;
-
-            // 打印详细调试信息
-            string fearList = g.Fears != null && g.Fears.Count > 0
-                ? string.Join(", ", g.Fears)
-                : "(无)";
-            Debug.Log($"[DayGuestSpawner] 已生成客人 {g.Id} | 类型: {g.TypeId} | 恐惧标签: {fearList} | 基础费用: {g.BaseFee}");
         }
-
-        Debug.Log($"[DayGuestSpawner] 成功生成 {spawned} 位客人，总数现为 {_world.Guests.Count}");
+        
         return spawned;
     }
 }

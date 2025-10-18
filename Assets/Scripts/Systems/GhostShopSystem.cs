@@ -14,7 +14,7 @@ namespace ScreamHotel.Systems
         private readonly World _world;
         private readonly Random _rng = new();
 
-        private readonly Data.ConfigDatabase _db;
+        private readonly ConfigDatabase _db;
 
         public GhostShopSystem(World world, Data.ConfigDatabase db)
         {
@@ -40,49 +40,47 @@ namespace ScreamHotel.Systems
             GenerateOffers(dayIndex, slots, rules.ghostShopUniqueMains);
         }
 
-        // 要求：直接读 world 中的 ghost 并随机，从这些实例衍生出商店条目
+        // 用配置全集生成每日商店
         private void GenerateOffers(int dayIndex, int count, bool uniqueMains)
         {
             _world.Shop.Offers.Clear();
-
-            if (_world == null || _world.Ghosts == null || _world.Ghosts.Count == 0 || count <= 0)
+            if (_db == null || _db.Ghosts == null || _db.Ghosts.Count == 0 || count <= 0)
                 return;
 
-            // 候选来自“世界中已经存在的鬼”
-            var candidates = _world.Ghosts.ToList();
-            var usedMains = new HashSet<FearTag>();
+            // 候选 = 全量配置（来自 DataManager.configSet.ghosts，经 Initialize 灌入 Database）
+            var allCfgs = _db.Ghosts.Values.ToList();
 
+            var usedMains = new HashSet<FearTag>();
             for (int i = 0; i < count; i++)
             {
-                Ghost chosen = null;
+                ScreamHotel.Data.GhostConfig cfg = null;
 
                 if (uniqueMains)
                 {
-                    // 优先覆盖更多 Main
-                    var mainCandidates = candidates.Where(g => !usedMains.Contains(g.Main)).ToList();
+                    // 尽量覆盖更多 Main
+                    var mainCandidates = allCfgs.Where(c => !usedMains.Contains(c.main)).ToList();
                     if (mainCandidates.Count > 0)
-                        chosen = mainCandidates[_rng.Next(mainCandidates.Count)];
+                        cfg = mainCandidates[_rng.Next(mainCandidates.Count)];
                 }
 
-                // 不足时退化到任意随机以补满
-                if (chosen == null)
-                    chosen = candidates[_rng.Next(candidates.Count)];
+                // 不足时退化到任意随机
+                if (cfg == null)
+                    cfg = allCfgs[_rng.Next(allCfgs.Count)];
 
-                // 从运行时 Id 还原配置 id 前缀，供后续购买/展示配对
-                string cfgId = ExtractBaseConfigId(chosen.Id);
-                if (string.IsNullOrEmpty(cfgId) || !_db.Ghosts.TryGetValue(cfgId, out var cfg))
-                    continue; // 若对应配置不存在则跳过
-                
+                if (cfg == null || string.IsNullOrEmpty(cfg.id))
+                    continue;
+
+                string cfgId = cfg.id;
                 string offerId = $"{cfgId}@offer_{dayIndex}_{i + 1}";
 
                 _world.Shop.Offers.Add(new GhostOffer
                 {
                     OfferId  = offerId,
-                    ConfigId = cfgId,     // 依然保存配置 id，购买时使用
-                    Main     = chosen.Main
+                    ConfigId = cfgId,   // 购买时仍按配置id落地
+                    Main     = cfg.main
                 });
 
-                usedMains.Add(chosen.Main);
+                usedMains.Add(cfg.main);
             }
 
             _world.Shop.DayLastRefreshed = dayIndex;
