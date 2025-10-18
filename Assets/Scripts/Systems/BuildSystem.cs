@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using ScreamHotel.Domain;
 using ScreamHotel.Core;
-using ScreamHotel.Presentation;
-using UnityEngine;
 
 namespace ScreamHotel.Systems
 {
@@ -16,30 +13,26 @@ namespace ScreamHotel.Systems
         private readonly World _world;
         public BuildSystem(World world) { _world = world; }
 
-
-        // 购买新房（Lv1）
-        public bool TryBuyRoom(out string newRoomId)
+        public bool TryUnlockRoom(string roomId)
         {
-            newRoomId = null;
+            var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
+            if (r == null) return false;
             var rules = _world.Config?.Rules;
             if (rules == null) return false;
 
-            if (_world.Economy.Gold < rules.roomBuyCost) return false;
-            _world.Economy.Gold -= rules.roomBuyCost;
+            // 仅 Lv0（锁定）可解锁
+            if (r.Level != 0) return false;
 
-            var id = $"Room_{_world.Rooms.Count + 1:00}";
-            var room = new Room
-            {
-                Id = id,
-                Level = 1,
-                Capacity = rules.capacityLv1,
-                RoomTag = null
-            };
-            _world.Rooms.Add(room);
-            newRoomId = id;
+            if (_world.Economy.Gold < rules.roomUnlockCost) return false;
+            _world.Economy.Gold -= rules.roomUnlockCost;
+
+            r.Level = 1;                      // Lv0 → Lv1
+            r.Capacity = rules.capacityLv1;
+            r.RoomTag = null;
 
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
-            EventBus.Raise(new RoomPurchasedEvent(id));
+            EventBus.Raise(new RoomUnlockedEvent(r.Id));   // 新事件
+            EventBus.Raise(new RoomUpgradedEvent(r.Id, r.Level)); // 通知刷新
             return true;
         }
 
@@ -49,6 +42,7 @@ namespace ScreamHotel.Systems
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
             if (r == null) return false;
             var rules = _world.Config?.Rules;
+            if (r.Level == 0) return false; // ← 必须先解锁
             if (rules == null) return false;
 
             if (r.Level == 1)
@@ -141,8 +135,7 @@ namespace ScreamHotel.Systems
         #endregion
         
         // ====== 内部实现 ======
-        private bool HasAnyFloor() => _world.Rooms.Count > 0;
-
+        
         private void CreateFloorInternally(int floor, bool free)
         {
             if (_world.Rooms.Any(r => TryParseFloor(r.Id, out var f) && f == floor)) return;
@@ -156,12 +149,12 @@ namespace ScreamHotel.Systems
                 var room = new Room
                 {
                     Id = id,
-                    Level = 1,
-                    Capacity = capLv1,
+                    Level = 0,            // 原来是 1，改为 0：锁定态
+                    Capacity = capLv1,    // 提前准备好容量
                     RoomTag = null
                 };
                 _world.Rooms.Add(room);
-                EventBus.Raise(new RoomPurchasedEvent(id));
+                EventBus.Raise(new RoomPurchasedEvent(id)); // 沿用
             }
         }
 

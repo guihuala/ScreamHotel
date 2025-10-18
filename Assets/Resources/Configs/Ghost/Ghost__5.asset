@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 5
   main: 0
-  prefabOverride: {fileID: 0}
+  prefabOverride: {fileID: 6584812081774067532, guid: d953af856e1aa4503aaaf0187bd786d7, type: 3}

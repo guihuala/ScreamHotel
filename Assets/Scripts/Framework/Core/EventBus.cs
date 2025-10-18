@@ -72,6 +72,13 @@ namespace ScreamHotel.Core
     // 屋顶需要更新事件
     public readonly struct RoofUpdateNeeded { }
     
+    public readonly struct RoomUnlockedEvent
+    {
+        public readonly string RoomId;
+        public RoomUnlockedEvent(string id) { RoomId = id; }
+    }
+
+    
     public readonly struct RoomPurchasedEvent
     {
         public readonly string RoomId;
@@ -97,18 +104,6 @@ namespace ScreamHotel.Core
     public readonly struct DayStartedEvent { }
     
     public readonly struct NightStartedEvent { }
-    
-    public readonly struct OpenFearPickUIEvent : IGameEvent
-    {
-        public readonly string GhostId;
-        public readonly int SlotIndex;
-
-        public OpenFearPickUIEvent(string ghostId, int slotIndex)
-        {
-            GhostId = ghostId;
-            SlotIndex = slotIndex;
-        }
-    }
     
     public readonly struct SuspicionChanged
     {

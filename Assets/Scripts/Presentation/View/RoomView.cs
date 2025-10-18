@@ -19,6 +19,10 @@ namespace ScreamHotel.Presentation
         
         [Header("Guest Anchors (optional)")]
         public Transform[] guestAnchors;
+        
+        [Header("Locked Curtain")]
+        public GameObject curtain;
+
 
         private Color _baseColor;
 
@@ -55,6 +59,10 @@ namespace ScreamHotel.Presentation
         // ----- 视觉切换 -----
         private void ApplyVisualByLevel(Room room)
         {
+            // 幕布：仅 Lv0 显示
+            if (curtain) curtain.SetActive(room.Level == 0);
+
+            // 原有三档可视
             SetActiveArray(lv1Set, room.Level == 1);
             SetActiveArray(lv2Set, room.Level == 2);
             SetActiveArray(lv3Set, room.Level == 3);

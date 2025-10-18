@@ -315,8 +315,7 @@ namespace ScreamHotel.Core
             var rules = World?.Config?.Rules;
             if (rules != null)
             {
-                int delta = r.AssignedFails * Mathf.Max(0, rules.suspicionPerFailedGuest)
-                            + r.UnservedGuests * Mathf.Max(0, rules.suspicionPerUnservedGuest);
+                int delta = r.AssignedFails * Mathf.Max(0, rules.suspicionPerFailedGuest);
 
                 if (delta != 0)
                 {

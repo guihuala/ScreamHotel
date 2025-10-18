@@ -44,47 +44,118 @@ namespace ScreamHotel.UI
 
         public void Show(string roomId)
         {
-            if (!canvas) canvas = GetComponentInParent<Canvas>();
-            var w = _game.World;
-            var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
-            if (r == null) { Hide(); return; }
-
-            // 查找房间的Transform
-            var roomView = FindRoomView(roomId);
-            if (roomView == null) { Hide(); return; }
-
-            _currentRoomTransform = roomView.transform;
-            
-            root.gameObject.SetActive(true);
-            titleText.text = roomId;
-            var tag = r.RoomTag.HasValue ? r.RoomTag.Value.ToString() : "-";
-            infoText.text = $"Lv {r.Level} | Cap {r.Capacity} | Tag {tag}";
-
-            // 设置面板位置（固定在房间上方）
-            PlacePanelAtRoom();
-
-            // 升级按钮
-            upgradeBtn.interactable = r.Level < 3;
-            upgradeBtn.onClick.RemoveAllListeners();
-            upgradeBtn.onClick.AddListener(() =>
+            // 基础引用
+            var game = FindObjectOfType<Game>();
+            if (game == null || game.World == null)
             {
-                FearTag? sel = null;
-                if (r.Level == 1 && tagDropdownForLv2) sel = (FearTag)tagDropdownForLv2.value;
+                Hide();
+                return;
+            }
 
-                var build = GetBuild();
-                if (build.TryUpgradeRoom(roomId, sel))
+            var world = game.World;
+            var room = world.Rooms.FirstOrDefault(x => x.Id == roomId);
+            if (room == null)
+            {
+                Hide();
+                return;
+            }
+
+            // 文案与可视
+            gameObject.SetActive(true);
+
+            // 显示房间当前信息
+            string tagText = room.RoomTag.HasValue ? room.RoomTag.Value.ToString() : "-";
+            if (infoText) infoText.text = $"Lv {room.Level} | Cap {room.Capacity} | Tag {tagText}";
+
+            // 准备按钮
+            if (!upgradeBtn) return;
+            upgradeBtn.onClick.RemoveAllListeners();
+
+            // 获取建造系统与规则
+            var build = GetBuild();
+            var rules = world.Config?.Rules;
+
+            // UI：根据等级切换为“解锁/升级”
+            var btnText = upgradeBtn.GetComponentInChildren<Text>();
+            if (room.Level == 0)
+            {
+                // —— Lv0：解锁 ——
+                if (btnText) btnText.text = "解锁";
+                upgradeBtn.interactable = rules != null && world.Economy.Gold >= rules.roomUnlockCost;
+
+                // 解锁不需要选择 Tag
+                if (tagDropdownForLv2) tagDropdownForLv2.gameObject.SetActive(false);
+
+                upgradeBtn.onClick.AddListener(() =>
                 {
-                    // 升级成功后刷新显示
-                    var rr = w.Rooms.First(x => x.Id == roomId);
-                    var t2 = rr.RoomTag.HasValue ? rr.RoomTag.Value.ToString() : "-";
-                    infoText.text = $"Lv {rr.Level} | Cap {rr.Capacity} | Tag {t2}";
-                    
-                    // 刷新按钮状态
-                    upgradeBtn.interactable = rr.Level < 3;
-                }
-            });
-        }
+                    if (build != null && build.TryUnlockRoom(roomId))
+                    {
+                        // 读取最新房间状态并刷新 UI
+                        var rr = world.Rooms.First(x => x.Id == roomId);
+                        string t2 = rr.RoomTag.HasValue ? rr.RoomTag.Value.ToString() : "-";
+                        if (infoText) infoText.text = $"Lv {rr.Level} | Cap {rr.Capacity} | Tag {t2}";
 
+                        // 解锁成功后切换为“升级”形态
+                        if (btnText) btnText.text = "升级";
+                        upgradeBtn.interactable = rr.Level < 3;
+
+                        if (tagDropdownForLv2)
+                        {
+                            tagDropdownForLv2.gameObject.SetActive(true);
+                            // 可选：重置下拉默认项
+                            tagDropdownForLv2.value = 0;
+                            tagDropdownForLv2.RefreshShownValue();
+                        }
+                    }
+                    else
+                    {
+                        // 金币不足或其它原因失败时，禁用按钮避免连点
+                        upgradeBtn.interactable = false;
+                    }
+                });
+            }
+            else
+            {
+                // —— Lv1/Lv2：升级；Lv3：满级禁用 ——
+                if (btnText) btnText.text = "升级";
+                upgradeBtn.interactable = room.Level < 3;
+
+                // Lv1->Lv2 需要选择 Tag；Lv2->Lv3 不需要
+                if (tagDropdownForLv2) tagDropdownForLv2.gameObject.SetActive(room.Level == 1);
+
+                upgradeBtn.onClick.AddListener(() =>
+                {
+                    // 计算（可选）Tag：仅在 Lv1->Lv2 时读取下拉
+                    FearTag? sel = null;
+                    if (room.Level == 1 && tagDropdownForLv2)
+                    {
+                        // 假设下拉 options 顺序与 FearTag 枚举值一致；若不一致，这里需要映射
+                        sel = (FearTag)tagDropdownForLv2.value;
+                    }
+
+                    if (build != null && build.TryUpgradeRoom(roomId, sel))
+                    {
+                        // 升级成功：刷新 UI
+                        var rr = world.Rooms.First(x => x.Id == roomId);
+                        string t2 = rr.RoomTag.HasValue ? rr.RoomTag.Value.ToString() : "-";
+                        if (infoText) infoText.text = $"Lv {rr.Level} | Cap {rr.Capacity} | Tag {t2}";
+
+                        upgradeBtn.interactable = rr.Level < 3;
+
+                        // 升到 Lv2 后，下次点击是 Lv2->Lv3，不需要 Tag
+                        if (tagDropdownForLv2) tagDropdownForLv2.gameObject.SetActive(rr.Level == 1);
+                    }
+                    else
+                    {
+                        // 失败（金币不足或已满级等），禁用按钮避免误操作
+                        upgradeBtn.interactable = false;
+                    }
+                });
+            }
+
+            // 你原有的定位/跟随鼠标等逻辑如果在 Show 外部完成，这里无需处理
+        }
+        
         void Update()
         {
             // 如果面板显示中，持续更新位置以跟随房间移动

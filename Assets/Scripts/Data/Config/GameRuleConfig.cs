@@ -1,4 +1,3 @@
-// GameRuleConfig.cs
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +10,6 @@ namespace ScreamHotel.Data
         [Header("Suspicion & Ending")] [Tooltip("怀疑值上限，达到或超过时立即触发失败结局")]
         public int suspicionThreshold = 100;
         [Tooltip("每位【吓人失败】的已接待客人增加的怀疑值")] public int suspicionPerFailedGuest = 1;
-        [Tooltip("每位【未接待】的客人增加的怀疑值（当晚直接算失败）")] public int suspicionPerUnservedGuest = 1;
         [Tooltip("本局总天数（坚持到最后一天且未满怀疑值 = 成功结局）")]
         public int totalDays = 14;
 
@@ -33,9 +31,11 @@ namespace ScreamHotel.Data
 
         [Header("Room Pricing & Capacity")]
         [Tooltip("购买一间Lv1房间的价格")] public int roomBuyCost = 200;
+        [Tooltip("解锁一间房间（Lv0→Lv1）的价格")] public int roomUnlockCost = 150; // ← 新增
         [Tooltip("Lv1与Lv3的容量（Lv2若与Lv1一致则无需字段）")] public int capacityLv1 = 1;
         public int capacityLv3 = 2;
         [Tooltip("Lv2/3 是否赋予房间恐惧Tag（装饰表现用）")] public bool lv2HasTag = true;
+
         
         [Header("Ghost Training")]
         public int ghostTrainingTimeDays = 2; // 统一的训练天数（每个鬼怪都相同）
