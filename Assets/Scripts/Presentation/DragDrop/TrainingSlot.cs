@@ -23,6 +23,14 @@ namespace ScreamHotel.Presentation
         [Header("Training Settings")]
         public int trainingTimeDays = 2; // 可配置的训练时长
         
+        // 完成标识
+        public GameObject completedMark;
+        
+        private FearTag _pendingTag = default;
+        public FearTag PendingTag => _pendingTag;
+        
+        public bool IsCompleted => completedMark != null && completedMark.activeSelf;
+        
         private TrainingRoomZone _trainingZone;
         private Game _game;
         private string _ghostId;
@@ -33,10 +41,6 @@ namespace ScreamHotel.Presentation
         public bool IsOccupied => !string.IsNullOrEmpty(_ghostId);
         public bool IsTraining => _slotState == GhostState.Training;
         public string GhostId => _ghostId;
-        public int TrainingDays => _trainingDays;
-        public int TotalTrainingTime => trainingTimeDays;
-
-        public int RemainDays => Mathf.Max(0, trainingTimeDays - _trainingDays);
 
         public void Initialize(Game game)
         {
@@ -69,13 +73,30 @@ namespace ScreamHotel.Presentation
             _ghostId = ghostId;
             _slotState = GhostState.Training;
             _trainingDays = 0;
+            _pendingTag = tag;              // ← 训练中只保存，先不写到 ghost.Sub
 
-            if (trainingVfx) 
-                trainingVfx.Play();
-                
+            if (completedMark) completedMark.SetActive(false); // 开始训练时隐藏完成标记
+            if (trainingVfx) trainingVfx.Play();
+
             UpdateVisuals();
             UpdateTrainingDisplay();
         }
+
+        public void CompleteTraining()
+        {
+            _slotState = GhostState.Idle;
+            if (trainingVfx) trainingVfx.Stop();
+
+            // 通知训练区：“此槽完成了”
+            _trainingZone?.OnSlotTrainingComplete(_ghostId, this);
+
+            // 在槽位上展示完成标识（鬼可被拖走）
+            if (completedMark) completedMark.SetActive(true);
+
+            // 槽位本身清空占用（让它可以继续接收新的鬼）
+            SetEmptyState();
+        }
+
 
         public void AdvanceTrainingDay()
         {
@@ -103,17 +124,6 @@ namespace ScreamHotel.Presentation
         {
             // 更新UI显示，但不推进天数
             UpdateVisuals();
-        }
-
-        public void CompleteTraining()
-        {
-            _slotState = GhostState.Idle;
-            if (trainingVfx) trainingVfx.Stop();
-            
-            // 通知训练区域训练完成
-            _trainingZone?.OnSlotTrainingComplete(_ghostId, this);
-            
-            SetEmptyState();
         }
 
         // === 视觉更新 ===
@@ -181,7 +191,6 @@ namespace ScreamHotel.Presentation
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
             return !IsOccupied && ghost != null && ghost.State != GhostState.Training;
         }
-        
         
         // === IHoverInfoProvider ===
         public HoverInfo GetHoverInfo() => new HoverInfo

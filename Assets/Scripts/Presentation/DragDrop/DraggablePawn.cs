@@ -9,17 +9,17 @@ namespace ScreamHotel.Presentation
         protected override float DropMoveDuration => 0.08f;
 
         public void SetGhostId(string id) => SetEntityId(id); // 兼容旧接口
-
-        // 训练槽位固定时禁止拖拽（子类特有）
+        
         protected override bool IsExternallyLocked()
         {
             if (string.IsNullOrEmpty(entityId)) return false;
             var slots = FindObjectsOfType<TrainingSlot>(true);
             foreach (var s in slots)
-                if (s && s.IsOccupied && s.GhostId == entityId) return true;
+                if (s && s.IsTraining && s.GhostId == entityId)   // 只锁训练中的
+                    return true;
             return false;
         }
-
+        
         protected override void UnassignEntity(AssignmentSystem assign, string id)
         {
             assign?.UnassignGhost(id);

@@ -34,7 +34,7 @@ namespace ScreamHotel.Core
         private BuildSystem _buildSystem;
         private DayPhaseSystem _dayPhaseSystem;
         private ProgressionSystem _progressionSystem;
-        private GhostTrainer _ghostTrainer;
+        private GhostTrainer _trainer;
         
         private int _settleGuestsTotal;
         private int _settleGuestsScared;
@@ -59,10 +59,8 @@ namespace ScreamHotel.Core
             _buildSystem = new BuildSystem(World);
             _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database);
             _progressionSystem = new ProgressionSystem(World);
-            
-            _ghostTrainer = new GhostTrainer();
-            _ghostTrainer.Initialize(World); 
-
+            _trainer = new GhostTrainer();
+         
             TimeSystem = new TimeSystem(this);
             GoToDay();
         }
@@ -221,8 +219,7 @@ namespace ScreamHotel.Core
             // 由 TimeManager 控制恢复
             TimeManager.Instance?.ResumeTime();
 
-            var trainer = FindObjectOfType<GhostTrainer>();
-            trainer?.AdvanceOneDay();
+            _trainer?.AdvanceOneDay();
         }
         
         public void StartNightShow()
