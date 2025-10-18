@@ -132,9 +132,7 @@ namespace ScreamHotel.Systems
             {
                 Id    = newGhostId,
                 Main  = cfg.main,
-                Sub   = null,
                 State = GhostState.Idle,
-                DaysForcedRest = 0
             });
 
             _world.Shop.Offers.RemoveAt(slotIndex);

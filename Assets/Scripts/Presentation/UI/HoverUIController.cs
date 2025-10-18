@@ -64,26 +64,44 @@ namespace ScreamHotel.UI
             // 如果是角色（鬼/客人），交给 FearIconsPanel
             if (info.Kind == HoverKind.Character)
             {
-                // 拿 PawnView 或 GuestView（任意其一）
                 var pawn  = hit.collider.GetComponentInParent<PawnView>();
                 var guest = hit.collider.GetComponentInParent<GuestView>();
 
-                // 取恐惧标签列表
-                System.Collections.Generic.List<Domain.FearTag> tags = null;
+                // 取恐惧标签列表（保证非 null）
+                System.Collections.Generic.List<ScreamHotel.Domain.FearTag> tags = null;
                 Transform target = null;
-                
-                if (pawn != null) { tags = pawn.GetFearTags(); target = pawn.transform; }
-                else if (guest != null) { tags = guest.GetFearTags(); target = guest.transform; }
+
+                if (pawn != null)
+                {
+                    tags = pawn.GetFearTags() ?? new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>();
+                    target = pawn.transform;
+                    // if (tags.Count == 0) Debug.LogWarning($"[HoverUI] Ghost found but no fear tags. ghostId={pawn.ghostId}");
+                }
+                else if (guest != null)
+                {
+                    tags = guest.GetFearTags() ?? new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>();
+                    target = guest.transform;
+                    if (tags.Count == 0) Debug.LogWarning($"[HoverUI] Guest found but no fear tags. guestId={guest.guestId}");
+                }
+
                 if (fearIconsPanel != null && target != null)
                 {
+                    // 隐掉其它面板
                     roomPanel?.Hide();
                     roofPanel?.Hide();
                     shopPanel?.Hide();
                     shopRerollPanel?.Hide();
                     trainingRemainPanel?.Hide();
 
-                    fearIconsPanel.worldOffset = fearIconsPanel.worldOffset;
-                    fearIconsPanel.Show(target, tags);
+                    if (tags.Count == 0)
+                    {
+                        // 没有标签就不展示图标，但至少清掉旧面板
+                        fearIconsPanel.Hide();
+                    }
+                    else
+                    {
+                        fearIconsPanel.Show(target, tags);
+                    }
                 }
                 else
                 {
@@ -92,8 +110,9 @@ namespace ScreamHotel.UI
 
                 _lastKind = HoverKind.Character;
                 _lastRoomId = null;
-                return; // 已处理完本帧
+                return;
             }
+
 
             // 3) 检查是否是训练槽位
             var trainingSlot = hit.collider.GetComponentInParent<TrainingSlot>();

@@ -76,7 +76,6 @@ namespace ScreamHotel.Presentation
                 var walker = GetComponentInChildren<PatrolWalker>(true);
                 if (walker != null)
                 {
-                    // 从新实例里取 SkeletonAnimation
                     var spine = instance.GetComponentInChildren<SkeletonAnimation>(true);
                     if (spine != null)
                     {
@@ -91,6 +90,7 @@ namespace ScreamHotel.Presentation
             StopAllCoroutines();
             StartCoroutine(MoveRoutine(target.position, dur));
         }
+        
         System.Collections.IEnumerator MoveRoutine(Vector3 to, float dur)
         {
             var from = transform.position; float t = 0;
@@ -108,43 +108,84 @@ namespace ScreamHotel.Presentation
             var list = new List<FearTag>();
             var game = FindObjectOfType<Game>();
             var g = game?.World?.Ghosts?.Find(x => x.Id == ghostId);
-            if (g == null) return list;
+            if (g == null)
+            {
+                Debug.LogWarning($"[PawnView] Ghost not found in World: ghostId={ghostId ?? "<null>"}");
+                return list;
+            }
 
-            // 常见：Ghost.Main / Ghost.Sub；再兼容 Tags/Fears 集合
             if (TryGetEnum<FearTag>(g, "Main", out var main)) list.Add(main);
-            if (TryGetEnum<FearTag>(g, "Sub", out var sub))   list.Add(sub);
-            TryAddList(g, "Tags", list);
+            if (TryGetEnum<FearTag>(g, "Sub",  out var sub))  list.Add(sub);
+            TryAddList(g, "Tags",  list);
             TryAddList(g, "Fears", list);
 
-            // 去重
-            for (int i = list.Count - 1; i >= 0; --i)
-                if (i > 0 && list.GetRange(0, i).Contains(list[i])) list.RemoveAt(i);
-
+            // 更稳的去重：保持原顺序
+            var seen = new HashSet<FearTag>();
+            list = list.Where(t => seen.Add(t)).ToList();
             return list;
         }
         
-        static bool TryGetEnum<T>(object obj, string prop, out T value) where T : struct
+        // 1) 读枚举（支持属性或字段）
+        static bool TryGetEnum<T>(object obj, string name, out T value) where T : struct
         {
             value = default;
-            var p = obj.GetType().GetProperty(prop);
-            if (p != null && p.PropertyType.IsEnum)
+
+            // 先找属性
+            var p = obj.GetType().GetProperty(name);
+            if (p != null)
             {
+                var t = p.PropertyType;
+                var underlying = System.Nullable.GetUnderlyingType(t);
+                bool isEnumOrNullableEnum = t.IsEnum || (underlying != null && underlying.IsEnum);
+                if (!isEnumOrNullableEnum) return false;
+
                 var v = p.GetValue(obj);
-                if (v != null) { value = (T)v; return true; }
+                if (v == null) return false;
+                if (underlying != null) v = System.Convert.ChangeType(v, underlying);
+                value = (T)v;
+                return true;
             }
+
+            // 再找字段
+            var f = obj.GetType().GetField(name);
+            if (f != null)
+            {
+                var t = f.FieldType;
+                var underlying = System.Nullable.GetUnderlyingType(t);
+                bool isEnumOrNullableEnum = t.IsEnum || (underlying != null && underlying.IsEnum);
+                if (!isEnumOrNullableEnum) return false;
+
+                var v = f.GetValue(obj);
+                if (v == null) return false;
+                if (underlying != null) v = System.Convert.ChangeType(v, underlying);
+                value = (T)v;
+                return true;
+            }
+
             return false;
         }
-        static void TryAddList(object obj, string prop, List<FearTag> outList)
+
+        // 2) 读列表（支持属性或字段）
+        static void TryAddList(object obj, string name, List<FearTag> outList)
         {
-            var p = obj.GetType().GetProperty(prop);
+            // 属性
+            var p = obj.GetType().GetProperty(name);
             if (p != null && typeof(System.Collections.IEnumerable).IsAssignableFrom(p.PropertyType))
             {
                 var en = (System.Collections.IEnumerable)p.GetValue(obj);
-                if (en == null) return;
-                foreach (var x in en) if (x is FearTag t) outList.Add(t);
+                if (en != null) foreach (var x in en) if (x is FearTag t) outList.Add(t);
+                return;
+            }
+
+            // 字段
+            var f = obj.GetType().GetField(name);
+            if (f != null && typeof(System.Collections.IEnumerable).IsAssignableFrom(f.FieldType))
+            {
+                var en = (System.Collections.IEnumerable)f.GetValue(obj);
+                if (en != null) foreach (var x in en) if (x is FearTag t) outList.Add(t);
             }
         }
-        
+
         public HoverInfo GetHoverInfo() => new HoverInfo { Kind = HoverKind.Character };
     }
 }

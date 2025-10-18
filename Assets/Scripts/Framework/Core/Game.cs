@@ -300,7 +300,7 @@ namespace ScreamHotel.Core
                             Main = cfg.main, // 从配置读主恐惧
                             State = GhostState.Idle
                         };
-
+                        
                         w.Ghosts.Add(ghost);
                     }
                 }

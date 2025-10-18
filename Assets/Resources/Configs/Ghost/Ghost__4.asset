@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Ghost__4
   m_EditorClassIdentifier: 
   id: 4
-  main: 0
+  main: 2
   prefabOverride: {fileID: 6189533936618388671, guid: d5f9e5dfada01489c9c102d64c2867cf, type: 3}

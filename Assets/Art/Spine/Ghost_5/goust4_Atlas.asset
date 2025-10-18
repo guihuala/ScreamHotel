@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51624d92c3e284dd3b783970bdecff4b, type: 3}
-  m_Name: Ghost__Spirit
+  m_Script: {fileID: 11500000, guid: a6b194f808b1af6499c93410e504af42, type: 3}
+  m_Name: goust4_Atlas
   m_EditorClassIdentifier: 
-  id: Ghost_Spirit
-  main: 4
-  prefabOverride: {fileID: 6904672651348245444, guid: 3dc7e6b0a54144fc390eb9d6d922594e, type: 3}
+  atlasFile: {fileID: 4900000, guid: f252d291df7054d1bad4835db4215e05, type: 3}
+  materials:
+  - {fileID: 2100000, guid: 0b3eedc2f04db475eb20e8ca08fffbe1, type: 2}

@@ -83,8 +83,6 @@ namespace ScreamHotel.Presentation
         }
         
         // ====== Move======
-        public void SnapTo(Vector3 pos) { transform.position = pos; }
-
         public void MoveTo(Transform target, float dur = 0.5f)
         {
             StopAllCoroutines();
@@ -102,20 +100,6 @@ namespace ScreamHotel.Presentation
             }
             transform.position = to;
         }
-
-        private static void SanitizePreviewNode(GameObject go)
-        {
-            // 禁用碰撞与刚体
-            foreach (var c in go.GetComponentsInChildren<Collider>(true)) c.enabled = false;
-            foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) Destroy(rb);
-
-            // 删除所有非渲染/动画的脚本，避免逻辑运行
-            foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
-            {
-                if (mb is Animator) continue;
-                Destroy(mb);
-            }
-        }
         
         public List<FearTag> GetFearTags()
         {
@@ -124,38 +108,81 @@ namespace ScreamHotel.Presentation
             var g = game?.World?.Guests?.Find(x => x.Id == guestId);
             if (g == null) return list;
 
-            // 常见做法：Guest 可能有 Main/Sub/Tags；按需采集
-            TryAddTagByProperty(g, "Main", list);
-            TryAddTagByProperty(g, "Sub", list);
-            TryAddListByProperty(g, "Tags", list);
-            TryAddListByProperty(g, "Fears", list); // 兼容命名
+            TryGetEnumByMember<FearTag>(g, "Main", out var main);     // 若以后给 Guest 也加 Main/Sub 可自动兼容
+            TryGetEnumByMember<FearTag>(g, "Sub", out var sub);
+            if (!EqualityComparer<FearTag>.Default.Equals(main, default)) list.Add(main);
+            if (!EqualityComparer<FearTag>.Default.Equals(sub,  default)) list.Add(sub);
 
-            // 去重
-            for (int i = list.Count - 1; i >= 0; --i)
-                if (i > 0 && list.GetRange(0, i).Contains(list[i])) list.RemoveAt(i);
+            TryAddListByMember(g, "Tags",  list);
+            TryAddListByMember(g, "Fears", list);
 
+            // 去重保持顺序
+            var seen = new HashSet<FearTag>();
+            list = list.Where(t => seen.Add(t)).ToList();
             return list;
         }
         
-        static void TryAddTagByProperty(object obj, string prop, List<FearTag> outList)
+        // 1) 读枚举（支持属性或字段）
+        static bool TryGetEnumByMember<T>(object obj, string name, out T value) where T : struct
         {
-            var p = obj.GetType().GetProperty(prop);
-            if (p != null && p.PropertyType.IsEnum)
+            value = default;
+
+            // 先找属性
+            var p = obj.GetType().GetProperty(name);
+            if (p != null)
             {
+                var t = p.PropertyType;
+                var underlying = System.Nullable.GetUnderlyingType(t);
+                bool isEnumOrNullableEnum = t.IsEnum || (underlying != null && underlying.IsEnum);
+                if (!isEnumOrNullableEnum) return false;
+
                 var v = p.GetValue(obj);
-                if (v != null) outList.Add((FearTag)v);
+                if (v == null) return false;
+                if (underlying != null) v = System.Convert.ChangeType(v, underlying);
+                value = (T)v;
+                return true;
             }
+
+            // 再找字段
+            var f = obj.GetType().GetField(name);
+            if (f != null)
+            {
+                var t = f.FieldType;
+                var underlying = System.Nullable.GetUnderlyingType(t);
+                bool isEnumOrNullableEnum = t.IsEnum || (underlying != null && underlying.IsEnum);
+                if (!isEnumOrNullableEnum) return false;
+
+                var v = f.GetValue(obj);
+                if (v == null) return false;
+                if (underlying != null) v = System.Convert.ChangeType(v, underlying);
+                value = (T)v;
+                return true;
+            }
+
+            return false;
         }
-        static void TryAddListByProperty(object obj, string prop, List<FearTag> outList)
+
+        // 2) 读列表（支持属性或字段）
+        static void TryAddListByMember(object obj, string name, List<FearTag> outList)
         {
-            var p = obj.GetType().GetProperty(prop);
+            // 属性
+            var p = obj.GetType().GetProperty(name);
             if (p != null && typeof(System.Collections.IEnumerable).IsAssignableFrom(p.PropertyType))
             {
                 var en = (System.Collections.IEnumerable)p.GetValue(obj);
-                if (en == null) return;
-                foreach (var x in en) if (x is FearTag t) outList.Add(t);
+                if (en != null) foreach (var x in en) if (x is FearTag t) outList.Add(t);
+                return;
+            }
+
+            // 字段
+            var f = obj.GetType().GetField(name);
+            if (f != null && typeof(System.Collections.IEnumerable).IsAssignableFrom(f.FieldType))
+            {
+                var en = (System.Collections.IEnumerable)f.GetValue(obj);
+                if (en != null) foreach (var x in en) if (x is FearTag t) outList.Add(t);
             }
         }
+
         
         public HoverInfo GetHoverInfo() => new HoverInfo { Kind = HoverKind.Character };
     }

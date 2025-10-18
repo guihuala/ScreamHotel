@@ -26,7 +26,6 @@ namespace ScreamHotel.Systems
             foreach (var g in _world.Ghosts)
             {
                 if (g.State == GhostState.Working) g.State = GhostState.Idle;
-                if (g.DaysForcedRest > 0) g.DaysForcedRest--;
             }
 
             // 2) 刷新客人池：先清掉上一日的客人，再生成今日客源

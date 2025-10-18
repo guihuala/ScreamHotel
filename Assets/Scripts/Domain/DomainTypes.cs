@@ -11,7 +11,6 @@ namespace ScreamHotel.Domain
         public FearTag Main;
         public FearTag? Sub;
         public GhostState State;
-        public int DaysForcedRest;  // 强制休息的天数
         public int TrainingDays;    // 训练期间的天数
 
         public bool IsTraining => State == GhostState.Training;
@@ -38,10 +37,7 @@ namespace ScreamHotel.Domain
         public List<string> AssignedGuestIds = new(); 
     }
 
-    public class Basement
-    {
-        public int TrainingSlots;
-    }
+
     
     // ---- 商店状态与货架条目 ----
     public class GhostOffer
@@ -64,11 +60,10 @@ namespace ScreamHotel.Domain
 
     public class World
     {
-        public int Suspicion = 0; // 全局累计怀疑值（每天结算后不清零）
+        public int Suspicion = 0; // 全局累计怀疑值
         public readonly List<Ghost> Ghosts = new();
         public readonly List<Guest> Guests = new();
         public readonly List<Room> Rooms = new();
-        public readonly Basement Basement = new();
         public readonly Economy Economy = new();
         public readonly Data.ConfigDatabase Config;
         
