@@ -22,6 +22,19 @@ namespace ScreamHotel.Core
         public InitialSetupConfig initialSetup;
         
         [SerializeField] private float skyTransitionSpeed = 3f;
+        [SerializeField] private Light mainDirectionalLight;        // 指向场景中的主光（Sun）
+        [SerializeField] private Vector3 sunDirectionBase = new Vector3(0f, 0f, 0f); // 基础朝向(可用y做方位角)
+        [SerializeField] private float sunAzimuthDegrees = 45f;     // 太阳方位角(平面绕Y旋转)
+        [SerializeField] private AnimationCurve sunElevationByTime = AnimationCurve.Linear(0, -10f, 1, 70f); // 通过归一化时间 [0,1] -> 太阳仰角（度），默认：清晨-10°到正午70°再回落（可改为更复杂曲线）
+
+        [SerializeField] private Gradient lightColorByTime;          // 主光颜色曲线（在 Inspector 可编辑）
+        [SerializeField] private AnimationCurve lightIntensityByTime = AnimationCurve.Linear(0, 0.05f, 1, 1.2f);
+
+        [SerializeField] private Gradient ambientColorByTime;        // 环境光颜色曲线
+        [SerializeField] private AnimationCurve ambientIntensityByTime = AnimationCurve.Linear(0, 0.7f, 1, 1.0f);
+
+        [SerializeField] private AnimationCurve reflectionIntensityByTime = AnimationCurve.Linear(0, 0.6f, 1, 1.0f);
+
         
         public GameState State { get; private set; } = GameState.Boot;
         public int DayIndex { get; private set; } = 1;
@@ -65,11 +78,34 @@ namespace ScreamHotel.Core
             GoToDay();
         }
 
+        private void EnsureDefaultLightingCurves()
+        {
+            if (lightColorByTime == null || lightColorByTime.colorKeys.Length == 0)
+            {
+                lightColorByTime = new Gradient
+                {
+                    colorKeys = new []
+                    {
+                        new GradientColorKey(new Color(0.8f,0.5f,0.4f), 0f),   // 黎明偏暖
+                        new GradientColorKey(new Color(1f,0.95f,0.85f), 0.5f), // 正午偏白暖
+                        new GradientColorKey(new Color(0.9f,0.45f,0.35f), 0.8f),// 黄昏
+                        new GradientColorKey(new Color(0.2f,0.25f,0.35f), 1f)  // 午夜偏冷
+                    }
+                };
+            }
+            if (ambientColorByTime == null || ambientColorByTime.colorKeys.Length == 0)
+            {
+                ambientColorByTime = lightColorByTime;
+            }
+        }
+
         private void Start()
         {
             skyboxMaterial = RenderSettings.skybox;
             _skyTransition = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
+            EnsureDefaultLightingCurves();
         }
+
 
         private void Update()
         {
@@ -77,7 +113,43 @@ namespace ScreamHotel.Core
             float dt = TimeManager.Instance.DeltaTime;     // 统一由 TimeManager 控制暂停/倍速
             TimeSystem.Update(dt);
             UpdateSkyboxTransition();
+            UpdateLighting();
         }
+        
+        private void UpdateLighting()
+        {
+            float t = Mathf.Clamp01(TimeSystem.currentTimeOfDay);
+
+            // 1) 主光方向：由方位角 + 仰角曲线共同决定
+            if (mainDirectionalLight != null)
+            {
+                float elevation = sunElevationByTime.Evaluate(t); // 度
+                float azimuth = sunAzimuthDegrees;                // 度（可在 Inspector 调整“日轨”方向）
+
+                // 由方位角/仰角生成方向向量（Y为上）
+                Quaternion rot = Quaternion.Euler(elevation, azimuth, 0f);
+                mainDirectionalLight.transform.rotation = rot;
+
+                // 2) 主光颜色/强度
+                mainDirectionalLight.color = lightColorByTime.Evaluate(t);
+                mainDirectionalLight.intensity = Mathf.Max(0f, lightIntensityByTime.Evaluate(t));
+
+                // 当太阳“落下”时可选择逐步禁用阴影以省性能（可选）
+                mainDirectionalLight.shadows = mainDirectionalLight.intensity > 0.05f
+                    ? LightShadows.Soft
+                    : LightShadows.None;
+            }
+
+            // 3) 环境光/反射强度（基于天空盒环境模式）
+            // 建议在项目设置里把 Lighting->Environment->Ambient Mode 设为 Skybox。
+            // 我们只动态调节强度与补色，避免大幅度色偏。
+            RenderSettings.ambientLight = ambientColorByTime.Evaluate(t); // 若 Ambient Mode 为 Color/Skybox 都安全
+            RenderSettings.ambientIntensity = Mathf.Clamp01(ambientIntensityByTime.Evaluate(t));
+
+            // 反射强度（影响基于反射探针/天空盒的高光）
+            RenderSettings.reflectionIntensity = Mathf.Clamp01(reflectionIntensityByTime.Evaluate(t));
+        }
+
 
         public void StartSettlement()
         {
