@@ -13,21 +13,20 @@ namespace ScreamHotel.UI
         public Button pauseButton;
         public Button executeButton;
         public Button skipDayButton;
+        
+        [Header("Guests")]
+        public Button guestsButton;
 
         [Header("HUD Text (optional)")]
         public TextMeshProUGUI goldText;
         public TextMeshProUGUI dayText;
 
         [Header("Analog Clock")]
-        [Tooltip("时针（RectTransform，围绕其Z轴旋转）")]
         public RectTransform hourHand;
-        [Tooltip("分针（RectTransform，围绕其Z轴旋转）")]
         public RectTransform minuteHand;
 
         [Header("Suspicion UI (Image Fill)")]
-        [Tooltip("用于显示怀疑值的填充图片（Image.type = Filled）")]
         public Image suspicionFillImage;
-        [Tooltip("当未从规则读取到阈值时使用的保底阈值")]
         public int suspicionFallbackThreshold = 100;
 
         private int suspicionThresholdCached = 100;
@@ -40,14 +39,16 @@ namespace ScreamHotel.UI
             if (executeButton) executeButton.onClick.AddListener(OnExecuteButtonClicked);
             if (skipDayButton) skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
 
+            // NEW
+            if (guestsButton)  guestsButton.onClick.AddListener(OnGuestsButtonClicked);
+
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
+            UpdateGuestsButtonVisibility(); // NEW
 
-            // 读取阈值（有则用规则，没有就保底）
             var rules = game?.World?.Config?.Rules;
             suspicionThresholdCached = Mathf.Max(1, rules != null ? rules.suspicionThreshold : suspicionFallbackThreshold);
 
-            // 确保怀疑值图片是 Filled 模式（运行时兜底一次）
             if (suspicionFillImage != null)
             {
                 if (suspicionFillImage.type != Image.Type.Filled)
@@ -59,8 +60,8 @@ namespace ScreamHotel.UI
         {
             RefreshGoldUI();
             RefreshDayUI();
-            RefreshSuspicionUI(); // 初始刷新
-            UpdateTimeDisplay();  // 初始时钟
+            RefreshSuspicionUI();
+            UpdateTimeDisplay();
         }
 
         private void OnEnable()
@@ -83,7 +84,7 @@ namespace ScreamHotel.UI
 
         private void Update()
         {
-            UpdateTimeDisplay(); // 驱动模拟表盘
+            UpdateTimeDisplay();
         }
 
         private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();
@@ -92,6 +93,7 @@ namespace ScreamHotel.UI
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
+            UpdateGuestsButtonVisibility(); // NEW
             RefreshDayUI();
         }
 
@@ -99,19 +101,20 @@ namespace ScreamHotel.UI
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
+            UpdateGuestsButtonVisibility(); // NEW
             RefreshDayUI();
-            RefreshSuspicionUI(); // 每天开始也刷新一次
+            RefreshSuspicionUI();
         }
 
         private void OnNightStarted(NightStartedEvent e)
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
+            UpdateGuestsButtonVisibility(); // NEW
         }
 
         private void OnSuspicionChanged(SuspicionChanged e)
         {
-            // 若规则临时变化，兜底阈值仍保持 >=1
             suspicionThresholdCached = Mathf.Max(1, suspicionThresholdCached);
             RefreshSuspicionUI();
         }
@@ -125,6 +128,7 @@ namespace ScreamHotel.UI
                 game.StartNightExecution();
                 UpdateExecuteButtonVisibility();
                 UpdateSkipDayButtonVisibility();
+                UpdateGuestsButtonVisibility();
             }
         }
 
@@ -135,6 +139,18 @@ namespace ScreamHotel.UI
                 game.SkipToNightShow();
                 UpdateSkipDayButtonVisibility();
                 UpdateExecuteButtonVisibility();
+                UpdateGuestsButtonVisibility();
+            }
+        }
+
+        // NEW: 打开候选顾客面板
+        private void OnGuestsButtonClicked()
+        {
+            var panel = UIManager.Instance.OpenPanel("GuestApprovalPanel");
+            var gap = panel as GuestApprovalPanel; // 需要新增脚本（见下）
+            if (gap != null)
+            {
+                gap.Init(game); // 让面板自己去读 Pending/操作 Accept/Reject
             }
         }
 
@@ -152,6 +168,15 @@ namespace ScreamHotel.UI
             bool show = game.State == GameState.Day;
             skipDayButton.gameObject.SetActive(show);
             skipDayButton.interactable = show;
+        }
+
+        // NEW: 仅 Day 显示“客人名单”按钮；是否>0可根据需要限制显示
+        private void UpdateGuestsButtonVisibility()
+        {
+            if (guestsButton == null) return;
+            bool show = game.State == GameState.Day;
+            guestsButton.gameObject.SetActive(show);
+            guestsButton.interactable = show;
         }
 
         private void RefreshGoldUI()
@@ -172,32 +197,27 @@ namespace ScreamHotel.UI
             };
             dayText.text = $"Day {game.DayIndex} - {stateText}";
         }
-        
+
         private void UpdateTimeDisplay()
         {
             var ts = game?.TimeSystem;
             if (ts == null) return;
 
-            float t = Mathf.Repeat(ts.currentTimeOfDay, 1f); // 0..1
-            float hoursFloat = t * 24f;                      // 0..24
-            int   hoursInt   = Mathf.FloorToInt(hoursFloat); // 地板小时（数字显示用）
+            float t = Mathf.Repeat(ts.currentTimeOfDay, 1f);
+            float hoursFloat = t * 24f;
+            int   hoursInt   = Mathf.FloorToInt(hoursFloat);
             float minutes    = (hoursFloat - hoursInt) * 60f;
 
-            // 分针角度（0-360）
             float minuteAngle = (minutes / 60f) * 360f;
-
-            // 时针角度：基于 12 小时制并包含分钟偏移
             float hours12     = Mathf.Repeat(hoursFloat, 12f);
             float hourAngle   = (hours12 / 12f) * 360f + (minutes / 60f) * (360f / 12f);
 
-            // 应用到指针
             if (minuteHand != null)
-                minuteHand.localRotation = Quaternion.Euler(0f, 0f, -minuteAngle); // UI Z 轴顺时针为负
-
+                minuteHand.localRotation = Quaternion.Euler(0f, 0f, -minuteAngle);
             if (hourHand != null)
                 hourHand.localRotation = Quaternion.Euler(0f, 0f, -hourAngle);
         }
-        
+
         private void RefreshSuspicionUI()
         {
             var world = game?.World;
@@ -212,7 +232,6 @@ namespace ScreamHotel.UI
             {
                 if (suspicionFillImage.type != Image.Type.Filled)
                     suspicionFillImage.type = Image.Type.Filled;
-
                 suspicionFillImage.fillAmount = pct;
             }
         }

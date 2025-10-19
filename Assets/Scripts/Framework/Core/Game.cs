@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ScreamHotel.Core;
@@ -34,6 +35,14 @@ namespace ScreamHotel.Core
         [SerializeField] private AnimationCurve ambientIntensityByTime = AnimationCurve.Linear(0, 0.7f, 1, 1.0f);
 
         [SerializeField] private AnimationCurve reflectionIntensityByTime = AnimationCurve.Linear(0, 0.6f, 1, 1.0f);
+
+        private DayGuestSpawner _dayGuestSpawner;
+        public IReadOnlyList<Guest> PendingGuests => _dayGuestSpawner?.Pending;
+        public IReadOnlyList<Guest> AcceptedGuests => _dayGuestSpawner?.Accepted;
+        public int PendingGuestCount => _dayGuestSpawner?.PendingCount ?? 0;
+
+        public bool ApproveGuest(string guestId) => _dayGuestSpawner != null && _dayGuestSpawner.Accept(guestId);
+        public bool RejectGuest(string guestId)  => _dayGuestSpawner != null && _dayGuestSpawner.Reject(guestId);
 
         
         public GameState State { get; private set; } = GameState.Boot;
@@ -73,6 +82,7 @@ namespace ScreamHotel.Core
             _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database);
             _progressionSystem = new ProgressionSystem(World);
             _trainer = new GhostTrainer();
+            _dayGuestSpawner = new DayGuestSpawner(World, dataManager.Database);
          
             TimeSystem = new TimeSystem(this);
             GoToDay();
@@ -294,6 +304,10 @@ namespace ScreamHotel.Core
 
             TimeManager.Instance?.ResumeTime();
             _trainer?.AdvanceOneDay();
+            
+            var rules = World?.Config?.Rules;
+            int count = (rules != null && rules.dayGuestSpawnCount > 0) ? rules.dayGuestSpawnCount : 3; // 没有就给个兜底
+            _dayGuestSpawner.GenerateCandidates(count);
         }
 
         public void StartNightShow()
@@ -301,7 +315,10 @@ namespace ScreamHotel.Core
             State = GameState.NightShow;
             EventBus.Raise(new GameStateChanged(State));
             EventBus.Raise(new NightStartedEvent());
-            Debug.Log("Enter Night Show phase");
+            
+            // 仅已接受顾客进入世界列表，NightShow 才能分配
+            int flushed = _dayGuestSpawner.FlushAcceptedToWorld();
+            Debug.Log($"[Guests] NightShow: flushed accepted guests = {flushed}");
         }
 
         public void StartNightExecute()
