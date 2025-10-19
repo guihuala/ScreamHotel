@@ -13,8 +13,12 @@ MonoBehaviour:
   m_Name: GuestType__3
   m_EditorClassIdentifier: 
   id: 3
+  displayName: 
   immunities: 00000000
   barMax: 100
   requiredPercent: 0.8
   baseFee: 100
   prefabOverride: {fileID: 7946536820087081390, guid: 68173c1f5fe8b4451917e68f459a99d0, type: 3}
+  portrait: {fileID: 0}
+  intro: 123456
+  gallery: []

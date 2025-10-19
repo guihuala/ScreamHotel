@@ -19,3 +19,5 @@ MonoBehaviour:
     uiPath: Panel/SettingPanel
   - uiName: SettlementPanel
     uiPath: Panel/SettlementPanel
+  - uiName: GuestApprovalPanel
+    uiPath: Panel/GuestApprovalPanel

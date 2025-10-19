@@ -313,13 +313,19 @@ namespace ScreamHotel.Core
         public void StartNightShow()
         {
             State = GameState.NightShow;
-            EventBus.Raise(new GameStateChanged(State));
-            EventBus.Raise(new NightStartedEvent());
-            
-            // 仅已接受顾客进入世界列表，NightShow 才能分配
+
+            // 先落库：仅把“已接受”的顾客写入 World.Guests
             int flushed = _dayGuestSpawner.FlushAcceptedToWorld();
             Debug.Log($"[Guests] NightShow: flushed accepted guests = {flushed}");
+
+            // 阶段事件（保持原有顺序/语义）
+            EventBus.Raise(new GameStateChanged(State));
+            EventBus.Raise(new NightStartedEvent());
+
+            // 新增：通知渲染层开始生成/同步顾客视图
+            EventBus.Raise(new GuestsRenderRequested());
         }
+
 
         public void StartNightExecute()
         {

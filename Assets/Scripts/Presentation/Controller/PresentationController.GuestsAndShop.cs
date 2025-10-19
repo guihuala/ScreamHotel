@@ -8,30 +8,44 @@ namespace ScreamHotel.Presentation
     {
         private void BuildInitialGuests()
         {
+            // 只在 NightShow 阶段渲染
+            if (game.State != ScreamHotel.Core.GameState.NightShow)
+            {
+                ClearGuestViews();
+                return;
+            }
+
             var w = game.World;
             foreach (var g in w.Guests)
             {
                 if (_guestViews.ContainsKey(g.Id)) continue;
-                
+
                 int idx = _guestViews.Count;
                 var pos = GetGuestQueueWorldPos(idx);
-                
+
                 var gv = Instantiate(guestPrefab, pos, Quaternion.identity, guestsRoot);
                 gv.BindGuest(g.Id);
-
                 _guestViews[g.Id] = gv;
             }
         }
 
         private void SyncGuestsQueue()
         {
+            // 只在 NightShow 同步；其它阶段确保清空并退出
+            if (game.State != ScreamHotel.Core.GameState.NightShow)
+            {
+                ClearGuestViews();
+                return;
+            }
+
             var w = game.World;
 
             // 删除不在世界里的旧客人
             var alive = new HashSet<string>(w.Guests.Select(g => g.Id));
             var toRemove = _guestViews.Keys.Where(id => !alive.Contains(id)).ToList();
             foreach (var id in toRemove) { SafeDestroy(_guestViews[id]?.gameObject); _guestViews.Remove(id); }
-            
+
+            // 补齐新客人
             for (int i = 0; i < w.Guests.Count; i++)
             {
                 var g = w.Guests[i];
@@ -89,6 +103,16 @@ namespace ScreamHotel.Presentation
                 var local = new Vector3(startXLocal + col * queueSpacingX, -row * queueRowHeight, queueFixedZ);
                 return guestQueueRoot.TransformPoint(local);
             }
+        }
+        
+        private void ClearGuestViews()
+        {
+            if (_guestViews.Count == 0) return;
+            foreach (var id in _guestViews.Keys.ToList())
+            {
+                SafeDestroy(_guestViews[id]?.gameObject);
+            }
+            _guestViews.Clear();
         }
 
         // -------- Shop ----------

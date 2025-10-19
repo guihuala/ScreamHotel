@@ -78,6 +78,7 @@ namespace ScreamHotel.Core
         public RoomUnlockedEvent(string id) { RoomId = id; }
     }
 
+    public struct GuestsRenderRequested { }
     
     public readonly struct RoomPurchasedEvent
     {

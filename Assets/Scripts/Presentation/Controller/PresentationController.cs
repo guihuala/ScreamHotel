@@ -66,6 +66,7 @@ namespace ScreamHotel.Presentation
             EventBus.Subscribe<NightResolved>(OnNightResolved);
             EventBus.Subscribe<FloorBuiltEvent>(OnFloorBuilt);
             EventBus.Subscribe<RoofUpdateNeeded>(OnRoofUpdateNeeded);
+            EventBus.Subscribe<GuestsRenderRequested>(OnGuestsRenderRequested);  // NEW
         }
 
         void OnDisable()
@@ -76,6 +77,14 @@ namespace ScreamHotel.Presentation
             EventBus.Unsubscribe<NightResolved>(OnNightResolved);
             EventBus.Unsubscribe<FloorBuiltEvent>(OnFloorBuilt);
             EventBus.Unsubscribe<RoofUpdateNeeded>(OnRoofUpdateNeeded);
+            EventBus.Unsubscribe<GuestsRenderRequested>(OnGuestsRenderRequested); // NEW
+        }
+        
+        private void OnGuestsRenderRequested(GuestsRenderRequested _)
+        {
+            // 进入 NightShow 时统一触发渲染（增量构建 + 队列对齐）
+            BuildInitialGuests();
+            SyncGuestsQueue();
         }
 
         void Start()

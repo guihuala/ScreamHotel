@@ -12,9 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78bebf8e695f44f3abbf8324fbc2a3b6, type: 3}
   m_Name: GuestType__Coward
   m_EditorClassIdentifier: 
-  id: Coward
+  id: 1
+  displayName: Coward
   immunities: 03000000
   barMax: 90
   requiredPercent: 0.75
   baseFee: 80
   prefabOverride: {fileID: 7106032176820751855, guid: aee0c326817c946228c61c62d2b9209c, type: 3}
+  portrait: {fileID: 0}
+  intro: hello
+  gallery: []

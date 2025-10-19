@@ -147,7 +147,7 @@ namespace ScreamHotel.UI
         private void OnGuestsButtonClicked()
         {
             var panel = UIManager.Instance.OpenPanel("GuestApprovalPanel");
-            var gap = panel as GuestApprovalPanel; // 需要新增脚本（见下）
+            var gap = panel as GuestApprovalPanel;
             if (gap != null)
             {
                 gap.Init(game); // 让面板自己去读 Pending/操作 Accept/Reject

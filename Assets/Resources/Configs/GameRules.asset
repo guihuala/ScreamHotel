@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   suspicionThreshold: 100
   suspicionPerFailedGuest: 1
-  suspicionPerUnservedGuest: 1
-  totalDays: 7
+  totalDays: 1
   dayGuestSpawnCount: 4
   ghostShopSlots: 3
   ghostShopPrice: 100
@@ -25,6 +24,7 @@ MonoBehaviour:
   floorCostGrowth: 1.25
   roomUpgradeCosts: c800000090010000
   roomBuyCost: 200
+  roomUnlockCost: 150
   capacityLv1: 1
   capacityLv3: 2
   lv2HasTag: 1
