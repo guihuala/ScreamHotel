@@ -188,6 +188,8 @@ namespace ScreamHotel.Presentation
             if (string.IsNullOrEmpty(ghostId)) return false;
 
             var game = FindObjectOfType<Game>();
+            if (game == null || game.State != GameState.Day) return false;
+
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
             return !IsOccupied && ghost != null && ghost.State != GhostState.Training;
         }
@@ -216,9 +218,13 @@ namespace ScreamHotel.Presentation
             return true;
         }
         
+
         public bool TryDrop(string ghostId, out Transform anchor)
         {
             anchor = null;
+            var game = FindObjectOfType<Game>();
+            if (game == null || game.State != GameState.Day) return false;
+
             if (!CanAccept(ghostId)) return false;
 
             _ghostId = ghostId;
@@ -226,7 +232,6 @@ namespace ScreamHotel.Presentation
             _trainingDays = 0;
 
             anchor = ghostAnchor;
-    
             UpdateVisuals();
             return true;
         }

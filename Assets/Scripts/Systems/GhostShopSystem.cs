@@ -21,14 +21,6 @@ namespace ScreamHotel.Systems
             _world = world;
             _db = db;
         }
-
-        // 从运行时 Id 提取“配置 id”前缀（与 PawnView 的解析规则保持一致）
-        private static string ExtractBaseConfigId(string runtimeId)
-        {
-            if (string.IsNullOrEmpty(runtimeId)) return null;
-            int cut = runtimeId.IndexOfAny(new[] { '#', '@', ':' });
-            return cut > 0 ? runtimeId.Substring(0, cut) : runtimeId;
-        }
         
         public void RefreshDaily(int dayIndex, bool force = false)
         {

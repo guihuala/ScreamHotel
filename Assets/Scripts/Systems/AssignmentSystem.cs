@@ -1,20 +1,39 @@
 using System.Linq;
 using ScreamHotel.Domain;
-using UnityEngine;  // 引入 UnityEngine 用于 Debug.Log
+using UnityEngine;
+using ScreamHotel.Core;
 
 namespace ScreamHotel.Systems
 {
     public class AssignmentSystem
     {
         private readonly World _world;
-        public AssignmentSystem(World world) { _world = world; }
+        private readonly Game _game;
+
+        public AssignmentSystem(World world, Game game)
+        {
+            _world = world;
+            _game  = game;
+        }
+
+        private bool IsAssignPhase()
+        {
+            if (_game == null) return false;
+            if (_game.State != GameState.NightShow)
+            {
+                Debug.LogWarning("[Assign] 仅在 NightShow 阶段允许分配/撤销分配");
+                return false;
+            }
+            return true;
+        }
 
         public bool TryAssignGhostToRoom(string ghostId, string roomId)
         {
+            if (!IsAssignPhase()) return false;
+
             var g = _world.Ghosts.FirstOrDefault(x => x.Id == ghostId);
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
 
-            // 打印调试信息
             Debug.Log($"尝试分配鬼怪 {ghostId} 到房间 {roomId}");
 
             if (g == null || r == null)
@@ -35,7 +54,6 @@ namespace ScreamHotel.Systems
                 return false;
             }
 
-            // 如果之前分配在别的房间，先移除旧房间中的记录
             foreach (var room in _world.Rooms)
                 room.AssignedGhostIds.Remove(ghostId);
 
@@ -52,6 +70,8 @@ namespace ScreamHotel.Systems
 
         public bool UnassignGhost(string ghostId)
         {
+            if (!IsAssignPhase()) return false;
+
             var g = _world.Ghosts.FirstOrDefault(x => x.Id == ghostId);
             if (g == null)
             {
@@ -75,10 +95,11 @@ namespace ScreamHotel.Systems
         
         public bool TryAssignGuestToRoom(string guestId, string roomId)
         {
+            if (!IsAssignPhase()) return false;
+
             var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
 
-            // 打印调试信息
             Debug.Log($"尝试分配客人 {guestId} 到房间 {roomId}");
 
             if (g == null || r == null)
@@ -87,7 +108,6 @@ namespace ScreamHotel.Systems
                 return false;
             }
 
-            // 一个客人只在一个房间：先从所有房间移除
             foreach (var rr in _world.Rooms) rr.AssignedGuestIds.Remove(guestId);
 
             if (!r.AssignedGuestIds.Contains(guestId))
@@ -102,6 +122,8 @@ namespace ScreamHotel.Systems
 
         public bool UnassignGuest(string guestId)
         {
+            if (!IsAssignPhase()) return false;
+
             var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
             if (g == null)
             {
@@ -122,6 +144,8 @@ namespace ScreamHotel.Systems
 
         public void ClearAssignments()
         {
+            if (!IsAssignPhase()) return;
+
             foreach (var r in _world.Rooms) r.AssignedGhostIds.Clear();
             foreach (var g in _world.Ghosts) if (g.State == GhostState.Working) g.State = GhostState.Idle;
 

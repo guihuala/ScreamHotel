@@ -67,7 +67,7 @@ namespace ScreamHotel.Core
             World = new World(dataManager.Database);
             SeedInitialWorld(World);
 
-            _assignmentSystem = new AssignmentSystem(World);
+            _assignmentSystem = new AssignmentSystem(World, this);
             _executionSystem = new NightExecutionSystem(World);
             _buildSystem = new BuildSystem(World);
             _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database);
@@ -167,14 +167,17 @@ namespace ScreamHotel.Core
             EventBus.Unsubscribe<ExecNightResolved>(OnNightResolved);
         }
         
+
         public bool ShopTryReroll()
         {
+            if (State != GameState.Day) { Debug.LogWarning("[Shop] 仅在 Day 阶段可刷新商店"); return false; }
             return _dayPhaseSystem != null && _dayPhaseSystem.ShopReroll(DayIndex);
         }
 
         public bool ShopTryBuy(int slot, out string newGhostId)
         {
             newGhostId = null;
+            if (State != GameState.Day) { Debug.LogWarning("[Shop] 仅在 Day 阶段可购买鬼怪"); return false; }
             return _dayPhaseSystem != null && _dayPhaseSystem.ShopBuy(slot, out newGhostId);
         }
 
@@ -287,17 +290,17 @@ namespace ScreamHotel.Core
             State = GameState.Day;
             _dayPhaseSystem.PrepareDay(DayIndex);
             EventBus.Raise(new GameStateChanged(State));
+            EventBus.Raise(new DayStartedEvent());
 
-            // 由 TimeManager 控制恢复
             TimeManager.Instance?.ResumeTime();
-
             _trainer?.AdvanceOneDay();
         }
-        
+
         public void StartNightShow()
         {
             State = GameState.NightShow;
             EventBus.Raise(new GameStateChanged(State));
+            EventBus.Raise(new NightStartedEvent());
             Debug.Log("Enter Night Show phase");
         }
 
