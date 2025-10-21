@@ -63,7 +63,7 @@ Material:
     - _DiffuseSmoothness: 0.5
     - _DrawnClampMax: 1
     - _DrawnClampMin: 0
-    - _DrawnMapScale: 8
+    - _DrawnMapScale: 6
     - _LightThreshold: 0.3
     m_Colors:
     - _EmissionColor: {r: 3.6886046, g: 2.7710407, b: 0.50457335, a: 1}
