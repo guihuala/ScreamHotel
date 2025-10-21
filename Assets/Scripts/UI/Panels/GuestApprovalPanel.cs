@@ -223,7 +223,7 @@ public class GuestApprovalPanel : BasePanel
         if (closeButton != null)
         {
             closeButton.onClick.RemoveAllListeners();
-            closeButton.onClick.AddListener(ClosePanel);
+            closeButton.onClick.AddListener(() => UIManager.Instance.ClosePanel(panelName));
         }
     }
 
