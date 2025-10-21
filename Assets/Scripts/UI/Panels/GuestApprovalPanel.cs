@@ -22,7 +22,7 @@ public class GuestApprovalPanel : BasePanel
     [Header("Right Strip (Thumbnails)")]
     public Transform thumbsRoot;                // 右侧头像列表的容器（建议加 VerticalLayoutGroup）
     public GameObject thumbTemplate;            // 右侧每一项的模板（需包含：Image + Button），默认隐藏
-    public Image selectedFrame;                 // 可选：高亮框（跟随当前选择）
+    public Image selectedFrame;                 // 高亮框（跟随当前选择）
 
     [Header("Empty State")]
     public GameObject emptyState;               // 没有候选时显示的占位（可选）

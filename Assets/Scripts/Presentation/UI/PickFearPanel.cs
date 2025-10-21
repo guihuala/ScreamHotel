@@ -9,16 +9,29 @@ public class PickFearPanel : MonoBehaviour
     [Header("UI")]
     public Canvas canvas;
     public RectTransform root;
-    public Transform buttonContainer;  // 按钮容器
+
+    [Tooltip("按钮容器（Vertical/Horizontal/Grid 均可）")]
+    public Transform buttonContainer;
+
+    [Header("Atlas & Button")]
+    [Tooltip("Tag→Sprite 的映射表；和 FearIconsPanel 用法一致")]
+    public FearIconAtlas fearIconAtlas;
+
+    [Tooltip("按钮的边长（仅当容器没有自动布局时有用）")]
+    public float buttonSize = 80f;
+
+    [Tooltip("按钮内是否附带小文字标签（找不到图标时会强制显示文字）")]
+    public bool showLabel = true;
 
     [Header("Panel Position")]
-    public Vector3 panelWorldOffset = new Vector3(0f, 2f, 0f); // 面板相对目标的世界偏移
+    [Tooltip("面板相对目标的世界偏移")]
+    public Vector3 panelWorldOffset = new Vector3(0f, 2f, 0f);
 
     private Action<string, FearTag, int> _onPick;
     private string _ghostId;
     private int _slotIndex;
 
-    // 锚定目标（例如 TrainingSlot.transform）
+    // 锚定目标（例如 RoomView.transform）
     private Transform _targetTransform;
     private Camera _mainCam;
 
@@ -45,7 +58,7 @@ public class PickFearPanel : MonoBehaviour
         _targetTransform = targetTransform;
 
         Show();
-        GenerateFearButtons();
+        GenerateFearButtons();   // ★ 每次打开前都会清理旧按钮，避免重复创建
         PlacePanelAtTarget();
     }
 
@@ -70,24 +83,17 @@ public class PickFearPanel : MonoBehaviour
         root.anchoredPosition = localPos;
     }
 
+    // ---------- 生成按钮：先清理再按 Tag→Sprite 创建 ----------
     private void GenerateFearButtons()
     {
-        if (buttonContainer == null)
+        EnsureContainer();
+
+        // 清理旧的按钮（避免重复创建）
+        for (int i = buttonContainer.childCount - 1; i >= 0; i--)
         {
-            // 如果没有指定容器，创建一个
-            var containerObj = new GameObject("ButtonContainer");
-            containerObj.transform.SetParent(root, false);
-            buttonContainer = containerObj.transform;
-
-            // 布局
-            var layoutGroup = containerObj.AddComponent<VerticalLayoutGroup>();
-            layoutGroup.childControlWidth = true;
-            layoutGroup.childControlHeight = true;
-            layoutGroup.childForceExpandWidth = true;
-            layoutGroup.childForceExpandHeight = false;
-
-            var contentFitter = containerObj.AddComponent<ContentSizeFitter>();
-            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var child = buttonContainer.GetChild(i);
+            if (Application.isPlaying) Destroy(child.gameObject);
+            else DestroyImmediate(child.gameObject);
         }
 
         var fearTags = (FearTag[])Enum.GetValues(typeof(FearTag));
@@ -95,33 +101,81 @@ public class PickFearPanel : MonoBehaviour
             CreateFearButton(fearTag);
     }
 
+    private void EnsureContainer()
+    {
+        if (buttonContainer != null) return;
+
+        // 如果没有指定容器，创建一个带纵向布局的容器
+        var containerObj = new GameObject("ButtonContainer", typeof(RectTransform));
+        containerObj.transform.SetParent(root, false);
+        buttonContainer = containerObj.transform;
+
+        var layoutGroup = containerObj.AddComponent<VerticalLayoutGroup>();
+        layoutGroup.childControlWidth = true;
+        layoutGroup.childControlHeight = true;
+        layoutGroup.childForceExpandWidth = true;
+        layoutGroup.childForceExpandHeight = false;
+
+        var contentFitter = containerObj.AddComponent<ContentSizeFitter>();
+        contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+    }
+
     private void CreateFearButton(FearTag fearTag)
     {
-        var buttonObj = new GameObject(fearTag.ToString());
+        // 容器下创建按钮
+        var buttonObj = new GameObject(fearTag.ToString(), typeof(RectTransform));
         buttonObj.transform.SetParent(buttonContainer, false);
 
+        // 组件
         var button = buttonObj.AddComponent<Button>();
-        var image  = buttonObj.AddComponent<Image>();
-        image.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+        var image  = buttonObj.AddComponent<Image>(); // 显示 Atlas 里的图标
+        var btnRect = buttonObj.GetComponent<RectTransform>();
 
-        var textObj = new GameObject("Text");
-        textObj.transform.SetParent(buttonObj.transform, false);
+        // 如果没有自动布局，给一个固定大小
+        if (buttonContainer.GetComponent<HorizontalOrVerticalLayoutGroup>() == null &&
+            buttonContainer.GetComponent<GridLayoutGroup>() == null)
+        {
+            btnRect.sizeDelta = new Vector2(buttonSize, buttonSize);
+        }
 
-        var text = textObj.AddComponent<Text>();
-        text.text = fearTag.ToString();
-        text.color = Color.white;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        // 从 Atlas 拿图标（仿照 FearIconsPanel 的做法）
+        Sprite icon = fearIconAtlas != null ? fearIconAtlas.Get(fearTag) : null;
+        if (icon != null)
+        {
+            image.sprite = icon;
+            image.preserveAspect = true;
+            image.color = Color.white;
+        }
+        else
+        {
+            // 没图时用深灰底兜底
+            image.sprite = null;
+            image.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+        }
 
-        var textRect = text.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.sizeDelta = Vector2.zero;
+        // 可选：小文字标签（找不到图标时强制显示）
+        if (showLabel || icon == null)
+        {
+            var textObj = new GameObject("Label", typeof(RectTransform));
+            textObj.transform.SetParent(buttonObj.transform, false);
+            var text = textObj.AddComponent<Text>();
+            text.text = fearTag.ToString();
+            text.color = icon != null ? new Color(1f, 1f, 1f, 0.85f) : Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-        var buttonRect = buttonObj.GetComponent<RectTransform>();
-        buttonRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 100f);
+            var textRect = text.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+        }
 
+        // 点击
         button.onClick.AddListener(() => OnFearTagSelected(fearTag));
+
+        // 可访问性：避免挡住外层交互
+        image.raycastTarget = true;
     }
 
     private void OnFearTagSelected(FearTag fearTag)
@@ -142,3 +196,4 @@ public class PickFearPanel : MonoBehaviour
         _targetTransform = null;
     }
 }
+

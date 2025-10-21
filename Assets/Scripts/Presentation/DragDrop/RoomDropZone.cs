@@ -115,7 +115,6 @@ namespace ScreamHotel.Presentation
                     // Lv1 -> Lv2：先选择恐惧属性，然后开始施工
                     if (_hoverUI == null)
                     {
-                        Debug.LogWarning("HoverUIController 未找到，无法选择恐惧属性。");
                         Flash(fullColor);
                         return false;
                     }
@@ -184,7 +183,7 @@ namespace ScreamHotel.Presentation
         }
 
         /// <summary>
-        /// 让鬼在锚点“施工”1~2秒，期间可播放粒子；结束后调用buildAction（扣费/升级）
+        /// 让鬼在锚点“施工”1秒，期间可播放粒子；结束后调用buildAction（扣费/升级）
         /// 不改变分配状态，结束后鬼仍可被自由拖动
         /// </summary>
         private IEnumerator Co_BuildOrUpgrade(string ghostId, Transform anchor, System.Func<bool> buildAction)
@@ -198,9 +197,8 @@ namespace ScreamHotel.Presentation
                 fx = Instantiate(buildFxPrefab, anchor.position, Quaternion.identity);
                 fx.Play();
             }
-
-            // 1~2 秒
-            float duration = Random.Range(1f, 2f);
+            
+            float duration = Random.Range(1f, 1.5f);
             float t = 0f;
             while (t < duration)
             {

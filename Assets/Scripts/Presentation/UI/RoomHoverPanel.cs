@@ -7,17 +7,18 @@ using ScreamHotel.Domain;
 
 namespace ScreamHotel.UI
 {
-    /// <summary>
-    /// 房间悬浮面板：仅展示状态与提示
-    /// 建造/升级入口改为：白天把【鬼】拖到房间，由 RoomDropZone 处理
-    /// </summary>
     public class RoomHoverPanel : MonoBehaviour
     {
         [Header("UI")]
         public Canvas canvas;
         public RectTransform root;
         public Text titleText;
-        public Text infoText;
+
+        [Header("Fear Icon")]
+        [Tooltip("用于显示当前房间恐惧属性的图标（可放在面板的一角）")]
+        public Image fearIconImage;
+        [Tooltip("Tag→Sprite 的映射表，做法与 FearIconsPanel 一致")]
+        public FearIconAtlas fearIconAtlas;
 
         [Header("Panel Position")]
         public Vector3 panelOffset = new Vector3(0f, 2f, 0f);
@@ -30,6 +31,9 @@ namespace ScreamHotel.UI
         {
             _game = FindObjectOfType<Game>();
             mainCamera = Camera.main;
+
+            // 初始隐藏图标位
+            if (fearIconImage) fearIconImage.gameObject.SetActive(false);
         }
 
         private void Start() => Hide();
@@ -50,13 +54,38 @@ namespace ScreamHotel.UI
 
             if (root) root.gameObject.SetActive(true);
             if (titleText) titleText.text = room.Id;
-
-            string tagText = room.RoomTag.HasValue ? room.RoomTag.Value.ToString() : "-";
-            string line1 = $"Lv {room.Level} | Cap {room.Capacity} | Tag {tagText}";
-
-            string hint = "提示：在【白天】将鬼拖入房间可进行建造/升级（持续 1~2 秒并播放特效）。Lv1→Lv2 会先选择恐惧属性，只有选择后才会继续。";
-            if (infoText) infoText.text = $"{line1}\n{hint}";
             
+            if (fearIconImage)
+            {
+                if (room.RoomTag.HasValue && fearIconAtlas != null)
+                {
+                    var sprite = fearIconAtlas.Get(room.RoomTag.Value);
+                    if (sprite != null)
+                    {
+                        fearIconImage.sprite = sprite;
+                        fearIconImage.preserveAspect = true;   // 防止拉伸（与 FearIconsPanel 一致）
+                        fearIconImage.raycastTarget = false;   // 不遮挡交互
+                        fearIconImage.enabled = true;
+                        fearIconImage.gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        // 找不到图就隐藏
+                        fearIconImage.sprite = null;
+                        fearIconImage.enabled = false;
+                        fearIconImage.gameObject.SetActive(false);
+                        Debug.LogWarning($"[RoomHoverPanel] Sprite not found for tag {room.RoomTag.Value} in atlas.");
+                    }
+                }
+                else
+                {
+                    // 无 Tag 或无 Atlas：隐藏
+                    fearIconImage.sprite = null;
+                    fearIconImage.enabled = false;
+                    fearIconImage.gameObject.SetActive(false);
+                }
+            }
+
             PlacePanelAtRoom();
         }
 
@@ -93,6 +122,13 @@ namespace ScreamHotel.UI
         {
             if (root) root.gameObject.SetActive(false);
             _currentRoomTransform = null;
+
+            if (fearIconImage)
+            {
+                fearIconImage.sprite = null;
+                fearIconImage.enabled = false;
+                fearIconImage.gameObject.SetActive(false);
+            }
         }
     }
 }

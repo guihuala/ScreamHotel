@@ -8,13 +8,12 @@ namespace ScreamHotel.Presentation
     {
         [Header("Binding")]
         public string roomId;
-        public MeshRenderer plate;       // 地块渲染器（高亮/着色）
         public Transform[] ghostAnchors; // 鬼锚点
 
         [Header("Decor Sets (通用)")]
         public GameObject[] lv1Set;
 
-        [Header("Decor Sets for Lv2 by FearTag (可选)")]
+        [Header("Decor Sets for Lv2 by FearTag")]
         public GameObject[] lv2DarknessSet;
         public GameObject[] lv2BloodSet;
         public GameObject[] lv2NoiseSet;
@@ -28,16 +27,7 @@ namespace ScreamHotel.Presentation
         public GameObject curtain;
 
         private Color _baseColor;
-
-        void Awake()
-        {
-            if (plate != null)
-            {
-                // 确保每个实例有独立材质
-                _baseColor = plate.material.color;
-            }
-        }
-
+        
         public void Bind(Room room)
         {
             roomId = room.Id;
