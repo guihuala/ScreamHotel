@@ -44,8 +44,6 @@ public class TrainingRoomZone : MonoBehaviour
         // 刷新训练室 UI 的"剩余天数"
         foreach (var zone in FindObjectsOfType<TrainingRoomZone>())
             zone.OnTrainingDayAdvanced();
-
-        Debug.Log($"[TrainingRoomZone] Advanced {trainingSlotsCount} training slots");
     }
 
     // === 选择副属性 UI ===

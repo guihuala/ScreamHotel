@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -24,7 +25,6 @@ namespace ScreamHotel.Core
         
         [SerializeField] private float skyTransitionSpeed = 3f;
         [SerializeField] private Light mainDirectionalLight;        // 指向场景中的主光（Sun）
-        [SerializeField] private Vector3 sunDirectionBase = new Vector3(0f, 0f, 0f); // 基础朝向(可用y做方位角)
         [SerializeField] private float sunAzimuthDegrees = 45f;     // 太阳方位角(平面绕Y旋转)
         [SerializeField] private AnimationCurve sunElevationByTime = AnimationCurve.Linear(0, -10f, 1, 70f); // 通过归一化时间 [0,1] -> 太阳仰角（度），默认：清晨-10°到正午70°再回落（可改为更复杂曲线）
 
@@ -37,10 +37,8 @@ namespace ScreamHotel.Core
         [SerializeField] private AnimationCurve reflectionIntensityByTime = AnimationCurve.Linear(0, 0.6f, 1, 1.0f);
 
         private DayGuestSpawner _dayGuestSpawner;
-        public IReadOnlyList<Guest> PendingGuests => _dayGuestSpawner?.Pending;
-        public IReadOnlyList<Guest> AcceptedGuests => _dayGuestSpawner?.Accepted;
-        public int PendingGuestCount => _dayGuestSpawner?.PendingCount ?? 0;
 
+        public IReadOnlyList<Guest> PendingGuests => _dayGuestSpawner != null ? _dayGuestSpawner.Pending : Array.Empty<Guest>();
         public bool ApproveGuest(string guestId) => _dayGuestSpawner != null && _dayGuestSpawner.Accept(guestId);
         public bool RejectGuest(string guestId)  => _dayGuestSpawner != null && _dayGuestSpawner.Reject(guestId);
 
@@ -79,13 +77,30 @@ namespace ScreamHotel.Core
             _assignmentSystem = new AssignmentSystem(World, this);
             _executionSystem = new NightExecutionSystem(World);
             _buildSystem = new BuildSystem(World);
-            _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database);
-            _progressionSystem = new ProgressionSystem(World);
-            _trainer = new GhostTrainer();
             _dayGuestSpawner = new DayGuestSpawner(World, dataManager.Database);
-         
+            _dayPhaseSystem = new DayPhaseSystem(World, dataManager.Database, _dayGuestSpawner);
+            _progressionSystem = new ProgressionSystem(World, dataManager.Database);
+            _trainer = new GhostTrainer();
             TimeSystem = new TimeSystem(this);
+            
             GoToDay();
+        }
+        
+        private void Start()
+        {
+            skyboxMaterial = RenderSettings.skybox;
+            _skyTransition = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
+            EnsureDefaultLightingCurves();
+        }
+
+
+        private void Update()
+        {
+            if (TimeManager.Instance == null) return;
+            float dt = TimeManager.Instance.DeltaTime;     // 统一由 TimeManager 控制暂停/倍速
+            TimeSystem.Update(dt);
+            UpdateSkyboxTransition();
+            UpdateLighting();
         }
 
         private void EnsureDefaultLightingCurves()
@@ -107,23 +122,6 @@ namespace ScreamHotel.Core
             {
                 ambientColorByTime = lightColorByTime;
             }
-        }
-
-        private void Start()
-        {
-            skyboxMaterial = RenderSettings.skybox;
-            _skyTransition = CalculateSkyTransition(TimeSystem.currentTimeOfDay);
-            EnsureDefaultLightingCurves();
-        }
-
-
-        private void Update()
-        {
-            if (TimeManager.Instance == null) return;
-            float dt = TimeManager.Instance.DeltaTime;     // 统一由 TimeManager 控制暂停/倍速
-            TimeSystem.Update(dt);
-            UpdateSkyboxTransition();
-            UpdateLighting();
         }
         
         private void UpdateLighting()
@@ -149,18 +147,14 @@ namespace ScreamHotel.Core
                     ? LightShadows.Soft
                     : LightShadows.None;
             }
-
-            // 3) 环境光/反射强度（基于天空盒环境模式）
-            // 建议在项目设置里把 Lighting->Environment->Ambient Mode 设为 Skybox。
-            // 我们只动态调节强度与补色，避免大幅度色偏。
+            
             RenderSettings.ambientLight = ambientColorByTime.Evaluate(t); // 若 Ambient Mode 为 Color/Skybox 都安全
             RenderSettings.ambientIntensity = Mathf.Clamp01(ambientIntensityByTime.Evaluate(t));
 
             // 反射强度（影响基于反射探针/天空盒的高光）
             RenderSettings.reflectionIntensity = Mathf.Clamp01(reflectionIntensityByTime.Evaluate(t));
         }
-
-
+        
         public void StartSettlement()
         {
             State = GameState.Settlement;
@@ -177,7 +171,6 @@ namespace ScreamHotel.Core
             EventBus.Unsubscribe<ExecNightResolved>(OnNightResolved);
         }
         
-
         public bool ShopTryReroll()
         {
             if (State != GameState.Day) { Debug.LogWarning("[Shop] 仅在 Day 阶段可刷新商店"); return false; }
@@ -304,10 +297,6 @@ namespace ScreamHotel.Core
 
             TimeManager.Instance?.ResumeTime();
             _trainer?.AdvanceOneDay();
-            
-            var rules = World?.Config?.Rules;
-            int count = (rules != null && rules.dayGuestSpawnCount > 0) ? rules.dayGuestSpawnCount : 3; // 没有就给个兜底
-            _dayGuestSpawner.GenerateCandidates(count);
         }
 
         public void StartNightShow()
@@ -321,12 +310,9 @@ namespace ScreamHotel.Core
             // 阶段事件（保持原有顺序/语义）
             EventBus.Raise(new GameStateChanged(State));
             EventBus.Raise(new NightStartedEvent());
-
-            // 新增：通知渲染层开始生成/同步顾客视图
             EventBus.Raise(new GuestsRenderRequested());
         }
-
-
+        
         public void StartNightExecute()
         {
             State = GameState.NightExecute;

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   suspicionThreshold: 100
   suspicionPerFailedGuest: 1
-  totalDays: 1
+  totalDays: 10
   dayGuestSpawnCount: 4
   ghostShopSlots: 3
   ghostShopPrice: 100

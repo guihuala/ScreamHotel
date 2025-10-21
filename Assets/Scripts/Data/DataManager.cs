@@ -39,7 +39,5 @@ namespace ScreamHotel.Data
         public ProgressionConfig Progression;
         public GameRuleConfig Rules;
         public override string ToString() => $"Ghosts:{Ghosts.Count}, Guests:{GuestTypes.Count}";
-        public GhostConfig GetGhost(string id) => Ghosts[id];
-        public GuestTypeConfig GetGuestType(string id) => GuestTypes[id];
     }
 }

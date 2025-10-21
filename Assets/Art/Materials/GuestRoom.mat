@@ -10,7 +10,7 @@ Material:
   m_Name: GuestRoom
   m_Shader: {fileID: 4800000, guid: 7633a2fd8a3bed44791c9e952ff86e5d, type: 3}
   m_Parent: {fileID: 2100000, guid: 65bdea545f2a34e4d8491941cd4b76d8, type: 2}
-  m_ModifiedSerializedProperties: 0
+  m_ModifiedSerializedProperties: 2
   m_ValidKeywords:
   - _MK_ALBEDO_MAP
   - _MK_ARTISTIC_ANIMATION_STUTTER
@@ -25,7 +25,7 @@ Material:
   - _MK_SPECULAR_ISOTROPIC
   m_InvalidKeywords:
   - _RECEIVESHADOWS_ON
-  m_LightmapFlags: 4
+  m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -41,11 +41,26 @@ Material:
         m_Texture: {fileID: 2800000, guid: 66d1e9c3831484a7f9e750e8f9153bad, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DrawnMap:
+        m_Texture: {fileID: 2800000, guid: fdee129c844a37f4baf59b2976e96f5e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 66d1e9c3831484a7f9e750e8f9153bad, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _Artistic: 1
+    - _ArtisticFrequency: 1
+    - _ArtisticProjection: 1
+    - _ColorGrading: 0
+    - _DiffuseSmoothness: 0.5
+    - _DrawnClampMax: 1
+    - _DrawnClampMin: 0
+    - _DrawnMapScale: 8
+    - _LightThreshold: 0.3
+    m_Colors:
+    - _EmissionColor: {r: 0.26415092, g: 0.22303309, b: 0.22303309, a: 1}
+    - _GoochDarkColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

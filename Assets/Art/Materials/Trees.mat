@@ -195,7 +195,7 @@ Material:
     - _AlphaCutoff: 0.48
     - _Anisotropy: 0
     - _Artistic: 1
-    - _ArtisticFrequency: 1
+    - _ArtisticFrequency: 10
     - _ArtisticProjection: 1
     - _ArtisticShadowFilter: 0
     - _Blend: 0
@@ -219,7 +219,7 @@ Material:
     - _DissolveMapScale: 1
     - _DrawnClampMax: 1
     - _DrawnClampMin: 0
-    - _DrawnMapScale: 11
+    - _DrawnMapScale: 8
     - _EmissionStrength: 0
     - _EnvironmentReflections: 2
     - _FresnelHighlights: 0
@@ -239,7 +239,7 @@ Material:
     - _Light: 1
     - _LightBands: 4
     - _LightBandsScale: 0.5
-    - _LightThreshold: 0.33
+    - _LightThreshold: 0.3
     - _LightTransmission: 0
     - _LightTransmissionDistortion: 0.19
     - _LightTransmissionIntensity: 22.73

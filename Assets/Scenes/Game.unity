@@ -7858,8 +7858,7 @@ MonoBehaviour:
   dataManager: {fileID: 1538333945}
   initialSetup: {fileID: 11400000, guid: c56a1df2bbdf94b729d2ffaf05d10a5e, type: 2}
   skyTransitionSpeed: 3
-  mainDirectionalLight: {fileID: 1294110929}
-  sunDirectionBase: {x: 0, y: 0, z: 0}
+  mainDirectionalLight: {fileID: 0}
   sunAzimuthDegrees: 45
   sunElevationByTime:
     serializedVersion: 2
