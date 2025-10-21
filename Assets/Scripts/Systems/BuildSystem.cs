@@ -47,7 +47,10 @@ namespace ScreamHotel.Systems
 
             if (r.Level == 1)
             {
-                // Lv1 -> Lv2
+                // 若 Lv2 需要恐惧标签但未提供，则不允许升级
+                if (rules.lv2HasTag && !setTagOnLv2.HasValue)
+                    return false; // 必须先选择恐惧属性
+
                 if (_world.Economy.Gold < GetRoomUpgradeCost(roomId, r.Level)) return false;
                 _world.Economy.Gold -= GetRoomUpgradeCost(roomId, r.Level);
 
