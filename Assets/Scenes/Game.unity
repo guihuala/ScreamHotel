@@ -4635,7 +4635,7 @@ MonoBehaviour:
   minX: 5
   maxX: 25
   minY: 2
-  maxY: 40
+  maxY: 15
   enableEdgePan: 1
   edgeZonePixels: 100
   edgeSpeed: 10

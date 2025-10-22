@@ -8,6 +8,14 @@ public class TitleUIController : MonoBehaviour
     public Button settingsButton;
     public Button exitButton;
 
+    [Header("Timeline 漫画播放器")]
+    [SerializeField] private TimelineComicPlayer comicPlayer;
+
+    [Header("进入游戏时是否使用黑屏加载")]
+    [SerializeField] private bool useBlackoutLoading = true;
+
+    bool _starting = false;
+
     private void Awake()
     {
         startButton.onClick.AddListener(OnStartButtonClicked);
@@ -17,7 +25,19 @@ public class TitleUIController : MonoBehaviour
 
     public void OnStartButtonClicked()
     {
-        SceneLoader.Instance.LoadScene(GameScene.Game);
+        if (_starting) return;
+        _starting = true;
+        startButton.interactable = false;
+
+        Action go = () =>
+        {
+            SceneLoader.Instance.LoadScene(GameScene.Game, useBlackoutLoading);
+        };
+
+        if (comicPlayer != null && !comicPlayer.IsPlaying)
+        {
+            comicPlayer.PlayComic(go);
+        }
     }
 
     public void OnSettingsButtonClicked()

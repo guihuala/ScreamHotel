@@ -108,11 +108,11 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
-    - _Exponent: 1
+    - _Exponent: 1.83
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Intensity: 1
+    - _Intensity: 1.02
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
