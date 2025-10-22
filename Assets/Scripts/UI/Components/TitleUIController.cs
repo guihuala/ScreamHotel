@@ -31,7 +31,7 @@ public class TitleUIController : MonoBehaviour
 
         Action go = () =>
         {
-            SceneLoader.Instance.LoadScene(GameScene.Game, useBlackoutLoading);
+            SceneLoader.Instance.LoadScene(GameScene.Game);
         };
 
         if (comicPlayer != null && !comicPlayer.IsPlaying)

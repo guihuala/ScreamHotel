@@ -29,12 +29,12 @@ public class StartSceneController : MonoBehaviour
         {
             slideInFx.OnFinished = () =>
             {
-                SceneLoader.Instance.LoadScene(GameScene.MainMenu, true); // 黑屏加载
+                SceneLoader.Instance.LoadScene(GameScene.MainMenu);
             };
             slideInFx.Play();
             return;
         }
         
-        SceneLoader.Instance.LoadScene(GameScene.MainMenu, true);
+        SceneLoader.Instance.LoadScene(GameScene.MainMenu);
     }
 }

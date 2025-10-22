@@ -1,60 +1,65 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Collections;
 using System;
+using System.Collections;
 
 public enum GameScene
 {
-    MainMenu = 0, // 主菜单
-    Game = 1, // 游戏场景
+    MainMenu = 0,
+    Game = 1,
     EndingComic = 2,
 }
 
 public class SceneLoader : SingletonPersistent<SceneLoader>
 {
-    [Header("加载界面设置")] [SerializeField] private CanvasGroup loadingCanvas;
-    [SerializeField] private Image progressBar;
-    [SerializeField] private Text progressText;
-    [SerializeField] private float fadeDuration = 0.5f;
-    [SerializeField] private float minLoadingTime = 1.5f;
+    [Header("遮罩面板（整块 UI 放这里）")]
+    [Tooltip("整块转场 UI 的根物体（会在加载时启/停）")]
+    [SerializeField] private GameObject maskPanelRoot;
+
+    [Header("遮罩控制")]
+    [Tooltip("做开合动画的遮罩 RectTransform（一般是带 Mask/RectMask2D 的 Image）")]
+    [SerializeField] private RectTransform startMask;
+    [Tooltip("遮罩完全打开时的尺寸（正方形更自然）")]
+    [SerializeField] private float openSize = 4000f;
+    [Tooltip("开场：遮罩从 0 → openSize 的时长")]
+    [SerializeField] private float openTime = 0.5f;
+    [Tooltip("收场：遮罩从 openSize → 0 的时长")]
+    [SerializeField] private float closeTime = 0.5f;
+    [Tooltip("忽略 Time.timeScale（转场常用真实时间）")]
+    [SerializeField] private bool useUnscaledTime = true;
+
+    [Header("其它")]
+    [Tooltip("最小加载时间（避免闪屏）")]
+    [SerializeField] private float minLoadingTime = 1.0f;
 
     private AsyncOperation loadingOperation;
     private bool isLoading = false;
+
+    // 记录初始遮罩尺寸，便于多次复用
+    private Vector2 _maskInitSize;
 
     protected override void Awake()
     {
         base.Awake();
         DontDestroyOnLoad(gameObject);
 
-        // 初始化加载界面
-        if (loadingCanvas != null)
-        {
-            loadingCanvas.alpha = 0f;
-            loadingCanvas.gameObject.SetActive(false);
-        }
+        if (maskPanelRoot) maskPanelRoot.SetActive(false);
+        if (startMask) _maskInitSize = startMask.sizeDelta;
     }
 
-    /// <summary>
-    /// 加载指定枚举场景
-    /// </summary>
+    public bool IsLoading() => isLoading;
+
     public void LoadScene(GameScene scene, Action onComplete = null)
     {
         if (isLoading) return;
-
-        string sceneName = scene.ToString();
-        StartCoroutine(LoadSceneRoutine(sceneName, onComplete));
+        StartCoroutine(LoadSceneRoutine(scene.ToString(), onComplete));
     }
 
-    /// <summary>
-    /// 重新加载当前场景
-    /// </summary>
     public void ReloadCurrentScene(Action onComplete = null)
     {
         if (isLoading) return;
-
-        string currentScene = SceneManager.GetActiveScene().name;
-        StartCoroutine(LoadSceneRoutine(currentScene, onComplete));
+        StartCoroutine(LoadSceneRoutine(SceneManager.GetActiveScene().name, onComplete));
     }
 
     private IEnumerator LoadSceneRoutine(string sceneName, Action onComplete)
@@ -62,137 +67,60 @@ public class SceneLoader : SingletonPersistent<SceneLoader>
         isLoading = true;
         float startTime = Time.time;
 
-        // 淡入加载界面
-        yield return StartCoroutine(FadeLoadingScreen(0f, 1f));
+        // === 1) 打开遮罩面板 & 开场动画（0 → openSize） ===
+        if (maskPanelRoot) maskPanelRoot.SetActive(true);
+        if (startMask)
+        {
+            startMask.sizeDelta = Vector2.zero;
+            yield return StartCoroutine(AnimateMaskSize(Vector2.zero, new Vector2(openSize, openSize), openTime));
+        }
 
-        // 开始异步加载场景
+        // === 2) 异步加载（在遮罩打开状态下进行） ===
         loadingOperation = SceneManager.LoadSceneAsync(sceneName);
         loadingOperation.allowSceneActivation = false;
 
-        // 更新加载进度
         while (!loadingOperation.isDone)
         {
-            float progress = Mathf.Clamp01(loadingOperation.progress / 0.9f);
-            UpdateProgressUI(progress);
-
-            // 确保最小加载时间，然后激活场景
+            // 进度到 0.9 且最小时长满足后激活
             if (loadingOperation.progress >= 0.9f &&
                 Time.time - startTime >= minLoadingTime)
             {
                 loadingOperation.allowSceneActivation = true;
             }
-
             yield return null;
         }
+        yield return null; // 确保切换完成
 
-        // 等待一帧确保场景完全加载
-        yield return null;
-
-        // 淡出加载界面
-        yield return StartCoroutine(FadeLoadingScreen(1f, 0f));
+        // === 3) 收场动画（openSize → 0），并关闭面板 ===
+        if (startMask)
+        {
+            yield return StartCoroutine(AnimateMaskSize(new Vector2(openSize, openSize), Vector2.zero, closeTime));
+            startMask.sizeDelta = _maskInitSize; // 复原初始值，方便下次
+        }
+        if (maskPanelRoot) maskPanelRoot.SetActive(false);
 
         isLoading = false;
         onComplete?.Invoke();
     }
 
-    private IEnumerator FadeLoadingScreen(float startAlpha, float targetAlpha)
+    // —— 工具：协程插值遮罩的 sizeDelta —— //
+    private IEnumerator AnimateMaskSize(Vector2 from, Vector2 to, float duration)
     {
-        if (loadingCanvas == null) yield break;
-
-        loadingCanvas.gameObject.SetActive(true);
-        float elapsedTime = 0f;
-
-        while (elapsedTime < fadeDuration)
+        if (!startMask || duration <= 0f)
         {
-            elapsedTime += Time.deltaTime;
-            loadingCanvas.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / fadeDuration);
+            if (startMask) startMask.sizeDelta = to;
+            yield break;
+        }
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += (useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime);
+            float k = Mathf.Clamp01(t / duration);
+            // 可替换为更平滑的缓动：k = Mathf.SmoothStep(0f, 1f, k);
+            startMask.sizeDelta = Vector2.LerpUnclamped(from, to, k);
             yield return null;
         }
-
-        loadingCanvas.alpha = targetAlpha;
-
-        // 如果完全淡出，则禁用游戏对象
-        if (targetAlpha == 0f)
-        {
-            loadingCanvas.gameObject.SetActive(false);
-        }
+        startMask.sizeDelta = to;
     }
-
-    // 带纯黑屏开关的重载
-    public void LoadScene(GameScene scene, bool blackout, Action onComplete = null)
-    {
-        if (isLoading) return;
-        string sceneName = scene.ToString();
-        StartCoroutine(LoadSceneRoutine(sceneName, onComplete, blackout));
-    }
-    
-    private IEnumerator LoadSceneRoutine(string sceneName, Action onComplete, bool blackout)
-    {
-        isLoading = true;
-        float startTime = Time.time;
-
-        // 准备加载 UI
-        if (loadingCanvas != null)
-        {
-            // 黑屏模式：只显示黑色遮罩，不显示进度
-            if (blackout)
-            {
-                if (progressBar != null) progressBar.gameObject.SetActive(false);
-                if (progressText != null) progressText.gameObject.SetActive(false);
-            }
-            else
-            {
-                if (progressBar != null) progressBar.gameObject.SetActive(true);
-                if (progressText != null) progressText.gameObject.SetActive(true);
-            }
-        }
-
-        // 淡入（到黑）
-        yield return StartCoroutine(FadeLoadingScreen(0f, 1f));
-
-        // 开始异步加载
-        loadingOperation = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName);
-        loadingOperation.allowSceneActivation = false;
-
-        // 进度更新（黑屏模式下不展示 UI，仅维持逻辑一致）
-        while (!loadingOperation.isDone)
-        {
-            float progress = Mathf.Clamp01(loadingOperation.progress / 0.9f);
-            if (!blackout)
-            {
-                UpdateProgressUI(progress);
-            }
-
-            if (loadingOperation.progress >= 0.9f &&
-                Time.time - startTime >= minLoadingTime)
-            {
-                loadingOperation.allowSceneActivation = true;
-            }
-
-            yield return null;
-        }
-
-        // 等一帧确保场景完全加载
-        yield return null;
-
-        // 淡出（从黑）
-        yield return StartCoroutine(FadeLoadingScreen(1f, 0f));
-
-        isLoading = false;
-        onComplete?.Invoke();
-    }
-    
-    private void UpdateProgressUI(float progress)
-    {
-        if (progressBar != null)
-            progressBar.fillAmount = progress;
-
-        if (progressText != null)
-            progressText.text = $"{(progress * 100):0}%";
-    }
-
-    /// <summary>
-    /// 检查是否正在加载
-    /// </summary>
-    public bool IsLoading() => isLoading;
 }
