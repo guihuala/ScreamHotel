@@ -6,15 +6,14 @@ using System;
 
 public enum GameScene
 {
-    MainMenu = 0,   // 主菜单
-    Game = 1,   // 游戏场景
+    MainMenu = 0, // 主菜单
+    Game = 1, // 游戏场景
     EndingComic = 2,
 }
 
 public class SceneLoader : SingletonPersistent<SceneLoader>
 {
-    [Header("加载界面设置")]
-    [SerializeField] private CanvasGroup loadingCanvas;
+    [Header("加载界面设置")] [SerializeField] private CanvasGroup loadingCanvas;
     [SerializeField] private Image progressBar;
     [SerializeField] private Text progressText;
     [SerializeField] private float fadeDuration = 0.5f;
@@ -27,7 +26,7 @@ public class SceneLoader : SingletonPersistent<SceneLoader>
     {
         base.Awake();
         DontDestroyOnLoad(gameObject);
-        
+
         // 初始化加载界面
         if (loadingCanvas != null)
         {
@@ -42,7 +41,7 @@ public class SceneLoader : SingletonPersistent<SceneLoader>
     public void LoadScene(GameScene scene, Action onComplete = null)
     {
         if (isLoading) return;
-        
+
         string sceneName = scene.ToString();
         StartCoroutine(LoadSceneRoutine(sceneName, onComplete));
     }
@@ -53,7 +52,7 @@ public class SceneLoader : SingletonPersistent<SceneLoader>
     public void ReloadCurrentScene(Action onComplete = null)
     {
         if (isLoading) return;
-        
+
         string currentScene = SceneManager.GetActiveScene().name;
         StartCoroutine(LoadSceneRoutine(currentScene, onComplete));
     }
@@ -77,7 +76,7 @@ public class SceneLoader : SingletonPersistent<SceneLoader>
             UpdateProgressUI(progress);
 
             // 确保最小加载时间，然后激活场景
-            if (loadingOperation.progress >= 0.9f && 
+            if (loadingOperation.progress >= 0.9f &&
                 Time.time - startTime >= minLoadingTime)
             {
                 loadingOperation.allowSceneActivation = true;
@@ -119,11 +118,75 @@ public class SceneLoader : SingletonPersistent<SceneLoader>
         }
     }
 
+    // 带纯黑屏开关的重载
+    public void LoadScene(GameScene scene, bool blackout, Action onComplete = null)
+    {
+        if (isLoading) return;
+        string sceneName = scene.ToString();
+        StartCoroutine(LoadSceneRoutine(sceneName, onComplete, blackout));
+    }
+    
+    private IEnumerator LoadSceneRoutine(string sceneName, Action onComplete, bool blackout)
+    {
+        isLoading = true;
+        float startTime = Time.time;
+
+        // 准备加载 UI
+        if (loadingCanvas != null)
+        {
+            // 黑屏模式：只显示黑色遮罩，不显示进度
+            if (blackout)
+            {
+                if (progressBar != null) progressBar.gameObject.SetActive(false);
+                if (progressText != null) progressText.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (progressBar != null) progressBar.gameObject.SetActive(true);
+                if (progressText != null) progressText.gameObject.SetActive(true);
+            }
+        }
+
+        // 淡入（到黑）
+        yield return StartCoroutine(FadeLoadingScreen(0f, 1f));
+
+        // 开始异步加载
+        loadingOperation = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName);
+        loadingOperation.allowSceneActivation = false;
+
+        // 进度更新（黑屏模式下不展示 UI，仅维持逻辑一致）
+        while (!loadingOperation.isDone)
+        {
+            float progress = Mathf.Clamp01(loadingOperation.progress / 0.9f);
+            if (!blackout)
+            {
+                UpdateProgressUI(progress);
+            }
+
+            if (loadingOperation.progress >= 0.9f &&
+                Time.time - startTime >= minLoadingTime)
+            {
+                loadingOperation.allowSceneActivation = true;
+            }
+
+            yield return null;
+        }
+
+        // 等一帧确保场景完全加载
+        yield return null;
+
+        // 淡出（从黑）
+        yield return StartCoroutine(FadeLoadingScreen(1f, 0f));
+
+        isLoading = false;
+        onComplete?.Invoke();
+    }
+    
     private void UpdateProgressUI(float progress)
     {
         if (progressBar != null)
             progressBar.fillAmount = progress;
-        
+
         if (progressText != null)
             progressText.text = $"{(progress * 100):0}%";
     }
