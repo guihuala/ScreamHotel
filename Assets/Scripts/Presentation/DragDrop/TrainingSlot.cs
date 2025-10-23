@@ -13,9 +13,9 @@ namespace ScreamHotel.Presentation
         public MeshRenderer slotIndicator;
 
         [Header("Colors")]
-        public Color emptyColor    = new Color(0.3f, 1f, 0.3f, 1f);
-        public Color occupiedColor = new Color(1f, 0.3f, 0.3f, 1f);
-        public Color trainingColor = new Color(0.3f, 0.3f, 1f, 1f);
+        public Color canTrainColor  = new Color(0.3f, 1f, 0.3f, 1f); // 绿色：可训练
+        public Color cantTrainColor = new Color(1f, 0.3f, 0.3f, 1f); // 红色：不可训练
+        public Color trainingColor  = new Color(0.3f, 0.3f, 1f, 1f); // 训练中（可选显示）
 
         [Header("VFX")]
         public ParticleSystem trainingVfx;
@@ -23,7 +23,7 @@ namespace ScreamHotel.Presentation
         [Header("Training Settings")]
         public int trainingTimeDays = 2; // 可配置的训练时长
         
-        // 完成标识
+        // 完成标识（空闲时一律不显示）
         public GameObject completedMark;
         
         private FearTag _pendingTag = default;
@@ -62,10 +62,11 @@ namespace ScreamHotel.Presentation
             _slotState = GhostState.Idle;
             _trainingDays = 0;
             _isHovering = false;
-            UpdateVisuals();
-            
-            if (trainingVfx) 
-                trainingVfx.Stop();
+
+            // 空闲时不显示完成标志
+            if (completedMark) completedMark.SetActive(false);
+
+            if (trainingVfx) trainingVfx.Stop();
         }
 
         public void StartTraining(string ghostId, FearTag tag)
@@ -73,10 +74,10 @@ namespace ScreamHotel.Presentation
             _ghostId = ghostId;
             _slotState = GhostState.Training;
             _trainingDays = 0;
-            _pendingTag = tag;              // ← 训练中只保存，先不写到 ghost.Sub
+            _pendingTag = tag;              // 训练中只保存，先不写到 ghost.Sub
 
-            if (completedMark) completedMark.SetActive(false); // 开始训练时隐藏完成标记
-            if (trainingVfx) trainingVfx.Play();
+            if (completedMark) completedMark.SetActive(false); // 训练期间隐藏完成标记
+            if (trainingVfx) trainingVfx.Play();               // 训练中持续释放粒子特效
 
             UpdateVisuals();
             UpdateTrainingDisplay();
@@ -90,13 +91,9 @@ namespace ScreamHotel.Presentation
             // 通知训练区：“此槽完成了”
             _trainingZone?.OnSlotTrainingComplete(_ghostId, this);
 
-            // 在槽位上展示完成标识（鬼可被拖走）
-            if (completedMark) completedMark.SetActive(true);
-
             // 槽位本身清空占用（让它可以继续接收新的鬼）
             SetEmptyState();
         }
-
 
         public void AdvanceTrainingDay()
         {
@@ -122,7 +119,6 @@ namespace ScreamHotel.Presentation
 
         public void UpdateTrainingDisplay()
         {
-            // 更新UI显示，但不推进天数
             UpdateVisuals();
         }
 
@@ -130,15 +126,32 @@ namespace ScreamHotel.Presentation
         private void UpdateVisuals()
         {
             if (!slotIndicator) return;
-            
-            slotIndicator.material.color =
-                IsTraining ? trainingColor :
-                IsOccupied ? occupiedColor : emptyColor;
+
+            if (IsTraining)
+            {
+                // 训练中：保持粒子播放，颜色可作为辅助提示（若不想显示颜色，可直接禁用指示器）
+                slotIndicator.material.color = trainingColor;
+                if (trainingVfx && !trainingVfx.isPlaying) trainingVfx.Play();
+                return;
+            }
+
+            if (IsOccupied)
+            {
+                // 已被占用但未处于“训练中”，视为当前不可训练 → 红色
+                slotIndicator.material.color = cantTrainColor;
+                return;
+            }
+
+            // 空闲且未悬停：默认不显示
+            if (!_isHovering)
+            {
+                slotIndicator.material.color = Color.white;
+            }
         }
         
         void OnValidate()
         {
-            // 保障 ghostAnchor 有效，避免(0,0,0) 导致“飞走”
+            // 保障 ghostAnchor 有效
             if (ghostAnchor == null)
             {
                 var t = transform.Find("GhostAnchor");
@@ -162,13 +175,21 @@ namespace ScreamHotel.Presentation
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
             bool canAccept = ghost != null && !IsOccupied && ghost.State != GhostState.Training;
 
-            slotIndicator.enabled = true;
-            slotIndicator.material.color = canAccept ? emptyColor : occupiedColor;
+            if (slotIndicator)
+            {
+                slotIndicator.enabled = true;
+                slotIndicator.material.color = canTrainColor; // 先默认绿
+                if (!canAccept)
+                {
+                    slotIndicator.material.color = cantTrainColor; // 不可训练 → 红
+                }
+            }
         }
 
         public void ClearHoverFeedback()
         {
             _isHovering = false;
+            
             UpdateVisuals();
         }
 
@@ -178,7 +199,7 @@ namespace ScreamHotel.Presentation
             if (slotIndicator)
             {
                 slotIndicator.enabled = true;
-                slotIndicator.material.color = occupiedColor;
+                slotIndicator.material.color = cantTrainColor;
             }
         }
 
@@ -218,7 +239,6 @@ namespace ScreamHotel.Presentation
             return true;
         }
         
-
         public bool TryDrop(string ghostId, out Transform anchor)
         {
             anchor = null;
@@ -228,11 +248,17 @@ namespace ScreamHotel.Presentation
             if (!CanAccept(ghostId)) return false;
 
             _ghostId = ghostId;
-            _slotState = GhostState.Idle;
+            _slotState = GhostState.Idle;   // 占位但尚未进入训练
             _trainingDays = 0;
 
             anchor = ghostAnchor;
-            UpdateVisuals();
+            
+            if (slotIndicator)
+            {
+                slotIndicator.enabled = true;
+                slotIndicator.material.color = cantTrainColor;
+            }
+
             return true;
         }
         

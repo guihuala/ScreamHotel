@@ -16,7 +16,7 @@ namespace ScreamHotel.Presentation
         public Transform visualRoot;
 
         [Header("Prefabs")]
-        [Tooltip("鬼的展示用 PawnView 预制件（简模即可）。")]
+        [Tooltip("鬼的展示用 PawnView 预制件。")]
         public PawnView pawnPrefab;
 
         [Header("Layout")]
