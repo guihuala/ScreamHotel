@@ -53,8 +53,14 @@ namespace ScreamHotel.Presentation
         {
             // 幕布：仅 Lv0 显示
             if (curtain) curtain.SetActive(room.Level == 0);
+            
+            if (room.Level >= 3)
+            {
+                // 直接返回，不清空、不替换任何模型
+                return;
+            }
 
-            // 先全关
+            // 原有逻辑：先全关
             SetActiveArray(lv1Set, false);
             SetActiveArray(lv2DarknessSet, false);
             SetActiveArray(lv2BloodSet, false);
@@ -74,6 +80,7 @@ namespace ScreamHotel.Presentation
                 }
             }
         }
+
 
         /// <summary>
         /// 根据 FearTag 启用对应的 Lv2 外观；若对应组为空，返回 false（外部会回退到 lv2Set）
