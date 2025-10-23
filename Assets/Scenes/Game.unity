@@ -4916,7 +4916,6 @@ MonoBehaviour:
   noiseWobbleAmp: 0.03
   noiseWobbleFreq: 1.7
   sweepShareOfExec: 1
-  vfxOnlyFirstLoop: 0
 --- !u!1 &758897908
 GameObject:
   m_ObjectHideFlags: 0

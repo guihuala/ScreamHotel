@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using ScreamHotel.Data;
 using ScreamHotel.Domain;
 using UnityEngine;
@@ -36,6 +38,33 @@ namespace ScreamHotel.Presentation
             var world = box.transform.TransformPoint(local);
             world.z = spawnFixedZ;
             return world;
+        }
+        
+        private void SyncGhosts()
+        {
+            if (!game || game.World == null) return;
+            var w = game.World;
+
+            // 1) 删除不在世界里的旧鬼视图
+            var alive = new HashSet<string>(w.Ghosts.Select(g => g.Id));
+            var toRemove = _ghostViews.Keys.Where(id => !alive.Contains(id)).ToList();
+            foreach (var id in toRemove)
+            {
+                SafeDestroy(_ghostViews[id]?.gameObject);
+                _ghostViews.Remove(id);
+            }
+
+            // 2) 为新鬼补齐视图
+            foreach (var g in w.Ghosts)
+            {
+                if (_ghostViews.ContainsKey(g.Id)) continue;
+
+                var pos = GetRandomGhostSpawnPos();
+                var pv  = Instantiate(ghostPrefab, pos, Quaternion.identity, ghostsRoot);
+                pv.BindGhost(g);
+
+                _ghostViews[g.Id] = pv;
+            }
         }
     }
 }

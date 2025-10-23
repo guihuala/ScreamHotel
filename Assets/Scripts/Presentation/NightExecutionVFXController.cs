@@ -45,10 +45,7 @@ namespace ScreamHotel.Systems
 
         [Header("Loop Settings")] [Tooltip("单次循环占用夜间执行总时长的比例。0.35 => 一轮大概用掉 35% 的时长，然后继续下一轮")] [Range(0.05f, 1f)]
         public float sweepShareOfExec = 0.35f;
-
-        [Tooltip("是否只在第一轮播放命中粒子，后续循环仅做位移动作避免刷屏")]
-        public bool vfxOnlyFirstLoop = true;
-
+        
         private Coroutine _loopRoutine;
         private Game _game;
         private Dictionary<FearTag, ParticleSystem> _tag2Vfx;

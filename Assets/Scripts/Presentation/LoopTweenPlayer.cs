@@ -1,5 +1,3 @@
-// CommonLoopMotion.cs
-// 需要 DOTween（Tools > Demigiant > DOTween Utility Panel > Setup DOTween...）
 using DG.Tweening;
 using UnityEngine;
 

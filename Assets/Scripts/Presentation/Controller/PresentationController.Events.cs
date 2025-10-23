@@ -92,8 +92,6 @@ namespace ScreamHotel.Presentation
 
         private void OnFloorBuilt(FloorBuiltEvent _)
         {
-            // 把缺的房间View补齐（CreateFloorInternally 已发了 4 次 RoomPurchasedEvent，
-            // 但为防止事件顺序差异，这里再兜一层，全量补齐）
             BuildInitialRooms();
 
             // 立刻上移屋顶到最高层之上

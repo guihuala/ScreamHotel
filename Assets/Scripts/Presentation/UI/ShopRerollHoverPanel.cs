@@ -10,8 +10,8 @@ namespace ScreamHotel.Presentation.Shop
 
         public void Show(int cost, Vector3 screenPos)
         {
-            if (titleText) titleText.text = "刷新货架";
-            if (costText)  costText.text  = $"价格：{cost}";
+            if (titleText) titleText.text = "Retroll";
+            if (costText)  costText.text  = $"Price:{cost}";
             transform.position = screenPos;
             gameObject.SetActive(true);
         }
