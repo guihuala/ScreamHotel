@@ -1,13 +1,12 @@
 using UnityEngine;
+using ScreamHotel.Core;
+using System.Collections;
 
 [DisallowMultipleComponent]
 public class CameraController : MonoBehaviour
 {
     [Header("移动")]
-    [Tooltip("键盘移动速度（单位/秒）")]
     public float keyboardSpeed = 10f;
-
-    [Tooltip("位置插值速度（越大越跟手）；<=0 表示直接赋值不插值")]
     public float positionLerp = 12f;
 
     [Header("边界 (XY)")]
@@ -19,22 +18,25 @@ public class CameraController : MonoBehaviour
 
     [Header("屏幕边缘移动")]
     public bool enableEdgePan = true;
-    [Tooltip("边缘范围（像素），鼠标进入该范围开始触发移动")]
     public float edgeZonePixels = 24f;
-    [Tooltip("卷屏基础速度（单位/秒）")]
     public float edgeSpeed = 10f;
-    [Tooltip("按接近边缘的程度进行加速的曲线（0=刚进入边缘，1=贴边）")]
     public AnimationCurve edgeAccel = AnimationCurve.EaseInOut(0, 0, 1, 1);
-    [Tooltip("应用未聚焦时是否忽略边缘输入")]
     public bool ignoreEdgeWhenUnfocused = true;
 
     [Header("其它")]
-    [Tooltip("是否锁定并维持初始 Z 值")]
     public bool lockZ = true;
+
+    [Header("震动效果")]
+    public float shakeDuration = 1.5f;
+    public float shakeStrength = 0.3f;
+    public float shakeFrequency = 20f;
 
     private Camera _cam;
     private Vector3 _targetPosition;
     private float _fixedZ;
+
+    private Coroutine _shakeRoutine;
+    private Vector3 _originalPos;
 
     void Awake()
     {
@@ -43,44 +45,81 @@ public class CameraController : MonoBehaviour
 
         _fixedZ = transform.position.z;
         _targetPosition = transform.position;
+        _originalPos = transform.localPosition;
+
+        // 监听游戏阶段变化
+        EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
+    }
+
+    void OnDestroy()
+    {
+        EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
+    }
+
+    private void OnGameStateChanged(GameStateChanged evt)
+    {
+        if (evt.State is GameState state && state == GameState.NightExecute)
+        {
+            // 进入夜间执行时震动相机
+            if (_shakeRoutine != null) StopCoroutine(_shakeRoutine);
+            _shakeRoutine = StartCoroutine(ShakeCamera());
+        }
+    }
+
+    private IEnumerator ShakeCamera()
+    {
+        float timer = 0f;
+        Vector3 basePos = transform.localPosition;
+
+        while (timer < shakeDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / shakeDuration;
+
+            // 衰减强度
+            float strength = shakeStrength * (1f - t);
+
+            // 随机方向震动
+            float offsetX = Mathf.PerlinNoise(Time.time * shakeFrequency, 0f) - 0.5f;
+            float offsetY = Mathf.PerlinNoise(0f, Time.time * shakeFrequency) - 0.5f;
+            Vector3 offset = new Vector3(offsetX, offsetY, 0f) * strength;
+
+            transform.localPosition = basePos + offset;
+            yield return null;
+        }
+
+        // 恢复原位
+        transform.localPosition = basePos;
+        _shakeRoutine = null;
     }
 
     void Update()
     {
-        // 1) 键盘输入推进目标位置
         HandleKeyboard();
-
-        // 2) 鼠标边缘推进目标位置
         if (enableEdgePan && (!ignoreEdgeWhenUnfocused || Application.isFocused))
         {
             HandleEdgePan();
         }
 
-        // 3) 约束到边界
         if (enableBounds)
         {
             _targetPosition.x = Mathf.Clamp(_targetPosition.x, minX, maxX);
             _targetPosition.y = Mathf.Clamp(_targetPosition.y, minY, maxY);
         }
 
-        // 4) 应用位置（插值或直接设置）
         Vector3 desired = _targetPosition;
         if (lockZ) desired.z = _fixedZ;
 
         if (positionLerp > 0f)
-        {
             transform.position = Vector3.Lerp(transform.position, desired, Time.deltaTime * positionLerp);
-        }
         else
-        {
             transform.position = desired;
-        }
     }
 
     private void HandleKeyboard()
     {
-        float h = Input.GetAxisRaw("Horizontal"); // A/D 或 ←/→
-        float v = Input.GetAxisRaw("Vertical");   // W/S 或 ↑/↓
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
         if (Mathf.Abs(h) > 0.0001f || Mathf.Abs(v) > 0.0001f)
         {
             Vector3 move = new Vector3(h, v, 0f) * keyboardSpeed * Time.deltaTime;
@@ -95,19 +134,16 @@ public class CameraController : MonoBehaviour
         float h = Screen.height;
         float zone = Mathf.Max(1f, edgeZonePixels);
 
-        // 计算每个方向的“贴边程度”[0..1]
-        float leftT   = Mathf.Clamp01((zone - mouse.x) / zone);
-        float rightT  = Mathf.Clamp01((mouse.x - (w - zone)) / zone);
+        float leftT = Mathf.Clamp01((zone - mouse.x) / zone);
+        float rightT = Mathf.Clamp01((mouse.x - (w - zone)) / zone);
         float bottomT = Mathf.Clamp01((zone - mouse.y) / zone);
-        float topT    = Mathf.Clamp01((mouse.y - (h - zone)) / zone);
+        float topT = Mathf.Clamp01((mouse.y - (h - zone)) / zone);
 
-        // 加速曲线
-        leftT   = edgeAccel.Evaluate(leftT);
-        rightT  = edgeAccel.Evaluate(rightT);
+        leftT = edgeAccel.Evaluate(leftT);
+        rightT = edgeAccel.Evaluate(rightT);
         bottomT = edgeAccel.Evaluate(bottomT);
-        topT    = edgeAccel.Evaluate(topT);
+        topT = edgeAccel.Evaluate(topT);
 
-        // 合成方向（可同时对角）
         float xDir = rightT - leftT;
         float yDir = topT - bottomT;
 
