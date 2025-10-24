@@ -8,8 +8,9 @@ namespace ScreamHotel.Systems
     {
         public float dayDurationInSeconds = 300f; // 一天5分钟
         public float currentTimeOfDay = 0.25f;    // 从早晨开始（6:00）
+        
+        public float DayProgress => currentTimeOfDay;
 
-        // 把 isPaused 变为转发到 TimeManager
         public bool isPaused
         {
             get => TimeManager.Instance != null && TimeManager.Instance.IsPaused;
@@ -24,9 +25,6 @@ namespace ScreamHotel.Systems
         private Game _game;
 
         public TimeSystem(Game game)  { _game = game; }
-
-        public float DayProgress => currentTimeOfDay;
-        public bool IsNight => currentTimeOfDay > 0.75f || currentTimeOfDay < 0.25f;
 
         public void Update(float deltaTime)
         {
@@ -77,6 +75,21 @@ namespace ScreamHotel.Systems
         public void SetNormalizedTime(float t)
         {
             currentTimeOfDay = Mathf.Repeat(t, 1f);
+        }
+        
+        public GameState GetCurrentTimePeriod()
+        {
+            var rules = _game?.World?.Config?.Rules;
+            float rDay = rules?.dayRatio ?? 0.50f;
+            float rShow = rules?.nightShowRatio ?? 0.20f;
+            float rExec = rules?.nightExecuteRatio ?? 0.20f;
+
+            float currentTime = DayProgress;  // 获取当前时间进度
+
+            if (currentTime >= 0f && currentTime < rDay) return GameState.Day;  // 白天
+            if (currentTime >= rDay && currentTime < rDay + rShow) return GameState.NightShow;  // 夜间展示
+            if (currentTime >= rDay + rShow && currentTime < rDay + rShow + rExec) return GameState.NightExecute; // 夜间执行
+            return GameState.Settlement;  // 结算
         }
     }
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using ScreamHotel.Core;
 using ScreamHotel.Domain;
 using ScreamHotel.Systems;
 using ScreamHotel.UI;
@@ -83,13 +84,11 @@ namespace ScreamHotel.Presentation
             {
                 if (_build == null)
                 {
-                    Debug.LogWarning("BuildSystem 未找到，无法建造/升级。");
                     Flash(fullColor);
                     return false;
                 }
                 if (_busyGhosts.Contains(id))
                 {
-                    Debug.Log($"鬼 {id} 正在建造中，忽略重复拖放。");
                     Flash(fullColor);
                     return false;
                 }
@@ -271,18 +270,10 @@ namespace ScreamHotel.Presentation
             if (plate != null) plate.material.color = _origColor;
         }
 
-        // 日夜判断；拿不到系统就默认白天
         private bool IsDaytime()
         {
-            if (_dayNightSysRaw == null) return true;
-            var t = _dayNightSysRaw.GetType();
-            var prop = t.GetProperty("IsDay") ?? t.GetProperty("IsDayTime");
-            if (prop != null && prop.PropertyType == typeof(bool))
-                return (bool)prop.GetValue(_dayNightSysRaw);
-            var field = t.GetField("IsDay") ?? t.GetField("IsDayTime");
-            if (field != null && field.FieldType == typeof(bool))
-                return (bool)field.GetValue(_dayNightSysRaw);
-            return true;
+            if (game?.TimeSystem == null) return true;  // 如果没有找到 TimeSystem，默认是白天
+            return game.TimeSystem.GetCurrentTimePeriod() == GameState.Day;  // 直接从 TimeSystem 获取白天状态
         }
     }
 }
