@@ -27,7 +27,8 @@ public class SlideInAnim : MonoBehaviour
     [Header("时间缩放")]
     [SerializeField] private bool useUnscaledTime = true;
 
-    [Header("完成后回调")]
+    [Header("完成后设置")]
+    [SerializeField] private float finishDelay = 0f; // 新增：动画完成后延迟执行回调的时间
     public System.Action OnFinished;
 
     bool _isPlaying;
@@ -50,7 +51,7 @@ public class SlideInAnim : MonoBehaviour
             float offset = startYOffset;
             if (Mathf.Approximately(offset, 0f))
             {
-                // 用画布高度作为偏移：保证从屏幕下方“离屏”位置开始
+                // 用画布高度作为偏移：保证从屏幕下方"离屏"位置开始
                 var canvas = target.GetComponentInParent<Canvas>();
                 if (canvas != null && canvas.TryGetComponent<RectTransform>(out var canvasRect))
                     offset = canvasRect.rect.height;
@@ -67,6 +68,15 @@ public class SlideInAnim : MonoBehaviour
         var slide = StartCoroutine(SlideIn(startPos, endAnchoredPos));
         var shake = StartCoroutine(ShakeScreen());
         yield return slide;
+
+        // 新增：等待延迟时间
+        if (finishDelay > 0f)
+        {
+            if (useUnscaledTime)
+                yield return new WaitForSecondsRealtime(finishDelay);
+            else
+                yield return new WaitForSeconds(finishDelay);
+        }
 
         // 结束
         _isPlaying = false;
