@@ -1,6 +1,8 @@
+// GuestTypeConfig.cs
 using System.Collections.Generic;
 using ScreamHotel.Domain;
 using UnityEngine;
+using Spine.Unity;
 
 namespace ScreamHotel.Data
 {
@@ -8,8 +10,8 @@ namespace ScreamHotel.Data
     public class GuestTypeConfig : ScriptableObject
     {
         [Header("Identity")]
-        public string id;                     // 配置ID（与 Guest.TypeId 对应）
-        public string displayName;            // 显示名称（面板大标题）
+        public string id;
+        public string displayName;
 
         [Header("Behavior")]
         public List<FearTag> immunities;
@@ -18,9 +20,15 @@ namespace ScreamHotel.Data
         public int baseFee = 100;
 
         [Header("Appearance")]
-        public GameObject prefabOverride;     // 场景中替换模型
-        public Sprite portrait;               // 头像（左侧大图 & 右侧缩略图）
-        [TextArea(3, 6)] public string intro; // 简介（中部多行文案）
-        public List<Sprite> gallery;          // 备用缩略图（如需在右侧显示不同姿态）
+        public GameObject prefabOverride;
+        public Sprite portrait;
+        [TextArea(3, 6)] public string intro;
+        public List<Sprite> gallery;
+
+        [Header("Spine (UI)")] [Tooltip("Spine-Unity 的 SkeletonDataAsset（UI用），若配置则在面板用Spine替代大图显示")]
+        public SkeletonDataAsset spineUIData;
+        [Tooltip("默认使用的Skin，可留空使用默认skin")] public string spineDefaultSkin = "";
+        [Tooltip("默认播放的动画名，例如 idle / loop 等")] public string spineDefaultAnimation = "idle";
+        [Tooltip("默认动画是否循环")] public bool spineDefaultLoop = true;
     }
 }

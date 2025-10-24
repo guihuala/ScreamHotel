@@ -15,13 +15,8 @@ namespace ScreamHotel.UI
         public Button executeButton;
         public Button skipDayButton;
 
-        [Header("Guests")]
-        public Button guestsButton;
-
         [Header("Time Info (HUD)")]
-        [Tooltip("HUD上用于显示时间段信息的按钮（悬停时出现Tooltip）")]
         public Button timeInfoButton;
-        [Tooltip("跟随鼠标的提示面板（需挂TooltipMousePanel脚本）")]
         public TooltipMousePanel timeInfoTooltip;
 
         [Header("HUD Text (optional)")]
@@ -45,14 +40,12 @@ namespace ScreamHotel.UI
             if (pauseButton)   pauseButton.onClick.AddListener(OnPauseButtonClicked);
             if (executeButton) executeButton.onClick.AddListener(OnExecuteButtonClicked);
             if (skipDayButton) skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
-            if (guestsButton)  guestsButton.onClick.AddListener(OnGuestsButtonClicked);
 
             // HUD 时间信息按钮：为其挂载 PointerEnter/Exit/Move
             SetupTimeInfoButtonTriggers();
 
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility();
 
             var rules = game?.World?.Config?.Rules;
             suspicionThresholdCached = Mathf.Max(1, rules != null ? rules.suspicionThreshold : suspicionFallbackThreshold);
@@ -103,29 +96,41 @@ namespace ScreamHotel.UI
 
         // ===== Event handlers =====
         private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();
+        
+        private void OnDayStarted(DayStartedEvent e)
+        {
+            UpdateExecuteButtonVisibility();
+            UpdateSkipDayButtonVisibility();
+            RefreshDayUI();
+            RefreshSuspicionUI();
+            
+            OpenGuestApprovalPanel();
+        }
 
         private void OnGameStateChanged(GameStateChanged e)
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility();
             RefreshDayUI();
+            
+            if (game != null && game.State == GameState.Day)
+                OpenGuestApprovalPanel();
         }
 
-        private void OnDayStarted(DayStartedEvent e)
+        private void OpenGuestApprovalPanel()
         {
-            UpdateExecuteButtonVisibility();
-            UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility();
-            RefreshDayUI();
-            RefreshSuspicionUI();
+            var panel = UIManager.Instance.OpenPanel("GuestApprovalPanel");
+            var gap = panel as GuestApprovalPanel;
+            if (gap != null)
+            {
+                gap.Init(game);
+            }
         }
 
         private void OnNightStarted(NightStartedEvent e)
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility();
         }
 
         private void OnSuspicionChanged(SuspicionChanged e)
@@ -144,7 +149,6 @@ namespace ScreamHotel.UI
                 game.StartNightExecution();
                 UpdateExecuteButtonVisibility();
                 UpdateSkipDayButtonVisibility();
-                UpdateGuestsButtonVisibility();
             }
         }
 
@@ -155,17 +159,6 @@ namespace ScreamHotel.UI
                 game.SkipToNightShow();
                 UpdateSkipDayButtonVisibility();
                 UpdateExecuteButtonVisibility();
-                UpdateGuestsButtonVisibility();
-            }
-        }
-
-        private void OnGuestsButtonClicked()
-        {
-            var panel = UIManager.Instance.OpenPanel("GuestApprovalPanel");
-            var gap = panel as GuestApprovalPanel;
-            if (gap != null)
-            {
-                gap.Init(game); // 让面板自己去读 Pending/操作 Accept/Reject
             }
         }
 
@@ -183,15 +176,6 @@ namespace ScreamHotel.UI
             bool show = game.State == GameState.Day;
             skipDayButton.gameObject.SetActive(show);
             skipDayButton.interactable = show;
-        }
-
-        // 仅 Day 显示“客人名单”按钮
-        private void UpdateGuestsButtonVisibility()
-        {
-            if (guestsButton == null) return;
-            bool show = game.State == GameState.Day;
-            guestsButton.gameObject.SetActive(show);
-            guestsButton.interactable = show;
         }
 
         // ===== UI refresh =====

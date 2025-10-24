@@ -13,8 +13,16 @@ MonoBehaviour:
   m_Name: GuestType__2
   m_EditorClassIdentifier: 
   id: 2
+  displayName: 
   immunities: 00000000
   barMax: 100
   requiredPercent: 0.8
   baseFee: 100
   prefabOverride: {fileID: 3718224893873345725, guid: d793031b2310944679e1e4f1cfebbe40, type: 3}
+  portrait: {fileID: 0}
+  intro: 
+  gallery: []
+  spineUIData: {fileID: 11400000, guid: 84efe269b96f14c80b607730badff26a, type: 2}
+  spineDefaultSkin: 2
+  spineDefaultAnimation: idle
+  spineDefaultLoop: 1
