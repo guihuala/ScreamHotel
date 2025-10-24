@@ -26,6 +26,7 @@ namespace ScreamHotel.UI
             if (detailText)
             {
                 string state = success ? "No one found the bug!" : "The bug was exposed";
+                detailText.text = state;
             }
         }
 

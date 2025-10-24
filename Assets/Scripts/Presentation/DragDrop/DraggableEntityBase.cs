@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Systems;
@@ -20,6 +21,11 @@ namespace ScreamHotel.Presentation
         public float followLerp = 30f;
         public bool dragSelf = true;
         
+        [Header("Drop Zone Highlight")]
+        [Tooltip("拖拽时是否高亮所有可放置区域（而不是仅鼠标下的一个）")]
+        public bool highlightAllDropZones = true;
+
+        private IDropZone[] _zonesCache; // 拖拽期间缓存所有 DropZone，减少 Find 开销
         public bool IsGhostEntity => IsGhost;
 
         // —— 由子类设置的标识 —— 
@@ -96,12 +102,27 @@ namespace ScreamHotel.Presentation
                 if (dragSelf) transform.position = Vector3.Lerp(transform.position, p, Time.deltaTime * followLerp);
 
                 var z = ZoneUnderPointer();
-                if (!ReferenceEquals(z, _hoverZone))
+
+                if (!highlightAllDropZones)
                 {
-                    _hoverZone?.ClearFeedback();
-                    _hoverZone = z;
+                    // 旧行为：仅维护和刷新鼠标下的一个 zone
+                    if (!ReferenceEquals(z, _hoverZone))
+                    {
+                        _hoverZone?.ClearFeedback();
+                        _hoverZone = z;
+                    }
+                    _hoverZone?.ShowHoverFeedback(entityId, IsGhost);
                 }
-                _hoverZone?.ShowHoverFeedback(entityId, IsGhost);
+                else
+                {
+                    // 拖拽时全局高亮
+                    _hoverZone = z; // 仍保留引用，方便松手时用 TryDrop
+                    if (_zonesCache != null)
+                    {
+                        foreach (var zone in _zonesCache)
+                            zone?.ShowHoverFeedback(entityId, IsGhost);
+                    }
+                }
             }
 
             // 结束拖拽
@@ -113,7 +134,6 @@ namespace ScreamHotel.Presentation
                 {
                     if (_hoverZone.TryDrop(entityId, IsGhost, out var anchor) && anchor != null)
                     {
-                        // MoveTo(anchor)
                         _moveTo?.Invoke(anchor, DropMoveDuration);
                         PinInRoomAfterDrop();
                     }
@@ -121,16 +141,21 @@ namespace ScreamHotel.Presentation
                     {
                         HandleNoDropZoneRelease();
                     }
-                    _hoverZone.ClearFeedback();
-                    _hoverZone = null;
                 }
                 else
                 {
                     HandleNoDropZoneRelease();
                 }
 
+                // 统一清理所有高亮
+                if (_zonesCache != null)
+                {
+                    foreach (var zone in _zonesCache)
+                        zone?.ClearFeedback(); // 逐个清除
+                    _zonesCache = null;
+                }
+
                 EndSelfDrag();
-                _hoverZone?.ClearFeedback();
                 _hoverZone = null;
             }
         }
@@ -180,6 +205,9 @@ namespace ScreamHotel.Presentation
                     _rbs[i].angularVelocity = Vector3.zero;
                 }
             }
+            
+            var allBehaviours = FindObjectsOfType<MonoBehaviour>(true);
+            _zonesCache = allBehaviours.OfType<IDropZone>().ToArray();
         }
 
         private void EndSelfDrag()

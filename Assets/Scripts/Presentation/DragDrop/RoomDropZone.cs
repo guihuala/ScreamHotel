@@ -6,6 +6,7 @@ using ScreamHotel.Core;
 using ScreamHotel.Domain;
 using ScreamHotel.Systems;
 using ScreamHotel.UI;
+using UnityEngine.Serialization;
 
 namespace ScreamHotel.Presentation
 {
@@ -20,11 +21,17 @@ namespace ScreamHotel.Presentation
         [Header("Build VFX")]
         [Tooltip("建造/升级时播放的粒子特效预制体")]
         public ParticleSystem buildFxPrefab;
+        
+        [Header("Build VFX")]
+        public GameObject buildIcon;
+        public GameObject nightBuildIcon;
 
-        private Core.Game game;
+        
+        private Game game;
         private RoomView _rv; // 只用于拿锚点/可视
         private string roomId;
         private Color _origColor;
+        private GameObject currentBuildIcon; // 存储当前显示的建造图标
 
         // 系统
         private AssignmentSystem _assign => GetSystem<AssignmentSystem>(game, "_assignmentSystem");
@@ -41,6 +48,9 @@ namespace ScreamHotel.Presentation
             if (game == null) game = FindObjectOfType<Core.Game>();
             _rv = GetComponent<RoomView>();
             _hoverUI = FindObjectOfType<HoverUIController>(true);
+            
+            if (buildIcon != null) buildIcon.SetActive(false);
+            if (nightBuildIcon != null) nightBuildIcon.SetActive(false);
         }
 
         public void SetRoomId(string newRoomId) => roomId = newRoomId;
@@ -79,7 +89,21 @@ namespace ScreamHotel.Presentation
                 return false;
             }
 
-            // ============ 白天 + 鬼：进入房间进行建造/升级（1~2秒） ============
+
+            // 显示图标（白天或夜晚）
+            if (isGhost && IsDaytime())
+            {
+                // 显示白天的建造图标
+                if (buildIcon != null) buildIcon.SetActive(true);
+                if (nightBuildIcon != null) nightBuildIcon.SetActive(false);
+            }
+            else
+            {
+                // 显示夜晚的建造图标
+                if (buildIcon != null) buildIcon.SetActive(false);
+                if (nightBuildIcon != null) nightBuildIcon.SetActive(true);
+            }
+            
             if (isGhost && IsDaytime())
             {
                 if (_build == null)
@@ -241,14 +265,23 @@ namespace ScreamHotel.Presentation
 
         public void ShowHoverFeedback(string id, bool isGhost)
         {
-            if (isGhost) ShowHoverFeedback(id);
-            else ShowHoverFeedbackGuest();
+            // 先做你原本的颜色高亮
+            if (isGhost) ShowHoverFeedback(id);     // 保留原逻辑：白天鬼=绿色，否则看 CanAccept
+            else         ShowHoverFeedbackGuest();
+
+            // ★ 在悬停阶段就显示对应图标（白天鬼=建造图标；其余=夜间/非建造图标）
+            bool showDayBuild = isGhost && IsDaytime();
+            if (buildIcon)      buildIcon.SetActive(showDayBuild);
+            if (nightBuildIcon) nightBuildIcon.SetActive(!showDayBuild);
         }
 
         public void ClearFeedback()
         {
-            if (plate == null) return;
-            plate.material.color = _origColor;
+            if (plate) plate.material.color = _origColor;
+
+            // ★ 统一关闭图标，防残留
+            if (buildIcon)      buildIcon.SetActive(false);
+            if (nightBuildIcon) nightBuildIcon.SetActive(false);
         }
 
         private static T GetSystem<T>(object obj, string field) where T : class

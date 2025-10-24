@@ -3,6 +3,7 @@ using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Domain;
 using ScreamHotel.UI;
+using UnityEngine.Serialization;
 
 namespace ScreamHotel.Presentation
 {
@@ -13,8 +14,6 @@ namespace ScreamHotel.Presentation
         public MeshRenderer slotIndicator;
 
         [Header("Colors")]
-        public Color canTrainColor  = new Color(0.3f, 1f, 0.3f, 1f); // 绿色：可训练
-        public Color cantTrainColor = new Color(1f, 0.3f, 0.3f, 1f); // 红色：不可训练
         public Color trainingColor  = new Color(0.3f, 0.3f, 1f, 1f); // 训练中（可选显示）
 
         [Header("VFX")]
@@ -22,6 +21,13 @@ namespace ScreamHotel.Presentation
         
         [Header("Training Settings")]
         public int trainingTimeDays = 2; // 可配置的训练时长
+
+        [Header("Slot Icons")]
+        public GameObject canTrainIcon;  // 可训练图标
+        public GameObject cantTrainIcon; // 不可训练图标
+
+        private GameObject currentSlotIcon; // 存储当前显示的图标
+        
         
         // 完成标识（空闲时一律不显示）
         public GameObject completedMark;
@@ -53,6 +59,9 @@ namespace ScreamHotel.Presentation
             _trainingZone = GetComponentInParent<TrainingRoomZone>();
             if (_game == null)
                 _game = FindObjectOfType<Game>();
+ 
+            if (canTrainIcon != null) canTrainIcon.SetActive(false);
+            if (cantTrainIcon != null) cantTrainIcon.SetActive(false);
         }
 
         // === 状态管理 ===
@@ -137,8 +146,6 @@ namespace ScreamHotel.Presentation
 
             if (IsOccupied)
             {
-                // 已被占用但未处于“训练中”，视为当前不可训练 → 红色
-                slotIndicator.material.color = cantTrainColor;
                 return;
             }
 
@@ -167,6 +174,7 @@ namespace ScreamHotel.Presentation
         }
 
         // === 拖拽反馈 ===
+
         public void ShowHoverFeedback(string ghostId)
         {
             _isHovering = true;
@@ -174,23 +182,18 @@ namespace ScreamHotel.Presentation
             var game = FindObjectOfType<Game>();
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
             bool canAccept = ghost != null && !IsOccupied && ghost.State != GhostState.Training;
-
-            if (slotIndicator)
-            {
-                slotIndicator.enabled = true;
-                slotIndicator.material.color = canTrainColor; // 先默认绿
-                if (!canAccept)
-                {
-                    slotIndicator.material.color = cantTrainColor; // 不可训练 → 红
-                }
-            }
+            
+            if (canTrainIcon)  canTrainIcon.SetActive(canAccept);
+            if (cantTrainIcon) cantTrainIcon.SetActive(!canAccept);
         }
 
         public void ClearHoverFeedback()
         {
             _isHovering = false;
-            
-            UpdateVisuals();
+
+            // 两个都关
+            if (canTrainIcon)  canTrainIcon.SetActive(false);
+            if (cantTrainIcon) cantTrainIcon.SetActive(false);
         }
 
         private void ShowCantAccept()
@@ -199,7 +202,6 @@ namespace ScreamHotel.Presentation
             if (slotIndicator)
             {
                 slotIndicator.enabled = true;
-                slotIndicator.material.color = cantTrainColor;
             }
         }
 
@@ -256,7 +258,6 @@ namespace ScreamHotel.Presentation
             if (slotIndicator)
             {
                 slotIndicator.enabled = true;
-                slotIndicator.material.color = cantTrainColor;
             }
 
             return true;
