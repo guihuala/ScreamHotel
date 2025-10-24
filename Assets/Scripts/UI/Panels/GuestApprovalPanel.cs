@@ -10,28 +10,33 @@ using Spine.Unity;
 
 public class GuestApprovalPanel : BasePanel
 {
-    [Header("Main Card")] public Image bigPortraitImage; // 左侧“大图”
+    [Header("Main Card")]
     public TextMeshProUGUI titleText; // 顾客名字（大标题）
     public TextMeshProUGUI introText; // 顾客简介
 
-    [Header("Actions (Bottom)")] public Button acceptButton; // 接受
+    [Header("Actions (Bottom)")]
+    public Button acceptButton; // 接受
     public Button rejectButton; // 拒绝
 
-    [Header("Right Strip (Thumbnails)")] public Transform thumbsRoot; // 右侧头像列表的容器（建议加 VerticalLayoutGroup）
+    [Header("Right Strip (Thumbnails)")]
+    public Transform thumbsRoot; // 右侧头像列表的容器（建议加 VerticalLayoutGroup）
     public GameObject thumbTemplate;
     public Image selectedFrame; // 高亮框（跟随当前选择）
 
-    [Header("Empty State")] public GameObject emptyState; // 没有候选时显示的占位
-
-    [Header("Behavior")] public bool autoCloseWhenDone = true; // 全部处理完自动关闭
+    [Header("Empty State")]
+    public GameObject emptyState; // 没有候选时显示的占位
     
-    [Header("Main Card - Spine")]
-    [Tooltip("面板里用于承载 Spine UI 的容器（可为空，仅需要SkeletonGraphic引用）")]
+    [Header("Main Card")]
     public RectTransform spineRoot;
-    [Tooltip("放在UI上的 SkeletonGraphic 组件（Spine-Unity）")]
     public SkeletonGraphic spineGraphic;
-    [Tooltip("若配置了 Spine 资源，是否优先使用 Spine 替代静态大图")]
     public bool preferSpineOverSprite = true;
+    
+    [Header("Immunity (Fear) Icons")]
+    public FearIconAtlas fearAtlas;
+    public Transform immunitiesRoot;
+    public GameObject immunityIconTemplate;
+    public bool showTextFallback = true;
+
 
     private Game _game;
     private ConfigDatabase _db;
@@ -138,13 +143,7 @@ public class GuestApprovalPanel : BasePanel
         {
             if (titleText) titleText.text = "";
             if (introText) introText.text = "";
-
-            // 静态图隐藏
-            if (bigPortraitImage)
-            {
-                bigPortraitImage.sprite = null;
-                bigPortraitImage.enabled = false;
-            }
+            
             // Spine隐藏
             SetSpineActive(false);
 
@@ -162,50 +161,32 @@ public class GuestApprovalPanel : BasePanel
 
         string intro = !string.IsNullOrEmpty(cfg?.intro) ? cfg.intro : "null";
         intro += $"\n\npayment:{g.BaseFee}";
+        
         if (g.Fears != null && g.Fears.Count > 0)
         {
-            var tags = string.Join("、", g.Fears.Select(t => t.ToString()));
-            intro += $"\nimmunities:{tags}";
+            BuildImmunityIcons(g);
         }
-        if (introText) introText.text = intro;
-
-        // === NEW：优先尝试用 Spine 显示 ===
-        bool showedSpine = TryShowSpine(cfg);
-        if (!showedSpine)
+        else
         {
-            // 回退：保持你原来的静态左侧大图逻辑
-            if (bigPortraitImage)
-            {
-                bigPortraitImage.sprite = cfg?.portrait;
-                bigPortraitImage.enabled = bigPortraitImage.sprite != null;
-            }
-            SetSpineActive(false);
+            ClearImmunityIcons();     // 没有免疫则清空
         }
 
+        if (introText) introText.text = intro;
+        
+        TryShowSpine(cfg);
         SetActionButtonsInteractable(true);
     }
-
-    // === NEW ：尝试用 Spine-Unity 播放客人动画（UI）===
+    
     private bool TryShowSpine(GuestTypeConfig cfg)
     {
         if (!preferSpineOverSprite) return false;
         if (cfg == null || cfg.spineUIData == null) return false;
-        if (spineGraphic == null) return false; // 没挂组件就不播
-
-        // 静态大图隐藏
-        if (bigPortraitImage)
-        {
-            bigPortraitImage.enabled = false;
-            bigPortraitImage.sprite = null;
-        }
-
-        // 配置 Spine 资源
+        if (spineGraphic == null) return false; 
+        
         spineGraphic.skeletonDataAsset = cfg.spineUIData;
-
-        // 重新初始化（很关键）
+        
         spineGraphic.Initialize(overwrite: true);
-
-        // 可选：切 Skin
+        
         if (!string.IsNullOrEmpty(cfg.spineDefaultSkin))
         {
             var skel = spineGraphic.Skeleton;
@@ -215,8 +196,7 @@ public class GuestApprovalPanel : BasePanel
                 skel.SetSlotsToSetupPose();
             }
         }
-
-        // 播放默认动画
+        
         var state = spineGraphic.AnimationState;
         if (state != null && !string.IsNullOrEmpty(cfg.spineDefaultAnimation))
         {
@@ -319,7 +299,6 @@ public class GuestApprovalPanel : BasePanel
 
     private void TryAutoCloseIfDone()
     {
-        if (!autoCloseWhenDone) return;
         if (_pendingCache.Count == 0)
         {
             // 全部处理完成 -> 自动关闭
@@ -345,4 +324,55 @@ public class GuestApprovalPanel : BasePanel
     }
 
     #endregion
+    
+    private void BuildImmunityIcons(Guest g)
+    {
+        if (immunitiesRoot == null || immunityIconTemplate == null)
+            return;
+
+        // 清空旧的
+        ClearImmunityIcons();
+
+        // 模板本体隐藏
+        immunityIconTemplate.SetActive(false);
+
+        // 没图集也允许继续（只是不显示图标）
+        foreach (var tag in g.Fears)
+        {
+            // 从图集拿图
+            Sprite s = fearAtlas ? fearAtlas.Get(tag) : null;
+
+            // 没有配置该 tag 的图标，则跳过（或走文字兜底）
+            if (s == null)
+                continue;
+
+            // 实例化一个
+            var go = Instantiate(immunityIconTemplate, immunitiesRoot);
+            go.name = $"ImmunityIcon_{tag}";
+            go.SetActive(true);
+
+            // 取 Image 赋图
+            var img = go.GetComponentInChildren<UnityEngine.UI.Image>(true);
+            if (img != null)
+            {
+                img.sprite = s;
+                img.enabled = s != null;
+                // 可选：根据图标尺寸自动设置 preserveAspect
+                img.preserveAspect = true;
+            }
+        }
+    }
+
+    private void ClearImmunityIcons()
+    {
+        if (immunitiesRoot == null) return;
+
+        // 不删模板，只删除运行时生成的孩子
+        for (int i = immunitiesRoot.childCount - 1; i >= 0; i--)
+        {
+            var child = immunitiesRoot.GetChild(i);
+            if (child.gameObject == immunityIconTemplate) continue;
+            Destroy(child.gameObject);
+        }
+    }
 }

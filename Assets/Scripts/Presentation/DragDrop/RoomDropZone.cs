@@ -13,11 +13,6 @@ namespace ScreamHotel.Presentation
     [RequireComponent(typeof(Collider))]
     public class RoomDropZone : MonoBehaviour, IDropZone
     {
-        [Header("Binding")]
-        public MeshRenderer plate;
-        public Color canColor = new Color(0.3f, 1f, 0.3f, 1f);
-        public Color fullColor = new Color(1f, 0.3f, 0.3f, 1f);
-
         [Header("Build VFX")]
         [Tooltip("建造/升级时播放的粒子特效预制体")]
         public ParticleSystem buildFxPrefab;
@@ -44,7 +39,6 @@ namespace ScreamHotel.Presentation
 
         void Awake()
         {
-            if (plate != null) _origColor = plate.sharedMaterial.color;
             if (game == null) game = FindObjectOfType<Core.Game>();
             _rv = GetComponent<RoomView>();
             _hoverUI = FindObjectOfType<HoverUIController>(true);
@@ -108,12 +102,10 @@ namespace ScreamHotel.Presentation
             {
                 if (_build == null)
                 {
-                    Flash(fullColor);
                     return false;
                 }
                 if (_busyGhosts.Contains(id))
                 {
-                    Flash(fullColor);
                     return false;
                 }
 
@@ -130,7 +122,6 @@ namespace ScreamHotel.Presentation
                         // 施工结束时再真正扣费/解锁
                         return _build.TryUnlockRoom(roomId);
                     }));
-                    Flash(canColor);
                     return true; // 让鬼进入锚点“施工”
                 }
                 else if (r.Level == 1)
@@ -138,7 +129,6 @@ namespace ScreamHotel.Presentation
                     // Lv1 -> Lv2：先选择恐惧属性，然后开始施工
                     if (_hoverUI == null)
                     {
-                        Flash(fullColor);
                         return false;
                     }
 
@@ -151,8 +141,7 @@ namespace ScreamHotel.Presentation
                             return _build.TryUpgradeRoom(roomId, tag); // Lv1->Lv2 必须有 tag
                         }));
                     });
-
-                    Flash(canColor);
+                    
                     return true; // 立刻把鬼放到锚点（等待选择完再开工）
                 }
                 else if (r.Level == 2)
@@ -162,13 +151,11 @@ namespace ScreamHotel.Presentation
                     {
                         return _build.TryUpgradeRoom(roomId); // 不改变 tag
                     }));
-                    Flash(canColor);
                     return true;
                 }
                 else
                 {
                     Debug.Log("房间已满级，无法继续升级。");
-                    Flash(fullColor);
                     return false;
                 }
             }
@@ -176,7 +163,6 @@ namespace ScreamHotel.Presentation
             // ============ 夜晚或非鬼：恢复“分配”逻辑 ============
             if (!CanAccept(id, isGhost))
             {
-                Flash(fullColor);
                 return false;
             }
 
@@ -186,7 +172,6 @@ namespace ScreamHotel.Presentation
                 {
                     var index = r.AssignedGhostIds.IndexOf(id);
                     targetAnchor = _rv != null ? _rv.GetAnchor(index) : transform;
-                    Flash(canColor);
                     return true;
                 }
             }
@@ -196,12 +181,10 @@ namespace ScreamHotel.Presentation
                 {
                     var idx = Mathf.Max(0, r.AssignedGuestIds.IndexOf(id));
                     targetAnchor = _rv != null ? _rv.GetGuestAnchor(idx) : transform;
-                    Flash(canColor);
                     return true;
                 }
             }
-
-            Flash(fullColor);
+            
             return false;
         }
 
@@ -244,32 +227,12 @@ namespace ScreamHotel.Presentation
                 }
                 _busyGhosts.Remove(ghostId);
             }
-
-            Flash(ok ? canColor : fullColor);
+            
             if (!ok) Debug.LogWarning("建造/升级失败：可能是金币不足或规则限制。");
         }
-
-        public void ShowHoverFeedbackGuest()
-        {
-            if (plate == null) return;
-            plate.material.color = canColor;
-        }
-
-        public void ShowHoverFeedback(string ghostId)
-        {
-            if (plate == null) return;
-            // 白天拖鬼用于建造：容量不影响，直接绿色提示；否则按分配校验
-            var c = IsDaytime() ? canColor : (CanAccept(ghostId, true) ? canColor : fullColor);
-            plate.material.color = Color.Lerp(plate.material.color, c, 0.5f);
-        }
-
+        
         public void ShowHoverFeedback(string id, bool isGhost)
         {
-            // 先做你原本的颜色高亮
-            if (isGhost) ShowHoverFeedback(id);     // 保留原逻辑：白天鬼=绿色，否则看 CanAccept
-            else         ShowHoverFeedbackGuest();
-
-            // ★ 在悬停阶段就显示对应图标（白天鬼=建造图标；其余=夜间/非建造图标）
             bool showDayBuild = isGhost && IsDaytime();
             if (buildIcon)      buildIcon.SetActive(showDayBuild);
             if (nightBuildIcon) nightBuildIcon.SetActive(!showDayBuild);
@@ -277,9 +240,6 @@ namespace ScreamHotel.Presentation
 
         public void ClearFeedback()
         {
-            if (plate) plate.material.color = _origColor;
-
-            // ★ 统一关闭图标，防残留
             if (buildIcon)      buildIcon.SetActive(false);
             if (nightBuildIcon) nightBuildIcon.SetActive(false);
         }
@@ -288,19 +248,6 @@ namespace ScreamHotel.Presentation
         {
             var f = obj.GetType().GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             return f?.GetValue(obj) as T;
-        }
-
-        private void Flash(Color c)
-        {
-            if (plate == null) return;
-            plate.material.color = c;
-            CancelInvoke(nameof(Revert));
-            Invoke(nameof(Revert), 0.25f);
-        }
-
-        private void Revert()
-        {
-            if (plate != null) plate.material.color = _origColor;
         }
 
         private bool IsDaytime()
