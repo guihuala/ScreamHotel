@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using ScreamHotel.Core;
 
 namespace ScreamHotel.UI
@@ -13,9 +14,15 @@ namespace ScreamHotel.UI
         public Button pauseButton;
         public Button executeButton;
         public Button skipDayButton;
-        
+
         [Header("Guests")]
         public Button guestsButton;
+
+        [Header("Time Info (HUD)")]
+        [Tooltip("HUD上用于显示时间段信息的按钮（悬停时出现Tooltip）")]
+        public Button timeInfoButton;
+        [Tooltip("跟随鼠标的提示面板（需挂TooltipMousePanel脚本）")]
+        public TooltipMousePanel timeInfoTooltip;
 
         [Header("HUD Text (optional)")]
         public TextMeshProUGUI goldText;
@@ -38,13 +45,14 @@ namespace ScreamHotel.UI
             if (pauseButton)   pauseButton.onClick.AddListener(OnPauseButtonClicked);
             if (executeButton) executeButton.onClick.AddListener(OnExecuteButtonClicked);
             if (skipDayButton) skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
-
-            // NEW
             if (guestsButton)  guestsButton.onClick.AddListener(OnGuestsButtonClicked);
+
+            // HUD 时间信息按钮：为其挂载 PointerEnter/Exit/Move
+            SetupTimeInfoButtonTriggers();
 
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility(); // NEW
+            UpdateGuestsButtonVisibility();
 
             var rules = game?.World?.Config?.Rules;
             suspicionThresholdCached = Mathf.Max(1, rules != null ? rules.suspicionThreshold : suspicionFallbackThreshold);
@@ -85,15 +93,22 @@ namespace ScreamHotel.UI
         private void Update()
         {
             UpdateTimeDisplay();
+
+            // 鼠标悬停时，实时让 Tooltip 跟随鼠标
+            if (timeInfoTooltip != null && timeInfoTooltip.gameObject.activeInHierarchy)
+            {
+                timeInfoTooltip.UpdatePosition(Input.mousePosition);
+            }
         }
 
+        // ===== Event handlers =====
         private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();
 
         private void OnGameStateChanged(GameStateChanged e)
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility(); // NEW
+            UpdateGuestsButtonVisibility();
             RefreshDayUI();
         }
 
@@ -101,7 +116,7 @@ namespace ScreamHotel.UI
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility(); // NEW
+            UpdateGuestsButtonVisibility();
             RefreshDayUI();
             RefreshSuspicionUI();
         }
@@ -110,7 +125,7 @@ namespace ScreamHotel.UI
         {
             UpdateExecuteButtonVisibility();
             UpdateSkipDayButtonVisibility();
-            UpdateGuestsButtonVisibility(); // NEW
+            UpdateGuestsButtonVisibility();
         }
 
         private void OnSuspicionChanged(SuspicionChanged e)
@@ -119,6 +134,7 @@ namespace ScreamHotel.UI
             RefreshSuspicionUI();
         }
 
+        // ===== Button callbacks =====
         private void OnPauseButtonClicked() => UIManager.Instance.OpenPanel("PausePanel");
 
         private void OnExecuteButtonClicked()
@@ -143,7 +159,6 @@ namespace ScreamHotel.UI
             }
         }
 
-        // NEW: 打开候选顾客面板
         private void OnGuestsButtonClicked()
         {
             var panel = UIManager.Instance.OpenPanel("GuestApprovalPanel");
@@ -170,7 +185,7 @@ namespace ScreamHotel.UI
             skipDayButton.interactable = show;
         }
 
-        // NEW: 仅 Day 显示“客人名单”按钮；是否>0可根据需要限制显示
+        // 仅 Day 显示“客人名单”按钮
         private void UpdateGuestsButtonVisibility()
         {
             if (guestsButton == null) return;
@@ -179,20 +194,22 @@ namespace ScreamHotel.UI
             guestsButton.interactable = show;
         }
 
+        // ===== UI refresh =====
         private void RefreshGoldUI()
         {
-            if (goldText != null) goldText.text = $"$ {game.World.Economy.Gold}";
+            if (goldText != null && game != null)
+                goldText.text = $"$ {game.World.Economy.Gold}";
         }
 
         private void RefreshDayUI()
         {
-            if (dayText == null) return;
+            if (dayText == null || game == null) return;
             string stateText = game.State switch
             {
-                GameState.Day => "Day",
-                GameState.NightShow => "Night Show",
+                GameState.Day          => "Day",
+                GameState.NightShow    => "Night Show",
                 GameState.NightExecute => "Night Execute",
-                GameState.Settlement => "Settlement",
+                GameState.Settlement   => "Settlement",
                 _ => "Preparing"
             };
             dayText.text = $"Day {game.DayIndex} - {stateText}";
@@ -234,6 +251,52 @@ namespace ScreamHotel.UI
                     suspicionFillImage.type = Image.Type.Filled;
                 suspicionFillImage.fillAmount = pct;
             }
+        }
+
+        // ===== TimeInfo Tooltip wiring =====
+        private void SetupTimeInfoButtonTriggers()
+        {
+            if (timeInfoButton == null) return;
+
+            var trigger = timeInfoButton.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = timeInfoButton.gameObject.AddComponent<EventTrigger>();
+            trigger.triggers ??= new System.Collections.Generic.List<EventTrigger.Entry>();
+
+            // Pointer Enter
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => ShowTimeInfoTooltip());
+            trigger.triggers.Add(enter);
+
+            // Pointer Exit
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => HideTimeInfoTooltip());
+            trigger.triggers.Add(exit);
+        }
+
+        private void ShowTimeInfoTooltip()
+        {
+            if (timeInfoTooltip == null || game == null) return;
+            string msg = CurrentPhaseText();
+            timeInfoTooltip.Show(msg);
+        }
+
+        private void HideTimeInfoTooltip()
+        {
+            if (timeInfoTooltip == null) return;
+            timeInfoTooltip.Hide();
+        }
+
+        private string CurrentPhaseText()
+        {
+            // 英文提示
+            return game.State switch
+            {
+                GameState.Day          => "Daytime: manage your hotel and prepare.",
+                GameState.NightShow    => "Night Show: guests arrive and fear builds.",
+                GameState.NightExecute => "Night Execute: haunt and execute your plans.",
+                GameState.Settlement   => "Settlement: results and rewards are tallied.",
+                _ => "Preparing..."
+            };
         }
     }
 }
