@@ -2,6 +2,7 @@ using UnityEngine;
 using ScreamHotel.Core;
 using ScreamHotel.Domain;
 using ScreamHotel.UI;
+using DG.Tweening;
 
 namespace ScreamHotel.Presentation
 {
@@ -12,20 +13,44 @@ namespace ScreamHotel.Presentation
         public FearTag main;
 
         [Header("Visual Roots")]
-        [Tooltip("所有可视元素的父节点。")]
         public Transform visualRoot;
 
         [Header("Prefabs")]
-        [Tooltip("鬼的展示用 PawnView 预制件。")]
         public PawnView pawnPrefab;
 
         [Header("Layout")]
         public Vector3 pawnLocalOffset = new Vector3(0, 0.5f, 0);
-        public float   pawnLocalScale  = 1.0f;
+        public float pawnLocalScale = 1.0f;
+
+        [Header("Animation")]
+        public float hoverScaleUp = 1.15f;
+        public float hoverDuration = 0.2f;
+        public float clickFlashDuration = 0.25f;
+        public Color clickFlashColor = new Color(1f, 0.9f, 0.5f, 1f);
+        private Tween _hoverTween;
+        private Tween _flashTween;
+        private Renderer _renderer;
+        private Color _originalColor;
 
         void Awake()
         {
             if (Application.isPlaying) BuildVisual();
+            _renderer = GetComponentInChildren<Renderer>();
+            if (_renderer != null) _originalColor = _renderer.material.color;
+        }
+
+        void OnMouseEnter()
+        {
+            if (!visualRoot) return;
+            _hoverTween?.Kill();
+            _hoverTween = visualRoot.DOScale(Vector3.one * hoverScaleUp, hoverDuration).SetEase(Ease.OutBack);
+        }
+
+        void OnMouseExit()
+        {
+            if (!visualRoot) return;
+            _hoverTween?.Kill();
+            _hoverTween = visualRoot.DOScale(Vector3.one, hoverDuration).SetEase(Ease.InBack);
         }
 
         public HoverInfo GetHoverInfo()
@@ -43,25 +68,36 @@ namespace ScreamHotel.Presentation
         public bool TryClick(Game game)
         {
             if (game == null) return false;
-            if (game.ShopTryBuy(slotIndex, out var newGhostId))
+            bool ok = game.ShopTryBuy(slotIndex, out var newGhostId);
+            if (ok)
             {
-                // 1) 本地立刻清掉已实例化的鬼
+                PlayClickEffect();
+
                 if (visualRoot)
                 {
                     for (int i = visualRoot.childCount - 1; i >= 0; i--)
                         Destroy(visualRoot.GetChild(i).gameObject);
                 }
 
-                // 2) 通知表现层：同步商店（删槽位）+ 同步鬼（把新鬼生到待命/出生区）
                 var pc = FindObjectOfType<PresentationController>();
                 if (pc)
                 {
-                    pc.SendMessage("SyncShop",   SendMessageOptions.DontRequireReceiver);
+                    pc.SendMessage("SyncShop", SendMessageOptions.DontRequireReceiver);
                     pc.SendMessage("SyncGhosts", SendMessageOptions.DontRequireReceiver);
                 }
-                return true;
             }
-            return false;
+            return ok;
+        }
+
+        private void PlayClickEffect()
+        {
+            if (_renderer == null) return;
+
+            _flashTween?.Kill();
+            _flashTween = DOTween.Sequence()
+                .Append(_renderer.material.DOColor(clickFlashColor, clickFlashDuration * 0.5f))
+                .Append(_renderer.material.DOColor(_originalColor, clickFlashDuration * 0.5f))
+                .Play();
         }
 
         public void Rebind(FearTag newMain, int newIndex)
@@ -75,17 +111,12 @@ namespace ScreamHotel.Presentation
         {
             if (!visualRoot) return;
 
-            // 1) 彻底清空旧可视
             for (int i = visualRoot.childCount - 1; i >= 0; i--)
-            {
-                var child = visualRoot.GetChild(i);
-                Destroy(child.gameObject);
-            }
+                Destroy(visualRoot.GetChild(i).gameObject);
 
-            // 2) 生成 Pawn（从 World.Shop.Offers 里拿到该槽位真实的 OfferId / Main）
             if (pawnPrefab)
             {
-                var game   = FindObjectOfType<Game>();
+                var game = FindObjectOfType<Game>();
                 var offers = game?.World?.Shop?.Offers;
                 GhostOffer offer = null;
 
@@ -95,10 +126,8 @@ namespace ScreamHotel.Presentation
                 var pawn = Instantiate(pawnPrefab, visualRoot);
                 pawn.transform.localPosition = pawnLocalOffset;
                 pawn.transform.localRotation = Quaternion.identity;
-                pawn.transform.localScale    = Vector3.one * Mathf.Max(0.01f, pawnLocalScale);
+                pawn.transform.localScale = Vector3.one * Mathf.Max(0.01f, pawnLocalScale);
 
-                // 若能拿到 Offer，用 OfferId 作为临时 Ghost 的 Id（形如 "{cfgId}@offer_day_slot"）
-                // PawnView 将按 '@' 前缀解析出 cfgId 并匹配到正确的 GhostConfig。
                 if (offer != null && !string.IsNullOrEmpty(offer.OfferId))
                 {
                     var fake = new Ghost { Id = offer.OfferId, Main = offer.Main };
@@ -106,7 +135,6 @@ namespace ScreamHotel.Presentation
                 }
                 else
                 {
-                    // 兜底：保留旧行为，仍可显示一个基于 FearTag 的占位预览
                     var fallbackId = $"preview@offer_{slotIndex}_{main}";
                     var fake = new Ghost { Id = fallbackId, Main = main };
                     pawn.BindGhost(fake);

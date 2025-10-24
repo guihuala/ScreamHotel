@@ -238,12 +238,7 @@ namespace ScreamHotel.UI
             _lastRoomId = null;
             _currentTrainingSlot = null;
         }
-
-        // === 恐惧标签选择面板相关方法 ===
-
-        /// <summary>
-        /// 打开恐惧标签选择面板（从TrainingRoomZone调用）
-        /// </summary>
+        
         public void OpenPickFearPanel(string ghostId, Transform transform,int slotIndex, System.Action<string, Domain.FearTag, int> onFearSelected)
         {
             if (pickFearPanel == null)
