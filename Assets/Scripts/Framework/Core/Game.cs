@@ -6,6 +6,7 @@ using ScreamHotel.Core;
 using ScreamHotel.Data;
 using ScreamHotel.Systems;
 using ScreamHotel.Domain;
+using ScreamHotel.UI;
 
 namespace ScreamHotel.Core
 {
@@ -432,9 +433,14 @@ namespace ScreamHotel.Core
         private void EndGame(bool success, string reason)
         {
             Debug.Log($"Game Ended. Success={success}. Reason={reason}");
-
-            // 结束时统一暂停
+            TimeManager.Instance?.PauseTime();
             EventBus.Raise(new GameEnded(success, reason, DayIndex));
+
+            // 打开结果面板
+            var panel = UIManager.Instance.OpenPanel(success ? "GameWinPanel" : "GameFailPanel");
+            var result = panel as GameResultPanel;
+            if (result != null)
+                result.Init(success);
         }
     }
 }

@@ -9982,7 +9982,6 @@ GameObject:
   - component: {fileID: 1538333944}
   - component: {fileID: 1538333946}
   - component: {fileID: 1538333945}
-  - component: {fileID: 1538333947}
   m_Layer: 0
   m_Name: -----GameCore-----
   m_TagString: Untagged
@@ -10194,18 +10193,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1538333947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1538333940}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91e49d806f9444d2a7d8bf79eb40e82d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1547181853
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16661,7 +16648,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.3254902}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -22834,7 +22821,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1377699721, guid: cb361ccc564094c2a8550a24aaca622f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 19721a38c58ac4b7883f8c48068e7b0f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

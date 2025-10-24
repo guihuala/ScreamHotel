@@ -21,3 +21,7 @@ MonoBehaviour:
     uiPath: Panel/SettlementPanel
   - uiName: GuestApprovalPanel
     uiPath: Panel/GuestApprovalPanel
+  - uiName: GameWinPanel
+    uiPath: Panel/GameWinPanel
+  - uiName: GameFailPanel
+    uiPath: Panel/GameFailPanel

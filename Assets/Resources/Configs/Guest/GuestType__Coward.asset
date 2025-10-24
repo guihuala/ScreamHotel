@@ -23,6 +23,6 @@ MonoBehaviour:
   intro: hello
   gallery: []
   spineUIData: {fileID: 11400000, guid: 84efe269b96f14c80b607730badff26a, type: 2}
-  spineDefaultSkin: 1
+  spineDefaultSkin: guest1
   spineDefaultAnimation: idle
   spineDefaultLoop: 1
