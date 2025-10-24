@@ -5266,6 +5266,7 @@ MonoBehaviour:
   shopSlotSpacingX: 3
   shopSlotsPerRow: 5
   shopFixedZ: 0
+  floorFramePrefab: {fileID: -8679921383154817045, guid: e90a0b26b45994889aa82a94a38ee4d7, type: 3}
 --- !u!114 &723280869
 MonoBehaviour:
   m_ObjectHideFlags: 0

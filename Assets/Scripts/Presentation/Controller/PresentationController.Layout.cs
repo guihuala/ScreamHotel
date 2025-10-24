@@ -73,5 +73,19 @@ namespace ScreamHotel.Presentation
             t.name = $"Elevator_F{floor}";
             _elevatorsSpawned.Add(floor);
         }
+        
+        private void TrySpawnFloorFrame(int floor)
+        {
+            if (!floorFramePrefab || !roomsRoot) return;
+            if (floor <= 1) return; 
+            
+            float prevFloorY = (floor - 1) * floorSpacing + 1.4f;
+            var local = new Vector3(0f, prevFloorY, 0f);
+            Vector3 worldPos = roomsRoot.TransformPoint(local);
+
+            var frame = Instantiate(floorFramePrefab, roomsRoot);
+            frame.position = worldPos;
+            frame.name = $"FloorFrame_F{floor - 1}";
+        }
     }
 }

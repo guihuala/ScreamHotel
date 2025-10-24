@@ -83,6 +83,15 @@ namespace ScreamHotel.Systems
         public bool TryBuildNextFloor(out int newFloor)
         {
             newFloor = GetNextFloorIndex();
+            
+            int maxFloor = _world.Config?.Rules?.maxFloor ?? 4;
+            
+            if (newFloor > maxFloor)
+            {
+                newFloor = -1;
+                return false;
+            }
+
             var cost = GetFloorBuildCost(newFloor);
             if (_world.Economy.Gold < cost) return false;
 

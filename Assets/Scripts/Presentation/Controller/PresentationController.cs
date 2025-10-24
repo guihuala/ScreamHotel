@@ -49,6 +49,10 @@ namespace ScreamHotel.Presentation
         public float shopSlotSpacingX = 1.6f;
         public int shopSlotsPerRow = 5;
         public float shopFixedZ = 0f;
+        
+        [Header("Floor Frame Prefab")]
+        [Tooltip("每新建一层时，在上一层中心生成该楼层框架")]
+        public Transform floorFramePrefab;
 
         // ===== Runtime maps =====
         private Transform _currentRoof;

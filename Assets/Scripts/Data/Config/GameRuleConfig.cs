@@ -11,8 +11,7 @@ namespace ScreamHotel.Data
         public int suspicionThreshold = 100;
         [Tooltip("每位【吓人失败】的已接待客人增加的怀疑值")] public int suspicionPerFailedGuest = 1;
         [Tooltip("本局总天数（坚持到最后一天且未满怀疑值 = 成功结局）")]
-        public int totalDays = 14;
-
+        public int totalDays = 10;
         
         [Header("Day Spawns")]
         [Tooltip("每天白天刷新的客人数")]
@@ -27,7 +26,11 @@ namespace ScreamHotel.Data
         [Header("Build Prices")] 
         public int floorBuildBaseCost = 500;
         public float floorCostGrowth = 1.25f;
-        [Tooltip("房间升级的价格：Index 0 表示 Lv1→Lv2，Index 1 表示 Lv2→Lv3")] public int[] roomUpgradeCosts = new[] { 200, 400 };
+        [Tooltip("房间升级的价格：Index 0 表示 Lv1→Lv2，Index 1 表示 Lv2→Lv3")] 
+        public int[] roomUpgradeCosts = new[] { 200, 400 };
+
+        [Tooltip("可建造的最高楼层上限（例如 4 表示最多4层）")]
+        public int maxFloor = 4;
 
         [Header("Room Pricing & Capacity")]
         [Tooltip("购买一间Lv1房间的价格")] public int roomBuyCost = 200;
@@ -35,7 +38,6 @@ namespace ScreamHotel.Data
         [Tooltip("Lv1与Lv3的容量（Lv2若与Lv1一致则无需字段）")] public int capacityLv1 = 1;
         public int capacityLv3 = 2;
         [Tooltip("Lv2/3 是否赋予房间恐惧Tag（装饰表现用）")] public bool lv2HasTag = true;
-
         
         [Header("Ghost Training")]
         public int ghostTrainingTimeDays = 2; // 统一的训练天数（每个鬼怪都相同）

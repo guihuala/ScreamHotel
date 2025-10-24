@@ -96,6 +96,7 @@ namespace ScreamHotel.Presentation
 
             // 立刻上移屋顶到最高层之上
             UpdateRoofPosition();
+            TrySpawnFloorFrame(_.Floor);
         }
         
         private void OnRoofUpdateNeeded(RoofUpdateNeeded _)

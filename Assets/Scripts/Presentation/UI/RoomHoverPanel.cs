@@ -53,7 +53,12 @@ namespace ScreamHotel.UI
             _currentRoomTransform = roomView.transform;
 
             if (root) root.gameObject.SetActive(true);
-            if (titleText) titleText.text = room.Id;
+            
+            if (titleText)
+            {
+                int number = ParseRoomNumber(room.Id);       // e.g. room_F2_L1 -> 201
+                titleText.text = $"{number:000}  Lv.{room.Level}";
+            }
             
             if (fearIconImage)
             {
@@ -79,7 +84,6 @@ namespace ScreamHotel.UI
                 }
                 else
                 {
-                    // 无 Tag 或无 Atlas：隐藏
                     fearIconImage.sprite = null;
                     fearIconImage.enabled = false;
                     fearIconImage.gameObject.SetActive(false);
@@ -87,6 +91,41 @@ namespace ScreamHotel.UI
             }
 
             PlacePanelAtRoom();
+        }
+        
+        private int ParseRoomNumber(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return 0;
+
+            int floor = 0;
+            string slot = null;
+
+            // 提取楼层
+            int fIdx = id.IndexOf("_F", StringComparison.Ordinal);
+            if (fIdx >= 0)
+            {
+                int usIdx = id.IndexOf('_', fIdx + 2);
+                if (usIdx > fIdx + 2)
+                {
+                    var num = id.Substring(fIdx + 2, usIdx - (fIdx + 2));
+                    int.TryParse(num, out floor);
+                    slot = id[(usIdx + 1)..]; // 剩余部分视作槽位
+                }
+            }
+
+            // 槽位→序号：L1=01, L2=02, R1=03, R2=04
+            // 兼容旧命名：LA->01, LB->02, RA->03, RB->04
+            int idx = slot switch
+            {
+                "L1" => 1, "LA" => 1,
+                "L2" => 2, "LB" => 2,
+                "R1" => 3, "RA" => 3,
+                "R2" => 4, "RB" => 4,
+                _    => 0
+            };
+
+            // 生成： floor*100 + idx，例如 F2 & R2 => 2*100 + 4 = 204
+            return Mathf.Clamp(floor, 0, 99) * 100 + Mathf.Clamp(idx, 0, 99);
         }
 
         void Update()
@@ -112,7 +151,7 @@ namespace ScreamHotel.UI
             root.anchoredPosition = localPos;
         }
 
-        private ScreamHotel.Presentation.RoomView FindRoomView(string roomId)
+        private Presentation.RoomView FindRoomView(string roomId)
         {
             var roomViews = FindObjectsOfType<ScreamHotel.Presentation.RoomView>();
             return roomViews.FirstOrDefault(rv => rv.roomId == roomId);
