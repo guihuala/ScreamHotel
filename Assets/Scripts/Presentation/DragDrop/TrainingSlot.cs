@@ -14,7 +14,7 @@ namespace ScreamHotel.Presentation
         public MeshRenderer slotIndicator;
 
         [Header("Colors")]
-        public Color trainingColor  = new Color(0.3f, 0.3f, 1f, 1f); // 训练中（可选显示）
+        public Color trainingColor  = new Color(0.3f, 0.3f, 1f, 1f);
 
         [Header("VFX")]
         public ParticleSystem trainingVfx;
@@ -26,16 +26,10 @@ namespace ScreamHotel.Presentation
         public GameObject canTrainIcon;  // 可训练图标
         public GameObject cantTrainIcon; // 不可训练图标
 
-        private GameObject currentSlotIcon; // 存储当前显示的图标
-        
-        
-        // 完成标识（空闲时一律不显示）
+        private GameObject currentSlotIcon;
         public GameObject completedMark;
-        
         private FearTag _pendingTag = default;
         public FearTag PendingTag => _pendingTag;
-        
-        public bool IsCompleted => completedMark != null && completedMark.activeSelf;
         
         private TrainingRoomZone _trainingZone;
         private Game _game;
@@ -83,7 +77,7 @@ namespace ScreamHotel.Presentation
             _ghostId = ghostId;
             _slotState = GhostState.Training;
             _trainingDays = 0;
-            _pendingTag = tag;              // 训练中只保存，先不写到 ghost.Sub
+            _pendingTag = tag;
 
             if (completedMark) completedMark.SetActive(false); // 训练期间隐藏完成标记
             if (trainingVfx) trainingVfx.Play();               // 训练中持续释放粒子特效
@@ -138,7 +132,7 @@ namespace ScreamHotel.Presentation
 
             if (IsTraining)
             {
-                // 训练中：保持粒子播放，颜色可作为辅助提示（若不想显示颜色，可直接禁用指示器）
+                // 训练中：保持粒子播放
                 slotIndicator.material.color = trainingColor;
                 if (trainingVfx && !trainingVfx.isPlaying) trainingVfx.Play();
                 return;
