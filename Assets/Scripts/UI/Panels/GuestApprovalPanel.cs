@@ -23,9 +23,6 @@ public class GuestApprovalPanel : BasePanel
     public GameObject thumbTemplate;
     public Image selectedFrame; // 高亮框（跟随当前选择）
 
-    [Header("Empty State")]
-    public GameObject emptyState; // 没有候选时显示的占位
-    
     [Header("Main Card")]
     public RectTransform spineRoot;
     public SkeletonGraphic spineGraphic;
@@ -107,9 +104,9 @@ public class GuestApprovalPanel : BasePanel
             go.SetActive(true);
 
             // 找到 Image/按钮
-            var img = go.GetComponentInChildren<Image>(true);
             var btn = go.GetComponentInChildren<Button>(true);
-
+            var img = btn.GetComponent<Image>();
+            
             // 取配置(SO)
             var cfg = GetGuestConfig(g);
             var portrait = cfg?.portrait;
@@ -216,7 +213,6 @@ public class GuestApprovalPanel : BasePanel
     private void ToggleEmptyState()
     {
         bool empty = _pendingCache.Count == 0;
-        if (emptyState) emptyState.SetActive(empty);
 
         // 无数据时隐藏右侧条/按钮等
         if (thumbsRoot) thumbsRoot.gameObject.SetActive(!empty);

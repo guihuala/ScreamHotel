@@ -781,15 +781,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2965156000848296192, guid: a2655244752c744f99bc27e8ad1925a7, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2965156000848296192, guid: a2655244752c744f99bc27e8ad1925a7, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2965156000848296192, guid: a2655244752c744f99bc27e8ad1925a7, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2965156000848296192, guid: a2655244752c744f99bc27e8ad1925a7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -839,6 +839,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: AvailableIcon
       objectReference: {fileID: 0}
+    - target: {fileID: 3965111022628315097, guid: a2655244752c744f99bc27e8ad1925a7, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -2136826093, guid: 3c31972901a32458babb08452667d64e, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -864,15 +868,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 27194018744481427, guid: 08509011f5a0047569dd590cc7745c4e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 27194018744481427, guid: 08509011f5a0047569dd590cc7745c4e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 27194018744481427, guid: 08509011f5a0047569dd590cc7745c4e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 27194018744481427, guid: 08509011f5a0047569dd590cc7745c4e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -922,6 +926,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BuildIcon
       objectReference: {fileID: 0}
+    - target: {fileID: 2179779651828093002, guid: 08509011f5a0047569dd590cc7745c4e, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 1605592382, guid: 3c31972901a32458babb08452667d64e, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
