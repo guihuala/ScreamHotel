@@ -19,8 +19,8 @@ Material:
   - _MK_DETAIL_BLEND_MIX
   - _MK_ENVIRONMENT_REFLECTIONS_ADVANCED
   - _MK_LIGHT_CEL
-  - _MK_OUTLINE_DATA_UV7
-  - _MK_OUTLINE_HULL_CLIP
+  - _MK_OUTLINE_HULL_ORIGIN
+  - _MK_OUTLINE_NOISE
   - _MK_RECEIVE_SHADOWS
   - _MK_SPECULAR_ISOTROPIC
   m_InvalidKeywords:
@@ -38,6 +38,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _Outline: 2
+    - _OutlineClipOffset: 0
+    - _OutlineNoise: 1
+    - _OutlineSize: 10
+    m_Colors:
+    - _OutlineColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   m_BuildTextureStacks: []

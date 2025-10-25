@@ -19,8 +19,8 @@ Material:
   - _MK_ENVIRONMENT_REFLECTIONS_ADVANCED
   - _MK_LIGHT_CEL
   - _MK_NORMAL_MAP
-  - _MK_OUTLINE_DATA_UV7
-  - _MK_OUTLINE_HULL_ORIGIN
+  - _MK_OUTLINE_HULL_CLIP
+  - _MK_OUTLINE_NOISE
   - _MK_RECEIVE_SHADOWS
   - _MK_SPECULAR_ISOTROPIC
   m_InvalidKeywords:
@@ -33,7 +33,7 @@ Material:
     IGNOREPROJECTOR: False
     RenderType: Opaque
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties: _DetailMap
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -307,13 +307,13 @@ Material:
     - _OcclusionMapIntensity: 1
     - _OcclusionStrength: 1
     - _OptionsTab: 1
-    - _Outline: 2
-    - _OutlineClipOffset: 0
-    - _OutlineData: 1
+    - _Outline: 3
+    - _OutlineClipOffset: 1
+    - _OutlineData: 0
     - _OutlineFadeMax: 2
     - _OutlineFadeMin: 0.25
-    - _OutlineNoise: 0
-    - _OutlineSize: 0
+    - _OutlineNoise: -0.01
+    - _OutlineSize: 800
     - _OutlineTab: 1
     - _Parallax: 0.1
     - _ReceiveShadows: 1
@@ -360,8 +360,8 @@ Material:
     - _ZWrite: 1
     - __dirty: 0
     m_Colors:
-    - _AlbedoColor: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
-    - _Color: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
+    - _AlbedoColor: {r: 0.8018868, g: 0.8018868, b: 0.8018868, a: 1}
+    - _Color: {r: 0.8018868, g: 0.8018868, b: 0.8018868, a: 1}
     - _Color0: {r: 0.5828111, g: 0.735849, b: 0.2603236, a: 0}
     - _DetailColor: {r: 0.6037736, g: 0, b: 0, a: 1}
     - _DissolveBorderColor: {r: 1, g: 1, b: 1, a: 1}
@@ -371,7 +371,7 @@ Material:
     - _GrassColor: {r: 0.5828111, g: 0.735849, b: 0.26032275, a: 0}
     - _IridescenceColor: {r: 1, g: 1, b: 1, a: 0.5019608}
     - _LightTransmissionColor: {r: 0, g: 0.91298914, b: 1, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 0.31132078, g: 0.31132078, b: 0.31132078, a: 1}
     - _RimBrightColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimDarkColor: {r: 0, g: 0, b: 0, a: 1}

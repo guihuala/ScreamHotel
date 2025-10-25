@@ -19,7 +19,7 @@ MonoBehaviour:
   requiredPercent: 0.75
   baseFee: 80
   prefabOverride: {fileID: 7106032176820751855, guid: aee0c326817c946228c61c62d2b9209c, type: 3}
-  portrait: {fileID: 0}
+  portrait: {fileID: 21300000, guid: b852ba7130be3498984937468df75927, type: 3}
   intro: hello
   gallery: []
   spineUIData: {fileID: 11400000, guid: 84efe269b96f14c80b607730badff26a, type: 2}

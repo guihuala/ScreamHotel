@@ -19,8 +19,8 @@ Material:
   - _MK_DETAIL_BLEND_MIX
   - _MK_ENVIRONMENT_REFLECTIONS_ADVANCED
   - _MK_LIGHT_CEL
-  - _MK_OUTLINE_DATA_UV7
-  - _MK_OUTLINE_HULL_CLIP
+  - _MK_OUTLINE_HULL_ORIGIN
+  - _MK_OUTLINE_NOISE
   - _MK_RECEIVE_SHADOWS
   - _MK_SPECULAR_ISOTROPIC
   m_InvalidKeywords:
@@ -272,13 +272,13 @@ Material:
     - _OcclusionMapIntensity: 1
     - _OcclusionStrength: 1
     - _OptionsTab: 1
-    - _Outline: 3
-    - _OutlineClipOffset: 0
-    - _OutlineData: 1
+    - _Outline: 2
+    - _OutlineClipOffset: 1
+    - _OutlineData: 0
     - _OutlineFadeMax: 2
     - _OutlineFadeMin: 0.25
-    - _OutlineNoise: 0
-    - _OutlineSize: 150
+    - _OutlineNoise: 1
+    - _OutlineSize: 5
     - _OutlineTab: 1
     - _Parallax: 0.1
     - _QueueOffset: 0
