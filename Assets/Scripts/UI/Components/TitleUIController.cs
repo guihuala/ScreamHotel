@@ -6,6 +6,7 @@ public class TitleUIController : MonoBehaviour
 {
     public Button startButton;
     public Button settingsButton;
+    public Button creditsButton;
     public Button exitButton;
 
     [Header("Timeline 漫画播放器")]
@@ -20,6 +21,7 @@ public class TitleUIController : MonoBehaviour
     {
         startButton.onClick.AddListener(OnStartButtonClicked);
         settingsButton.onClick.AddListener(OnSettingsButtonClicked);
+        creditsButton.onClick.AddListener(OnCreditsButtonClicked);
         exitButton.onClick.AddListener(OnExitButtonClicked);
     }
 
@@ -43,6 +45,11 @@ public class TitleUIController : MonoBehaviour
     public void OnSettingsButtonClicked()
     {
         UIManager.Instance.OpenPanel("SettingPanel");
+    }
+
+    public void OnCreditsButtonClicked()
+    {
+        UIManager.Instance.OpenPanel("CreditPanel");
     }
 
     public void OnExitButtonClicked()

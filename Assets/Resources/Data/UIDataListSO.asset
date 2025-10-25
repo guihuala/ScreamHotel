@@ -27,3 +27,5 @@ MonoBehaviour:
     uiPath: Panel/GameFailPanel
   - uiName: GuidePanel
     uiPath: Panel/GuidePanel
+  - uiName: CreditPanel
+    uiPath: Panel/CreditPanel

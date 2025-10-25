@@ -99,18 +99,6 @@ public class BasePanel : MonoBehaviour
     }
     
     /// <summary>
-    /// 立即关闭面板（无动画）
-    /// </summary>
-    public virtual void ClosePanelImmediate()
-    {
-        hasRemoved = true;
-        if (gameObject != null)
-        {
-            Destroy(gameObject);
-        }
-    }
-    
-    /// <summary>
     /// 设置面板交互状态
     /// </summary>
     /// <param name="interactable">是否可交互</param>
@@ -121,5 +109,10 @@ public class BasePanel : MonoBehaviour
             canvasGroup.interactable = interactable;
             canvasGroup.blocksRaycasts = interactable;
         }
+    }
+
+    public void ClosePanelByBtn()
+    {
+        UIManager.Instance.ClosePanel(panelName);
     }
 }

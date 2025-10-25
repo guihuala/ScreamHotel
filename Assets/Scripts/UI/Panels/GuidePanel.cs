@@ -1,120 +1,133 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GuidePanel : BasePanel
 {
-    [Header("操作指南组件")]
-    public Text titleText;
-    public Text pageText;
+    [Header("Paging")]
+    [SerializeField] private float pageSpeed = 0.5f;     // 翻页旋转时长（秒）
+    public List<Transform> pages;                        // 书本页面（从左到右/从前到后）
+
+    [Header("UI")]
     public Button closeButton;
-    public Button nextButton;
-    public Button prevButton;
-    public Transform content;
+    public Button nextButton;       // 下一页
+    public Button previousButton;   // 上一页
 
-    [Header("指南内容")]
-    public string[] pageTitles; // 页面标题
+    private int currentIndex = 0;   // 当前页索引（可见页）
+    private bool isRotating = false;
 
-    public GameObject[] pagePrefabs; // 存储每一页对应的预制件
-
-    private int currentPage = 0;
-
-    protected override void Awake()
+    private void Start()
     {
-        base.Awake();
+        // 绑定按钮
+        if (closeButton)    closeButton.onClick.AddListener(() => UIManager.Instance.ClosePanel(panelName));
+        if (nextButton)     nextButton.onClick.AddListener(ShowNextPage);
+        if (previousButton) previousButton.onClick.AddListener(ShowPreviousPage);
 
-        // 初始化按钮事件
-        closeButton.onClick.AddListener(OnCloseClick);
-        nextButton.onClick.AddListener(OnNextClick);
-        prevButton.onClick.AddListener(OnPrevClick);
+        // 初始化书本
+        InitialState();
     }
 
-    public override void OpenPanel(string name)
+    /// <summary>初始化书本状态：所有页复位，第一页置顶</summary>
+    private void InitialState()
     {
-        base.OpenPanel(name);
+        if (pages == null || pages.Count == 0) return;
 
-        // 初始化内容
-        currentPage = 0;
-        UpdateContent();
-
-        // 设置初始交互状态
-        SetInteractable(true);
-    }
-
-    private void Update()
-    {
-        // 快捷键支持
-        if (canvasGroup.alpha > 0.9f && canvasGroup.interactable)
+        // 所有页面旋转归零
+        for (int i = 0; i < pages.Count; i++)
         {
-            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.H))
-            {
-                OnCloseClick();
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
-            {
-                OnNextClick();
-            }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
-            {
-                OnPrevClick();
-            }
+            if (pages[i] == null) continue;
+            pages[i].rotation = Quaternion.identity;
         }
+
+        // 确保第一页在最上层
+        pages[0].SetAsLastSibling();
+        currentIndex = 0;
+
+        // 更新按钮显隐
+        UpdateButtons();
     }
 
-    private void UpdateContent()
+    /// <summary>更新翻页按钮可见性</summary>
+    private void UpdateButtons()
     {
-        if (pageTitles.Length == 0) return;
-
-        // 更新标题和文本内容
-        titleText.text = pageTitles[currentPage];
-        pageText.text = $"{currentPage + 1}/{pageTitles.Length}";
-
-        // 显示当前页面的预制件（如果有）
-        ShowPagePrefab(currentPage);
-
-        // 更新按钮状态
-        prevButton.interactable = currentPage > 0;
-        nextButton.interactable = currentPage < pageTitles.Length - 1;
-    }
-
-    private void ShowPagePrefab(int pageIndex)
-    {
-        // 如果页面有对应的预制件，则展示
-        if (pagePrefabs != null && pagePrefabs.Length > pageIndex && pagePrefabs[pageIndex] != null)
+        bool hasPages = pages != null && pages.Count > 0;
+        if (!hasPages)
         {
-            // 删除之前的预制件（如果有）
-            foreach (Transform child in content)
-            {
-                if (child != titleText.transform && child != pageText.transform)
-                {
-                    Destroy(child.gameObject);
-                }
-            }
-
-            // 实例化当前页面的预制件
-            Instantiate(pagePrefabs[pageIndex], content);
+            if (previousButton) previousButton.gameObject.SetActive(false);
+            if (nextButton)     nextButton.gameObject.SetActive(false);
+            return;
         }
+
+        if (previousButton) previousButton.gameObject.SetActive(currentIndex > 0);
+        if (nextButton)     nextButton.gameObject.SetActive(currentIndex < pages.Count - 1);
     }
 
-    private void OnNextClick()
+    /// <summary>翻到下一页</summary>
+    private void ShowNextPage()
     {
-        if (currentPage < pageTitles.Length - 1)
+        if (isRotating || pages == null || pages.Count == 0) return;
+        if (currentIndex >= pages.Count - 1) return;
+
+        Transform currentPage = pages[currentIndex];
+        if (currentPage == null) return;
+
+        StartCoroutine(RotatePage(currentPage, 180f, true));
+    }
+
+    /// <summary>翻回上一页</summary>
+    private void ShowPreviousPage()
+    {
+        if (isRotating || pages == null || pages.Count == 0) return;
+        if (currentIndex <= 0) return;
+
+        // 上一页需要被翻回到 0°
+        Transform previousPage = pages[currentIndex - 1];
+        if (previousPage == null) return;
+
+        // 先把上一页置顶，再播放翻回动画
+        previousPage.SetAsLastSibling();
+        StartCoroutine(RotatePage(previousPage, 0f, false));
+    }
+
+    /// <summary>执行页面旋转动画</summary>
+    private IEnumerator RotatePage(Transform page, float targetAngleY, bool isForward)
+    {
+        isRotating = true;
+
+        float duration = Mathf.Max(0.01f, pageSpeed);
+        float t = 0f;
+
+        Quaternion startRot = page.rotation;
+        Quaternion endRot   = Quaternion.Euler(0f, targetAngleY, 0f);
+
+        while (t < duration)
         {
-            currentPage++;
-            UpdateContent();
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / duration);
+            page.rotation = Quaternion.Slerp(startRot, endRot, k);
+            yield return null;
         }
-    }
 
-    private void OnPrevClick()
-    {
-        if (currentPage > 0)
+        // 强制终值
+        page.rotation = endRot;
+
+        // 更新当前页索引
+        currentIndex = isForward ? currentIndex + 1 : currentIndex - 1;
+        currentIndex = Mathf.Clamp(currentIndex, 0, pages.Count - 1);
+
+        // 把当前页置顶
+        pages[currentIndex].SetAsLastSibling();
+
+        // 确保当前页之前的都处于“翻过去”的状态（180°），视觉更一致
+        for (int i = 0; i < pages.Count; i++)
         {
-            currentPage--;
-            UpdateContent();
+            if (pages[i] == null) continue;
+            if (i < currentIndex)
+                pages[i].rotation = Quaternion.Euler(0f, 180f, 0f);
         }
-    }
 
-    private void OnCloseClick()
-    {
-        UIManager.Instance.ClosePanel(panelName);
+        UpdateButtons();
+        isRotating = false;
     }
 }

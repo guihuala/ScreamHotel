@@ -283,5 +283,14 @@ namespace ScreamHotel.UI
         {
             return _isPickFearPanelActive;
         }
+        
+        public void ClosePickFearPanelIfActive()
+        {
+            if (_isPickFearPanelActive && pickFearPanel != null)
+            {
+                pickFearPanel.Hide();          // 直接隐藏面板
+                _isPickFearPanelActive = false; // 恢复悬停逻辑
+            }
+        }
     }
 }

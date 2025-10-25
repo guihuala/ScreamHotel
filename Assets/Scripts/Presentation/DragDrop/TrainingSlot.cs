@@ -25,6 +25,8 @@ namespace ScreamHotel.Presentation
         [Header("Slot Icons")]
         public GameObject canTrainIcon;  // 可训练图标
         public GameObject cantTrainIcon; // 不可训练图标
+        
+        private Color _origColor = Color.white;
 
         private GameObject currentSlotIcon;
         public GameObject completedMark;
@@ -51,10 +53,12 @@ namespace ScreamHotel.Presentation
         void Awake()
         {
             _trainingZone = GetComponentInParent<TrainingRoomZone>();
-            if (_game == null)
-                _game = FindObjectOfType<Game>();
- 
-            if (canTrainIcon != null) canTrainIcon.SetActive(false);
+            if (_game == null) _game = FindObjectOfType<Game>();
+
+            if (slotIndicator != null)
+                _origColor = slotIndicator.material.color; // 记录原始颜色
+
+            if (canTrainIcon != null)  canTrainIcon.SetActive(false);
             if (cantTrainIcon != null) cantTrainIcon.SetActive(false);
         }
 
@@ -79,10 +83,12 @@ namespace ScreamHotel.Presentation
             _trainingDays = 0;
             _pendingTag = tag;
 
-            if (completedMark) completedMark.SetActive(false); // 训练期间隐藏完成标记
-            if (trainingVfx) trainingVfx.Play();               // 训练中持续释放粒子特效
+            if (completedMark) completedMark.SetActive(false);
+            if (trainingVfx)  trainingVfx.Play();
 
-            UpdateVisuals();
+            // 训练中改成训练色
+            if (slotIndicator) slotIndicator.material.color = trainingColor;
+
             UpdateTrainingDisplay();
         }
 
@@ -90,11 +96,10 @@ namespace ScreamHotel.Presentation
         {
             _slotState = GhostState.Idle;
             if (trainingVfx) trainingVfx.Stop();
+            if (slotIndicator) slotIndicator.material.color = _origColor;
 
-            // 通知训练区：“此槽完成了”
             _trainingZone?.OnSlotTrainingComplete(_ghostId, this);
-
-            // 槽位本身清空占用（让它可以继续接收新的鬼）
+            
             SetEmptyState();
         }
 
@@ -172,11 +177,7 @@ namespace ScreamHotel.Presentation
         public void ShowHoverFeedback(string ghostId)
         {
             _isHovering = true;
-
-            var game = FindObjectOfType<Game>();
-            var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
-            bool canAccept = ghost != null && !IsOccupied && ghost.State != GhostState.Training;
-            
+            bool canAccept = CanAccept(ghostId);
             if (canTrainIcon)  canTrainIcon.SetActive(canAccept);
             if (cantTrainIcon) cantTrainIcon.SetActive(!canAccept);
         }
@@ -198,8 +199,7 @@ namespace ScreamHotel.Presentation
                 slotIndicator.enabled = true;
             }
         }
-
-        // === 业务校验 / 投放（立即占位） ===
+        
         public bool CanAccept(string ghostId)
         {
             if (string.IsNullOrEmpty(ghostId)) return false;
@@ -208,8 +208,13 @@ namespace ScreamHotel.Presentation
             if (game == null || game.State != GameState.Day) return false;
 
             var ghost = game ? game.World.Ghosts.FirstOrDefault(x => x.Id == ghostId) : null;
-            return !IsOccupied && ghost != null && ghost.State != GhostState.Training;
+
+            // 必须没有副属性
+            bool noSub = ghost != null && ghost.Sub == null;
+
+            return !IsOccupied && ghost != null && ghost.State != GhostState.Training && noSub;
         }
+
         
         // === IHoverInfoProvider ===
         public HoverInfo GetHoverInfo() => new HoverInfo
@@ -223,15 +228,26 @@ namespace ScreamHotel.Presentation
             if (!isGhost) return false;
             return CanAccept(id);
         }
-
+        
         bool IDropZone.TryDrop(string id, bool isGhost, out Transform targetAnchor)
         {
             targetAnchor = null;
             if (!isGhost) return false;
-            if (!TryDrop(id, out targetAnchor)) return false;
+            if (!CanAccept(id)) return false;
 
+            var game = FindObjectOfType<Game>();
+            if (game == null || game.State != GameState.Day) return false;
+
+            // 提供锚点：拖拽系统会把鬼移到这里
+            targetAnchor = ghostAnchor;
+
+            // 只打开“选择训练属性”的 UI，不设置 _ghostId、不改状态
             var zone = GetComponentInParent<TrainingRoomZone>();
             if (zone != null) zone.OpenPickFearUI(id, this);
+
+            // 界面等待玩家选择时，此槽未占用
+            if (slotIndicator) slotIndicator.enabled = true;
+
             return true;
         }
         

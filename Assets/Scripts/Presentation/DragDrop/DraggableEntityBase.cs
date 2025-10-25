@@ -184,6 +184,12 @@ namespace ScreamHotel.Presentation
         // —— 拖拽开始/结束：切层 & 刚体保护 —— 
         private void BeginSelfDrag()
         {
+            var hover = UnityEngine.Object.FindObjectOfType<UI.HoverUIController>();
+            if (hover != null)
+            {
+                hover.ClosePickFearPanelIfActive();
+            }
+
             _dragStartPos = transform.position;
 
             _origLayer = gameObject.layer;
