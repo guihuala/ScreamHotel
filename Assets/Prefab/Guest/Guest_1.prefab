@@ -104,6 +104,9 @@ MonoBehaviour:
   dragPlaneZ: 0
   followLerp: 30
   dragSelf: 1
+  highlightAllDropZones: 1
+  xRange: {x: -5, y: 37}
+  yRange: {x: 1, y: 25}
 --- !u!114 &3513860939847209319
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,7 +152,6 @@ MonoBehaviour:
   turnPerSecond: 0.04
   rotateYInsteadOfScale: 1
   visualRoot: {fileID: 0}
-  lockOnlyYRotation: 1
   groundMask:
     serializedVersion: 2
     m_Bits: 8

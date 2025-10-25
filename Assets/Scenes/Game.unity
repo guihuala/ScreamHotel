@@ -23788,13 +23788,36 @@ GameObject:
   - component: {fileID: 1921901553403370004}
   - component: {fileID: 3043171517562540106}
   - component: {fileID: 4132971327532238215}
-  m_Layer: 0
+  - component: {fileID: 5402784556163406742}
+  m_Layer: 3
   m_Name: Stonesteps
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!64 &5402784556163406742
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5402784556163406741}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -8508728332496427099, guid: 0958966a6d5d542bdb4f47d720ad811b, type: 3}
 --- !u!4 &5497004311991889746
 Transform:
   m_ObjectHideFlags: 0
