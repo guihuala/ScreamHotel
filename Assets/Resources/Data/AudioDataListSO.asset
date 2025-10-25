@@ -13,19 +13,35 @@ MonoBehaviour:
   m_Name: AudioDataListSO
   m_EditorClassIdentifier: 
   audioDataList:
-  - audioName: glass_005
-    audioPath: Audio/Sfx/glass_005
-  - audioName: glass_006
-    audioPath: Audio/Sfx/glass_006
-  - audioName: maximize_001
-    audioPath: Audio/Sfx/maximize_001
-  - audioName: maximize_002
-    audioPath: Audio/Sfx/maximize_002
-  - audioName: minimize_008
-    audioPath: Audio/Sfx/minimize_008
-  - audioName: minimize_009
-    audioPath: Audio/Sfx/minimize_009
-  - audioName: scroll_005
-    audioPath: Audio/Sfx/scroll_005
-  - audioName: select_005
-    audioPath: Audio/Sfx/select_005
+  - audioName: ClickBtn
+    audioPath: Audio/Sfx/ClickBtn
+  - audioName: CostMoney
+    audioPath: Audio/Sfx/CostMoney
+  - audioName: GetMoney
+    audioPath: Audio/Sfx/GetMoney
+  - audioName: Ghost_in
+    audioPath: Audio/Sfx/Ghost_in
+  - audioName: PopupWindow
+    audioPath: Audio/Sfx/PopupWindow
+  - audioName: Settlement
+    audioPath: Audio/Sfx/Settlement
+  - audioName: doubt_value_add
+    audioPath: Audio/Sfx/doubt_value_add
+  - audioName: Guest_doubt_1
+    audioPath: Audio/Sfx/GuestAction/Guest_doubt_1
+  - audioName: Guest_doubt_2
+    audioPath: Audio/Sfx/GuestAction/Guest_doubt_2
+  - audioName: Guest_scare_1
+    audioPath: Audio/Sfx/GuestAction/Guest_scare_1
+  - audioName: Guest_scare_2
+    audioPath: Audio/Sfx/GuestAction/Guest_scare_2
+  - audioName: Guest_scare_3
+    audioPath: Audio/Sfx/GuestAction/Guest_scare_3
+  - audioName: Build
+    audioPath: Audio/Sfx/Build
+  - audioName: Guest_in
+    audioPath: Audio/Sfx/Guest_in
+  - audioName: NightFall
+    audioPath: Audio/Sfx/NightFall
+  - audioName: Guest_doubt_3
+    audioPath: Audio/Sfx/GuestAction/Guest_doubt_3

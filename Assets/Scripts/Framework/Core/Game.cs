@@ -111,6 +111,7 @@ namespace ScreamHotel.Core
         {
             State = GameState.Settlement;
             EventBus.Raise(new GameStateChanged(State));
+            AudioManager.Instance.PlaySfx("Settlement");
             
             TimeManager.Instance?.PauseTime();
 

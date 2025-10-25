@@ -32,6 +32,8 @@ public class StartSceneController : MonoBehaviour
                 SceneLoader.Instance.LoadScene(GameScene.MainMenu);
             };
             slideInFx.Play();
+            AudioManager.Instance.PlaySfx("Ghost_in");
+            
             return;
         }
         
