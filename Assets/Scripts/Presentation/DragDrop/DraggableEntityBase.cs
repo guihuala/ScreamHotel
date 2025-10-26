@@ -323,8 +323,7 @@ namespace ScreamHotel.Presentation
             var f = obj?.GetType().GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             return f?.GetValue(obj) as T;
         }
-
-        // —— 提供给外部：统一的 ID 设定 —— 
+        
         public void SetEntityId(string id) => entityId = id;
     }
 }

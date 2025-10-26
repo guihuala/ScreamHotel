@@ -94,7 +94,8 @@ MonoBehaviour:
   followLerp: 20
   dragSelf: 1
   highlightAllDropZones: 1
-  xRange: {x: 10, y: 37}
+  useRectBounds: 0
+  xRange: {x: 0, y: 37}
   yRange: {x: -3, y: 20}
 --- !u!54 &3846706319776199229
 Rigidbody:
