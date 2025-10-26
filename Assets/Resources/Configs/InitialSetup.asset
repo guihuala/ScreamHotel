@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec2fe8d19abb46bab4b9b55116f9ba7, type: 3}
   m_Name: InitialSetup
   m_EditorClassIdentifier: 
-  startGold: 9999
+  startGold: 200
   startRoomCount: 8
   starterGhosts:
   - {fileID: 11400000, guid: c3365b6df210d40bc88fa0b5146512c5, type: 2}

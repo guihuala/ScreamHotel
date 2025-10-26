@@ -402,7 +402,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buildFxPrefab: {fileID: 19826678, guid: c05e92eaee7a00844867e5edc8e0dde1, type: 3}
   buildIcon: {fileID: 7141660383285488018}
-  nightBuildIcon: {fileID: 5432365538995770420}
+  nightIcon: {fileID: 5432365538995770420}
 --- !u!1 &9162744380764322905
 GameObject:
   m_ObjectHideFlags: 0

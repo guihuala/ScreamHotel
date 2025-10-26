@@ -24,6 +24,11 @@ namespace ScreamHotel.Presentation
         [Header("Drop Zone Highlight")]
         [Tooltip("拖拽时是否高亮所有可放置区域（而不是仅鼠标下的一个）")]
         public bool highlightAllDropZones = true;
+        
+        [Header("Drag Bounds (World Space)")]
+        public Vector2 dragBoundsMin = new Vector2(-10f, -10f);
+        public Vector2 dragBoundsMax = new Vector2(10f, 10f);
+
 
         private IDropZone[] _zonesCache; // 拖拽期间缓存所有 DropZone，减少 Find 开销
         public bool IsGhostEntity => IsGhost;
@@ -99,6 +104,9 @@ namespace ScreamHotel.Presentation
             {
                 var p = MouseOnPlaneZ(dragPlaneZ);
                 p.z = _fixedZ;
+               
+                p = ClampToBoundsWorld(p);
+
                 if (dragSelf) transform.position = Vector3.Lerp(transform.position, p, Time.deltaTime * followLerp);
 
                 var z = ZoneUnderPointer();
@@ -184,7 +192,7 @@ namespace ScreamHotel.Presentation
         // —— 拖拽开始/结束：切层 & 刚体保护 —— 
         private void BeginSelfDrag()
         {
-            var hover = UnityEngine.Object.FindObjectOfType<UI.HoverUIController>();
+            var hover = FindObjectOfType<UI.HoverUIController>();
             if (hover != null)
             {
                 hover.ClosePickFearPanelIfActive();
@@ -252,9 +260,7 @@ namespace ScreamHotel.Presentation
             var rb = GetComponent<Rigidbody>();
             if (rb) rb.isKinematic = false;
         }
-
-        // —— Raycast / Helpers —— 
-// 用 RaycastAll 只挑“顶层（最近）且是可拖拽实体”的对象；可选优先拾取鬼
+        
         private bool PointerHitsTopMostSelf()
         {
             var ray = _cam.ScreenPointToRay(Input.mousePosition);
@@ -317,7 +323,14 @@ namespace ScreamHotel.Presentation
             go.layer = layer;
             foreach (Transform t in go.transform) SetLayerRecursively(t.gameObject, layer);
         }
-
+        
+        private Vector3 ClampToBoundsWorld(Vector3 worldPos)
+        {
+            worldPos.x = Mathf.Clamp(worldPos.x, dragBoundsMin.x, dragBoundsMax.x);
+            worldPos.y = Mathf.Clamp(worldPos.y, dragBoundsMin.y, dragBoundsMax.y);
+            return worldPos;
+        }
+        
         protected static T GetSystem<T>(object obj, string field) where T : class
         {
             var f = obj?.GetType().GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

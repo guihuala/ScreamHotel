@@ -42,6 +42,16 @@ namespace ScreamHotel.Presentation
         public float queueRowHeight = 0.7f;
         public int queueWrapCount = 0;
         public float queueFixedZ = 0f;
+        
+        [Header("Guest Spawn Walk")]
+        [Tooltip("实例化后，沿自身向右移动的世界距离")]
+        public float guestSpawnWalkDistance = 0.6f;
+        [Tooltip("实例化后，行走到目标所花时间（秒）")]
+        public float guestSpawnWalkDuration = 0.25f;
+        [Tooltip("Spine 行走动画名（留空则不切换）")]
+        public string spineWalkAnim = "walk";
+        [Tooltip("Spine 待机动画名（留空则不切换）")]
+        public string spineIdleAnim = "idle";
 
         // ===== Shop (Basement) =====
         [Header("Ghost Shop (Basement)")]
@@ -51,7 +61,6 @@ namespace ScreamHotel.Presentation
         public float shopFixedZ = 0f;
         
         [Header("Floor Frame Prefab")]
-        [Tooltip("每新建一层时，在上一层中心生成该楼层框架")]
         public Transform floorFramePrefab;
 
         // ===== Runtime maps =====
@@ -70,7 +79,7 @@ namespace ScreamHotel.Presentation
             EventBus.Subscribe<NightResolved>(OnNightResolved);
             EventBus.Subscribe<FloorBuiltEvent>(OnFloorBuilt);
             EventBus.Subscribe<RoofUpdateNeeded>(OnRoofUpdateNeeded);
-            EventBus.Subscribe<GuestsRenderRequested>(OnGuestsRenderRequested);  // NEW
+            EventBus.Subscribe<GuestsRenderRequested>(OnGuestsRenderRequested);
         }
 
         void OnDisable()
@@ -81,14 +90,13 @@ namespace ScreamHotel.Presentation
             EventBus.Unsubscribe<NightResolved>(OnNightResolved);
             EventBus.Unsubscribe<FloorBuiltEvent>(OnFloorBuilt);
             EventBus.Unsubscribe<RoofUpdateNeeded>(OnRoofUpdateNeeded);
-            EventBus.Unsubscribe<GuestsRenderRequested>(OnGuestsRenderRequested); // NEW
+            EventBus.Unsubscribe<GuestsRenderRequested>(OnGuestsRenderRequested);
         }
-        
+
         private void OnGuestsRenderRequested(GuestsRenderRequested _)
         {
-            // 进入 NightShow 时统一触发渲染（增量构建 + 队列对齐）
-            BuildInitialGuests();
-            SyncGuestsQueue();
+            AudioManager.Instance.PlaySfx("Guest_in");
+            StartCoroutine(Co_BuildGuestsThenSync());
         }
 
         void Start()

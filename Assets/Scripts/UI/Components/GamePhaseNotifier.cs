@@ -37,7 +37,7 @@ namespace ScreamHotel.UI
         private void OnGameStateChanged(GameStateChanged evt)
         {
             if (evt.State is not GameState state) return;
-
+            
             string msg = state switch
             {
                 GameState.Day => "A new day begins",

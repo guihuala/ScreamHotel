@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 5902507591843824500}
   - component: {fileID: 5698494083993245043}
   - component: {fileID: 3513860939847209319}
-  - component: {fileID: 4658408324706859204}
   m_Layer: 0
   m_Name: Guest_1
   m_TagString: Untagged
@@ -105,8 +104,8 @@ MonoBehaviour:
   followLerp: 30
   dragSelf: 1
   highlightAllDropZones: 1
-  xRange: {x: -5, y: 37}
-  yRange: {x: 1, y: 25}
+  dragBoundsMin: {x: 11, y: 1}
+  dragBoundsMax: {x: 39, y: 20}
 --- !u!114 &3513860939847209319
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,49 +120,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guestId: 
   replaceRoot: {fileID: 568586645543880482}
---- !u!114 &4658408324706859204
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7714624583527147650}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e9dea3ef9f044912b0d72ef561786d8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  useWidthFromStart: 1
-  width: 6
-  leftPoint: {fileID: 0}
-  rightPoint: {fileID: 0}
-  speed: 2
-  pauseAtEnds: 1
-  pauseRange: {x: 0.2, y: 0.6}
-  startMovingRight: 0
-  randomizeStartDirection: 0
-  randomizeSpeed: 1
-  speedRange: {x: 1.2, y: 2.6}
-  shuffleIntervalRange: {x: 1.5, y: 3.5}
-  randomMidPause: 1
-  midPausePerSecond: 0.12
-  midPauseRange: {x: 0.15, y: 0.45}
-  randomTurnWithoutObstacle: 1
-  turnPerSecond: 0.04
-  rotateYInsteadOfScale: 1
-  visualRoot: {fileID: 0}
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 8
-  obstacleMask:
-    serializedVersion: 2
-    m_Bits: 0
-  edgeCheckDistance: 0.6
-  wallCheckDistance: 0.3
-  groundRayOffset: {x: 0, y: 0.1, z: 0}
-  forwardRayOffset: {x: 0, y: 0.1, z: 0}
-  turnCooldown: 0.3
-  spineAnim: {fileID: 0}
-  walkAnim: walk
-  idleAnim: idle
-  drawGizmos: 1

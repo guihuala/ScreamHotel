@@ -9,8 +9,7 @@ namespace ScreamHotel.UI
     public class HudController : MonoBehaviour
     {
         [Header("References")]
-        private Game game;
-
+        
         public Button tutorialButton;
         public Button pauseButton;
         public Button executeButton;
@@ -21,7 +20,6 @@ namespace ScreamHotel.UI
         public TooltipMousePanel timeInfoTooltip;
 
         [Header("HUD Text (optional)")]
-        public TextMeshProUGUI goldText;
         public TextMeshProUGUI dayText;
 
         [Header("Analog Clock")]
@@ -31,7 +29,14 @@ namespace ScreamHotel.UI
         [Header("Suspicion UI (Image Fill)")]
         public Image suspicionFillImage;
         public int suspicionFallbackThreshold = 100;
+        public TextMeshProUGUI suspicionText;       // “当前/阈值” 文本（可选）
 
+        [Header("Gold UI (Image Fill)")]
+        public Image goldFillImage;
+        public TextMeshProUGUI goldFillText;
+
+
+        private Game game;
         private int suspicionThresholdCached = 100;
 
         private void Awake()
@@ -51,17 +56,10 @@ namespace ScreamHotel.UI
 
             var rules = game?.World?.Config?.Rules;
             suspicionThresholdCached = Mathf.Max(1, rules != null ? rules.suspicionThreshold : suspicionFallbackThreshold);
-
-            if (suspicionFillImage != null)
-            {
-                if (suspicionFillImage.type != Image.Type.Filled)
-                    suspicionFillImage.type = Image.Type.Filled;
-            }
         }
 
         private void Start()
         {
-            RefreshGoldUI();
             RefreshDayUI();
             RefreshSuspicionUI();
             UpdateTimeDisplay();
@@ -182,10 +180,31 @@ namespace ScreamHotel.UI
         }
 
         // ===== UI refresh =====
+        
         private void RefreshGoldUI()
         {
-            if (goldText != null && game != null)
-                goldText.text = $"$ {game.World.Economy.Gold}";
+            if (game == null) return;
+
+            int currentGold = game.World?.Economy?.Gold ?? 0;
+            
+            var rules = game.World?.Config?.Rules;
+            int target = Mathf.Max(0, rules != null ? rules.targetGold : 0);
+
+            // 处理目标值为 0 的情况：不填充并展示 “当前/—”
+            float fill = 0f;
+            if (target > 0)
+                fill = Mathf.Clamp01((float)currentGold / target);
+
+            if (goldFillImage != null)
+                goldFillImage.fillAmount = fill;
+
+            if (goldFillText != null)
+            {
+                if (target > 0)
+                    goldFillText.text = $"{currentGold}/{target}";
+                else
+                    goldFillText.text = $"{currentGold}/—";
+            }
         }
 
         private void RefreshDayUI()
@@ -238,8 +257,11 @@ namespace ScreamHotel.UI
                     suspicionFillImage.type = Image.Type.Filled;
                 suspicionFillImage.fillAmount = pct;
             }
+            
+            if (suspicionText != null)
+                suspicionText.text = $"{current}/{threshold}";
         }
-
+        
         // ===== TimeInfo Tooltip wiring =====
         private void SetupTimeInfoButtonTriggers()
         {

@@ -19,7 +19,7 @@ namespace ScreamHotel.Presentation
         
         [Header("Build VFX")]
         public GameObject buildIcon;
-        public GameObject nightBuildIcon;
+        public GameObject nightIcon;
 
         
         private Game game;
@@ -44,7 +44,7 @@ namespace ScreamHotel.Presentation
             _hoverUI = FindObjectOfType<HoverUIController>(true);
             
             if (buildIcon != null) buildIcon.SetActive(false);
-            if (nightBuildIcon != null) nightBuildIcon.SetActive(false);
+            if (nightIcon != null) nightIcon.SetActive(false);
         }
 
         public void SetRoomId(string newRoomId) => roomId = newRoomId;
@@ -56,6 +56,11 @@ namespace ScreamHotel.Presentation
             var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
             if (r == null) return false;
 
+            if (r.Level == 0)
+            {
+                return false;
+            }
+            
             if (isGhost)
             {
                 var g = w.Ghosts.FirstOrDefault(x => x.Id == id);
@@ -82,20 +87,23 @@ namespace ScreamHotel.Presentation
                 Debug.LogWarning($"房间 {roomId} 未找到！");
                 return false;
             }
-
-
-            // 显示图标（白天或夜晚）
+            
+            if (r.Level == 0)
+            {
+                return false;
+            }
+            
             if (isGhost && IsDaytime())
             {
                 // 显示白天的建造图标
                 if (buildIcon != null) buildIcon.SetActive(true);
-                if (nightBuildIcon != null) nightBuildIcon.SetActive(false);
+                if (nightIcon != null) nightIcon.SetActive(false);
             }
             else
             {
-                // 显示夜晚的建造图标
+                // 显示夜晚的放置图标
                 if (buildIcon != null) buildIcon.SetActive(false);
-                if (nightBuildIcon != null) nightBuildIcon.SetActive(true);
+                if (nightIcon != null) nightIcon.SetActive(true);
             }
             
             if (isGhost && IsDaytime())
@@ -187,15 +195,13 @@ namespace ScreamHotel.Presentation
             
             return false;
         }
-
-        /// <summary>
-        /// 让鬼在锚点“施工”1秒，期间可播放粒子；结束后调用buildAction（扣费/升级）
-        /// 不改变分配状态，结束后鬼仍可被自由拖动
-        /// </summary>
+        
         private IEnumerator Co_BuildOrUpgrade(string ghostId, Transform anchor, System.Func<bool> buildAction)
         {
             _busyGhosts.Add(ghostId);
 
+            AudioManager.Instance.PlaySfx("Build");
+            
             // 播放粒子
             ParticleSystem fx = null;
             if (buildFxPrefab != null)
@@ -233,15 +239,25 @@ namespace ScreamHotel.Presentation
         
         public void ShowHoverFeedback(string id, bool isGhost)
         {
+            var w = game.World;
+            var r = w.Rooms.FirstOrDefault(x => x.Id == roomId);
+            
+            if (r == null || r.Level == 0)
+            {
+                if (nightIcon) nightIcon.SetActive(false);
+                return;
+            }
+            
             bool showDayBuild = isGhost && IsDaytime();
-            if (buildIcon)      buildIcon.SetActive(showDayBuild);
-            if (nightBuildIcon) nightBuildIcon.SetActive(!showDayBuild);
+            if (buildIcon)  buildIcon.SetActive(showDayBuild);
+            if (nightIcon)  nightIcon.SetActive(!showDayBuild);
         }
+
 
         public void ClearFeedback()
         {
             if (buildIcon)      buildIcon.SetActive(false);
-            if (nightBuildIcon) nightBuildIcon.SetActive(false);
+            if (nightIcon) nightIcon.SetActive(false);
         }
 
         private static T GetSystem<T>(object obj, string field) where T : class
@@ -252,8 +268,8 @@ namespace ScreamHotel.Presentation
 
         private bool IsDaytime()
         {
-            if (game?.TimeSystem == null) return true;  // 如果没有找到 TimeSystem，默认是白天
-            return game.TimeSystem.GetCurrentTimePeriod() == GameState.Day;  // 直接从 TimeSystem 获取白天状态
+            if (game?.TimeSystem == null) return true;
+            return game.TimeSystem.GetCurrentTimePeriod() == GameState.Day;
         }
     }
 }

@@ -85,8 +85,7 @@ namespace ScreamHotel.Core
             
             CheckFirstEnterAndShowGuide();
         }
-
-
+        
         private void Update()
         {
             if (TimeManager.Instance == null) return;
@@ -105,17 +104,6 @@ namespace ScreamHotel.Core
                 PlayerPrefs.SetInt(FirstEnterKey, 1);
                 PlayerPrefs.Save();
             }
-        }
-        
-        public void StartSettlement()
-        {
-            State = GameState.Settlement;
-            EventBus.Raise(new GameStateChanged(State));
-            AudioManager.Instance.PlaySfx("Settlement");
-            
-            TimeManager.Instance?.PauseTime();
-
-            DisplaySettlementUI();
         }
         
         private void OnDestroy()
@@ -200,17 +188,26 @@ namespace ScreamHotel.Core
                 TimeSystem.SetNormalizedTime(Mathf.Repeat(dayEnd + 0.0001f, 1f));
             }
         }
-        
+
         public void StartNightExecution()
         {
             var (_, showEnd, _) = GetPhaseBoundaries();
             TimeSystem.SetNormalizedTime(Mathf.Repeat(showEnd + 0.0001f, 1f));
         }
-        
+
+        public void StartSettlement()
+        {
+            State = GameState.Settlement;
+            EventBus.Raise(new GameStateChanged(State));
+            AudioManager.Instance.PlaySfx("Settlement");
+
+            TimeManager.Instance?.PauseTime();
+
+            DisplaySettlementUI();
+        }
+
         private void DisplaySettlementUI()
         {
-            Debug.Log("Displaying settlement UI.");
-
             // 计算完成度
             float completion = 0f;
             if (_settleGuestsTotal > 0)
@@ -255,20 +252,21 @@ namespace ScreamHotel.Core
         {
             State = GameState.NightShow;
             
+            AudioManager.Instance.PlaySfx("PopupWindow");
+            
             int flushed = _dayGuestSpawner.FlushAcceptedToWorld();
-            Debug.Log($"[Guests] NightShow: flushed accepted guests = {flushed}");
             
             EventBus.Raise(new GameStateChanged(State));
             EventBus.Raise(new NightStartedEvent());
             EventBus.Raise(new GuestsRenderRequested());
         }
-        
+
         public void StartNightExecute()
         {
             State = GameState.NightExecute;
             EventBus.Raise(new GameStateChanged(State));
-            Debug.Log("Enter Night Execute phase");
-
+            AudioManager.Instance.PlaySfx("NightFall");
+            
             // 执行夜晚的相关逻辑
             ExecuteNightActions();
         }
@@ -291,8 +289,7 @@ namespace ScreamHotel.Core
                 Debug.LogWarning("[Game] Rules is null. Using safe defaults.");
             }
             int capLv1 = rules != null ? rules.capacityLv1 : 1;
-
-            // 播种首批房间（按 LA/LB/RA/RB 顺序铺层）
+            
             int actuallyAdded = 0;
             for (int i = 0; i < setup.startRoomCount; i++)
             {
@@ -373,9 +370,22 @@ namespace ScreamHotel.Core
             var rules = World?.Config?.Rules;
             if (rules != null && DayIndex >= Mathf.Max(1, rules.totalDays))
             {
+                if (rules.requireTargetGold)
+                {
+                    int target = Mathf.Max(0, rules.targetGold);
+                    int currentGold = World?.Economy?.Gold ?? 0;
+
+                    if (currentGold < target)
+                    {
+                        EndGame(false, $"未达到目标金币（{currentGold}/{target}）");
+                        return;
+                    }
+                }
+                
                 EndGame(true, "成功经营至最后一天，未被揭穿");
                 return;
             }
+
             GoToDay();
         }
         

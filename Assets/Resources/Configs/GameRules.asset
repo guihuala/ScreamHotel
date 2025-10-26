@@ -15,6 +15,8 @@ MonoBehaviour:
   suspicionThreshold: 100
   suspicionPerFailedGuest: 1
   totalDays: 10
+  requireTargetGold: 1
+  targetGold: 4000
   dayGuestSpawnCount: 4
   ghostShopSlots: 3
   ghostShopPrice: 100

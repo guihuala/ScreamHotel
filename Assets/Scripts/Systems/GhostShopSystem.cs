@@ -112,6 +112,7 @@ namespace ScreamHotel.Systems
                 return false;
             }
 
+            AudioManager.Instance.PlaySfx("CostMoney");
             _world.Economy.Gold -= rules.ghostShopPrice;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
 

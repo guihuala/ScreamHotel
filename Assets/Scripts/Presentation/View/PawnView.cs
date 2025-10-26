@@ -28,13 +28,7 @@ namespace ScreamHotel.Presentation
             var draggable = GetComponentInParent<DraggablePawn>();
             if (draggable != null) draggable.SetGhostId(ghostId);
         }
-
-        /// <summary>
-        /// 解析运行时 Id，按分隔符('#', '@', ':')截取前缀作为配置 id，再到数据库匹配。
-        /// 约定：
-        ///   - 购买生成："{cfg.id}#shop_..."   （真实实例）
-        ///   - 商店预览："{cfg.id}@offer_..." （预览实例）
-        /// </summary>
+        
         private GhostConfig FindGhostConfig(Ghost g)
         {
             var game = FindObjectOfType<Game>();

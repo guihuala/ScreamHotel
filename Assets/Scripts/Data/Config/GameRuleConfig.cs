@@ -13,6 +13,12 @@ namespace ScreamHotel.Data
         [Tooltip("本局总天数（坚持到最后一天且未满怀疑值 = 成功结局）")]
         public int totalDays = 10;
         
+        [Header("Ending – Gold Target")]
+        [Tooltip("是否启用：到最后一天结算时，必须达到目标金币才算成功")]
+        public bool requireTargetGold = false;
+        [Tooltip("成功所需的目标金币（仅在启用时生效）")]
+        public int targetGold = 0;
+        
         [Header("Day Spawns")]
         [Tooltip("每天白天刷新的客人数")]
         public int dayGuestSpawnCount = 4;
@@ -29,7 +35,7 @@ namespace ScreamHotel.Data
         [Tooltip("房间升级的价格：Index 0 表示 Lv1→Lv2，Index 1 表示 Lv2→Lv3")] 
         public int[] roomUpgradeCosts = new[] { 200, 400 };
 
-        [Tooltip("可建造的最高楼层上限（例如 4 表示最多4层）")]
+        [Tooltip("可建造的最高楼层上限")]
         public int maxFloor = 4;
 
         [Header("Room Pricing & Capacity")]
