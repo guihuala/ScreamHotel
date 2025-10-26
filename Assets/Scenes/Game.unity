@@ -3980,10 +3980,8 @@ MonoBehaviour:
   queueRowHeight: 0.7
   queueWrapCount: 0
   queueFixedZ: 0
-  guestSpawnWalkDistance: 20
-  guestSpawnWalkDuration: 1
-  spineWalkAnim: walk
-  spineIdleAnim: idle
+  guestSpawnWalkDistance: 15
+  guestSpawnWalkDuration: 3
   shopRoot: {fileID: 1033287417}
   shopSlotSpacingX: 3
   shopSlotsPerRow: 5
@@ -4042,7 +4040,7 @@ Transform:
   m_GameObject: {fileID: 758897908}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.34}
+  m_LocalPosition: {x: -4.33, y: 0, z: -0.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4067,8 +4065,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5, y: 0.73275864, z: 0.7324822}
-  m_Center: {x: 0, y: 0.36637932, z: -1.0208482}
+  m_Size: {x: 5, y: 0.73275864, z: 0.10967767}
+  m_Center: {x: 0, y: 0.36637932, z: -0.8069201}
 --- !u!1001 &763639601
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7160,7 +7158,7 @@ Transform:
   m_GameObject: {fileID: 1390902963}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.64, y: 1, z: 0}
+  m_LocalPosition: {x: 23.85, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

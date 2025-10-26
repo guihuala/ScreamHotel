@@ -52,16 +52,25 @@ namespace ScreamHotel.Presentation
             _hoverTween?.Kill();
             _hoverTween = visualRoot.DOScale(Vector3.one, hoverDuration).SetEase(Ease.InBack);
         }
-
+        
         public HoverInfo GetHoverInfo()
         {
             var game = FindObjectOfType<Game>();
             int price = game?.World?.Config?.Rules?.ghostShopPrice ?? 0;
+
+            // 读取当日商店该槽位的货架条目（GhostOffer）
+            string ghostId = null;
+            var offers = game?.World?.Shop?.Offers;
+            if (offers != null && slotIndex >= 0 && slotIndex < offers.Count && offers[slotIndex] != null)
+            {
+                ghostId = offers[slotIndex].OfferId;
+            }
+            
             return new HoverInfo
             {
-                Kind = HoverKind.ShopSlot,
-                ShopMain = main,
-                ShopPrice = price,
+                Kind        = HoverKind.ShopSlot,
+                ShopPrice   = price,
+                ShopGhostId = ghostId,
             };
         }
 

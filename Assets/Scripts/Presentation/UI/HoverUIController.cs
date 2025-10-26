@@ -75,7 +75,6 @@ namespace ScreamHotel.UI
                 {
                     tags = pawn.GetFearTags() ?? new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>();
                     target = pawn.transform;
-                    // if (tags.Count == 0) Debug.LogWarning($"[HoverUI] Ghost found but no fear tags. ghostId={pawn.ghostId}");
                 }
                 else if (guest != null)
                 {
@@ -112,7 +111,6 @@ namespace ScreamHotel.UI
                 _lastRoomId = null;
                 return;
             }
-
 
             // 3) 检查是否是训练槽位
             var trainingSlot = hit.collider.GetComponentInParent<TrainingSlot>();
@@ -175,7 +173,7 @@ namespace ScreamHotel.UI
 
         private void ShowPanels(HoverInfo info)
         {
-            var screen = (Vector3)( (Vector2)Input.mousePosition + hoverScreenOffset );
+            var screen = (Vector3)((Vector2)Input.mousePosition + hoverScreenOffset);
             
             // 隐藏训练剩余天数面板
             trainingRemainPanel?.Hide();
@@ -197,10 +195,14 @@ namespace ScreamHotel.UI
                     break;
 
                 case HoverKind.ShopSlot:
-                    shopPanel?.Show(info.ShopMain, info.ShopPrice, screen);
+                {
+                    if (!string.IsNullOrEmpty(info.ShopGhostId))
+                        shopPanel?.Show(info.ShopGhostId, info.ShopPrice, screen);
+                    
                     _lastKind = HoverKind.ShopSlot;
                     _lastRoomId = null;
                     break;
+                }
                 
                 case HoverKind.ShopReroll:
                 {
@@ -210,7 +212,6 @@ namespace ScreamHotel.UI
                 }
 
                 case HoverKind.TrainingRoom:
-                    // 训练室整体悬停，不显示具体信息
                     _lastKind = HoverKind.TrainingRoom;
                     _lastRoomId = null;
                     break;
@@ -233,7 +234,7 @@ namespace ScreamHotel.UI
             shopPanel?.Hide();
             shopRerollPanel?.Hide();
             trainingRemainPanel?.Hide();
-            fearIconsPanel?.Hide(); // ←
+            fearIconsPanel?.Hide();
             _lastKind = HoverKind.None;
             _lastRoomId = null;
             _currentTrainingSlot = null;
@@ -276,9 +277,6 @@ namespace ScreamHotel.UI
             panelObj.AddComponent<GraphicRaycaster>();
         }
         
-        /// <summary>
-        /// 检查是否有激活的恐惧标签面板
-        /// </summary>
         public bool IsPickFearPanelActive()
         {
             return _isPickFearPanelActive;
@@ -288,8 +286,8 @@ namespace ScreamHotel.UI
         {
             if (_isPickFearPanelActive && pickFearPanel != null)
             {
-                pickFearPanel.Hide();          // 直接隐藏面板
-                _isPickFearPanelActive = false; // 恢复悬停逻辑
+                pickFearPanel.Hide();
+                _isPickFearPanelActive = false;
             }
         }
     }

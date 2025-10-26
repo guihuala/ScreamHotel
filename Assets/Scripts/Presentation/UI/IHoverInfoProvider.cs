@@ -10,8 +10,8 @@ namespace ScreamHotel.UI
         public string RoomId;         // Room
         public int NextFloor;         // Roof
         public int Cost;              // Roof
-        public Domain.FearTag ShopMain;
         public int ShopPrice;
+        public string ShopGhostId;
     }
 
     public interface IHoverInfoProvider

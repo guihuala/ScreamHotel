@@ -36,8 +36,6 @@ namespace ScreamHotel.Domain
         public readonly List<string> AssignedGhostIds = new();
         public List<string> AssignedGuestIds = new(); 
     }
-
-
     
     // ---- 商店状态与货架条目 ----
     public class GhostOffer

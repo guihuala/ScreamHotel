@@ -68,17 +68,6 @@ namespace ScreamHotel.Presentation
 
                 // 实例化新的 prefab
                 GameObject instance = Instantiate(cfg.prefabOverride, replaceRoot);
-                
-                var walker = GetComponentInChildren<PatrolWalker>(true);
-                if (walker != null)
-                {
-                    // 从新实例里取 SkeletonAnimation
-                    var spine = instance.GetComponentInChildren<SkeletonAnimation>(true);
-                    if (spine != null)
-                    {
-                        walker.spineAnim = spine;
-                    }
-                }
             }
         }
         

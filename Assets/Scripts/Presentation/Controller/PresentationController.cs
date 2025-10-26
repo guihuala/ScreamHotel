@@ -48,10 +48,6 @@ namespace ScreamHotel.Presentation
         public float guestSpawnWalkDistance = 0.6f;
         [Tooltip("实例化后，行走到目标所花时间（秒）")]
         public float guestSpawnWalkDuration = 0.25f;
-        [Tooltip("Spine 行走动画名（留空则不切换）")]
-        public string spineWalkAnim = "walk";
-        [Tooltip("Spine 待机动画名（留空则不切换）")]
-        public string spineIdleAnim = "idle";
 
         // ===== Shop (Basement) =====
         [Header("Ghost Shop (Basement)")]
@@ -113,7 +109,6 @@ namespace ScreamHotel.Presentation
 
             BuildInitialRooms();
             BuildInitialGhosts();
-            BuildInitialGuests();
             UpdateRoofPosition();
         }
 

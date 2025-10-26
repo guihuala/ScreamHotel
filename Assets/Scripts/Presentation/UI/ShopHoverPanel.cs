@@ -29,23 +29,27 @@ namespace ScreamHotel.Presentation.Shop
             Hide();
         }
 
-        public void SetContent(Domain.FearTag main, int price)
+        // 修改：去掉@后面的部分
+        public void SetContent(string ghostId, int price)
         {
-            if (titleText) titleText.text = $"{main}";
+            // 如果 ghostId 非空且包含 '@'，只保留 '@' 前面的部分
+            if (!string.IsNullOrEmpty(ghostId))
+            {
+                int atIndex = ghostId.IndexOf('@');
+                if (atIndex >= 0)
+                {
+                    ghostId = ghostId.Substring(0, atIndex); // 获取 '@' 前面的部分
+                }
+            }
+
+            // 设置显示内容
+            if (titleText) titleText.text = string.IsNullOrEmpty(ghostId) ? "-" : ghostId;
             if (priceText) priceText.text = $"Price:{price}";
         }
         
-        public void Show(Domain.FearTag main, int price, Transform target)
+        public void Show(string ghostId, int price, Vector3 screenPos)
         {
-            SetContent(main, price);
-            _target = target;
-            if (root) root.gameObject.SetActive(true);
-            UpdatePosition();
-        }
-        
-        public void Show(Domain.FearTag main, int price, Vector3 screenPos)
-        {
-            SetContent(main, price);
+            SetContent(ghostId, price);
             _target = null; // 不跟随
             if (root)
             {

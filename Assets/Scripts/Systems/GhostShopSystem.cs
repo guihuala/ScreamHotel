@@ -68,7 +68,7 @@ namespace ScreamHotel.Systems
                 _world.Shop.Offers.Add(new GhostOffer
                 {
                     OfferId  = offerId,
-                    ConfigId = cfgId,   // 购买时仍按配置id落地
+                    ConfigId = cfgId,
                     Main     = cfg.main
                 });
 

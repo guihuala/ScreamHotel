@@ -47,8 +47,7 @@ namespace ScreamHotel.UI
             if (pauseButton)   pauseButton.onClick.AddListener(OnPauseButtonClicked);
             if (executeButton) executeButton.onClick.AddListener(OnExecuteButtonClicked);
             if (skipDayButton) skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
-
-            // HUD 时间信息按钮：为其挂载 PointerEnter/Exit/Move
+            
             SetupTimeInfoButtonTriggers();
 
             UpdateExecuteButtonVisibility();
