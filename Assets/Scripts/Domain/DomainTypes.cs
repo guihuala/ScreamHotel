@@ -12,8 +12,6 @@ namespace ScreamHotel.Domain
         public FearTag? Sub;
         public GhostState State;
         public int TrainingDays;    // 训练期间的天数
-
-        public bool IsTraining => State == GhostState.Training;
     }
 
 

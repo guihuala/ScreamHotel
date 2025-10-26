@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51624d92c3e284dd3b783970bdecff4b, type: 3}
   m_Name: Ghost__2
   m_EditorClassIdentifier: 
-  id: Ghost__2
-  main: 1
+  id: Female Ghost
+  main: 2
   prefabOverride: {fileID: 6969772223808871354, guid: 2c032e0e297444d4cb67cb7da0435877, type: 3}

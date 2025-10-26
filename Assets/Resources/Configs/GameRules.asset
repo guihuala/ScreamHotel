@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameRules
   m_EditorClassIdentifier: 
   suspicionThreshold: 100
-  suspicionPerFailedGuest: 1
+  suspicionPerFailedGuest: 5
   totalDays: 10
   requireTargetGold: 1
   targetGold: 4000
@@ -22,12 +22,12 @@ MonoBehaviour:
   ghostShopPrice: 100
   ghostShopRerollCost: 50
   ghostShopUniqueMains: 0
-  floorBuildBaseCost: 500
+  floorBuildBaseCost: 1000
   floorCostGrowth: 1.25
   roomUpgradeCosts: c800000090010000
   maxFloor: 4
   roomBuyCost: 200
-  roomUnlockCost: 150
+  roomUnlockCost: 100
   capacityLv1: 1
   capacityLv3: 2
   lv2HasTag: 1

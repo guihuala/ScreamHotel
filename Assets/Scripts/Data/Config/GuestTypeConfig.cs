@@ -1,4 +1,3 @@
-// GuestTypeConfig.cs
 using System.Collections.Generic;
 using ScreamHotel.Domain;
 using UnityEngine;
@@ -14,7 +13,8 @@ namespace ScreamHotel.Data
         public string displayName;
 
         [Header("Behavior")]
-        public List<FearTag> immunities;
+        public List<FearTag> immunities; // 可用的免疫属性列表
+        public int maxImmunitiesCount = 2; // 每个游客的最大免疫属性数量
         public float barMax = 100f;
         [Range(0.5f, 0.99f)] public float requiredPercent = 0.8f;
         public int baseFee = 100;
@@ -23,9 +23,8 @@ namespace ScreamHotel.Data
         public GameObject prefabOverride;
         public Sprite portrait;
         [TextArea(3, 6)] public string intro;
-        public List<Sprite> gallery;
 
-        [Header("Spine (UI)")] [Tooltip("Spine-Unity 的 SkeletonDataAsset（UI用），若配置则在面板用Spine替代大图显示")]
+        [Header("Spine (UI)")]
         public SkeletonDataAsset spineUIData;
         [Tooltip("默认使用的Skin，可留空使用默认skin")] public string spineDefaultSkin = "";
         [Tooltip("默认播放的动画名，例如 idle / loop 等")] public string spineDefaultAnimation = "idle";

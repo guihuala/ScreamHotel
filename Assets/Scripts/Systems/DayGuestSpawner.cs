@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,6 +14,7 @@ public class DayGuestSpawner
 
     // —— 白天阶段的候选清单（不写入 world）——
     private readonly List<Guest> _pending = new List<Guest>();
+
     // —— 当天已接受（仍未写入 world，等 NightShow 再落库）——
     private readonly List<Guest> _accepted = new List<Guest>();
     public IReadOnlyList<Guest> Pending => _pending;
@@ -23,7 +25,7 @@ public class DayGuestSpawner
         _db = db;
         _seq = (_world?.Guests?.Count ?? 0);
     }
-    
+
     public int GenerateCandidates(int count)
     {
         ClearAll(); // 每天重新生成
@@ -46,14 +48,33 @@ public class DayGuestSpawner
             // 统一从“全部类型”里均匀随机，不再区分难/易类型
             var typeCfg = types[_rng.Next(types.Count)];
             string id = $"Guest_{++_seq:0000}";
-            
+
+            // 获取免疫属性的数量
+            int immunityCount = typeCfg.maxImmunitiesCount;
+        
+            // 生成恐惧属性
+            List<FearTag> generatedImmunities = new List<FearTag>();
+            if (immunityCount > 0)
+            {
+                // 从 FearTag 枚举中随机抽取不同的恐惧属性
+                var allFearTags = Enum.GetValues(typeof(FearTag)).Cast<FearTag>().ToList();
+                var availableFears = new List<FearTag>(allFearTags);
+
+                // 确保免疫属性不重复
+                for (int j = 0; j < immunityCount; j++)
+                {
+                    var randomIndex = _rng.Next(availableFears.Count);
+                    generatedImmunities.Add(availableFears[randomIndex]);
+                    availableFears.RemoveAt(randomIndex);  // 移除已选择的恐惧属性，确保唯一性
+                }
+            }
+
+            // 创建客人对象
             var g = new Guest
             {
                 Id = id,
                 TypeId = typeCfg.id,
-                Fears = (typeCfg.immunities != null && typeCfg.immunities.Count > 0)
-                    ? new List<FearTag>(typeCfg.immunities)
-                    : new List<FearTag>(),
+                Fears = generatedImmunities,  // 设置生成的恐惧属性
                 BaseFee = typeCfg.baseFee,
                 BarMax = typeCfg.barMax,
                 RequiredPercent = typeCfg.requiredPercent,

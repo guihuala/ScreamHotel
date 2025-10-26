@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: GuestType__Coward
   m_EditorClassIdentifier: 
   id: 1
-  displayName: Coward
-  immunities: 03000000
+  displayName: Ordinary tourists
+  immunities: 
   barMax: 90
   requiredPercent: 0.75
   baseFee: 80
   prefabOverride: {fileID: 7106032176820751855, guid: aee0c326817c946228c61c62d2b9209c, type: 3}
   portrait: {fileID: 21300000, guid: f26a2dda2bb80421d95ee0f2322be5db, type: 3}
-  intro: hello
-  gallery: []
+  intro: Visitors who come out of admiration. These folks are usually quite timid
+    and get scared easily.
   spineUIData: {fileID: 11400000, guid: 84efe269b96f14c80b607730badff26a, type: 2}
   spineDefaultSkin: guest1
   spineDefaultAnimation: idle
