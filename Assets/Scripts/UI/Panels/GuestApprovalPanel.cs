@@ -48,17 +48,20 @@ public class GuestApprovalPanel : BasePanel
         _db = _game?.dataManager?.Database;
         Rebuild();
         WireButtons();
+
     }
 
     private void OnEnable()
     {
         if (_game != null) Rebuild();
-
+        
+        TimeManager.Instance?.PauseTime();
         EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
     }
 
     private void OnDisable()
     {
+        TimeManager.Instance?.ResumeTime();
         EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
     }
 

@@ -24,8 +24,6 @@ public class TrainingRoomZone : MonoBehaviour
             slot.Initialize(_game);
 
         _ghostSlotMap.Clear();
-
-        Debug.Log($"[TrainingRoomZone] Awake: Found {_slots.Count} training slots");
     }
 
     // === 推进所有槽位的训练天数（由 GhostTrainer 调用） ===

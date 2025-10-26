@@ -76,11 +76,6 @@ public class FearIconsPanel : MonoBehaviour
 
         _target = target;
 
-        // 日志：确认拿到多少个标签
-        #if UNITY_EDITOR
-        Debug.Log($"[FearIconsPanel] Rendering {tags.Count} fear tag(s) on {target.name}");
-        #endif
-
         EnsurePool(tags.Count);
 
         for (int i = 0; i < _pool.Count; i++)
@@ -151,8 +146,7 @@ public class FearIconsPanel : MonoBehaviour
         // 确保模板是 layout 的孩子
         if (iconTemplate.transform.parent != layout.transform)
             iconTemplate.transform.SetParent(layout.transform, false);
-
-        // 初始化：把模板加入池，并设为隐藏
+        
         if (_pool.Count == 0)
         {
             iconTemplate.gameObject.SetActive(false);

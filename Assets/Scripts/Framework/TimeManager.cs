@@ -1,10 +1,8 @@
 using UnityEngine;
 
 [DefaultExecutionOrder(-10000)] // 很早执行，确保比场景物体更早 Awake
-public sealed class TimeManager : MonoBehaviour
+public sealed class TimeManager : SingletonPersistent<TimeManager>
 {
-    public static TimeManager Instance { get; private set; }
-
     public float TimeFactor { get; private set; } = 1f;
     public bool IsPaused { get; private set; }
     private float _baseFixedDeltaTime;
@@ -24,15 +22,9 @@ public sealed class TimeManager : MonoBehaviour
         DontDestroyOnLoad(go);
     }
 
-    private void Awake()
+    protected override void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        base.Awake();
 
         _baseFixedDeltaTime = Time.fixedDeltaTime;
     }
@@ -43,9 +35,7 @@ public sealed class TimeManager : MonoBehaviour
         Time.timeScale = IsPaused ? 0f : Mathf.Max(0f, TimeFactor);
         Time.fixedDeltaTime = _baseFixedDeltaTime * Time.timeScale;
     }
-
-    public void SetTimeFactor(float factor) => TimeFactor = Mathf.Max(0f, factor);
+    
     public void PauseTime()  { IsPaused = true;  Debug.Log("[TimeManager] paused"); }
     public void ResumeTime() { IsPaused = false; Debug.Log("[TimeManager] resumed"); }
-    public void SetPaused(bool paused) => IsPaused = paused;
 }

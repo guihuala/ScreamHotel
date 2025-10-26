@@ -11,6 +11,7 @@ namespace ScreamHotel.UI
         [Header("References")]
         private Game game;
 
+        public Button tutorialButton;
         public Button pauseButton;
         public Button executeButton;
         public Button skipDayButton;
@@ -37,6 +38,7 @@ namespace ScreamHotel.UI
         {
             game = FindObjectOfType<Game>();
 
+            if(tutorialButton) tutorialButton.onClick.AddListener(OnTutorialButtonClicked);
             if (pauseButton)   pauseButton.onClick.AddListener(OnPauseButtonClicked);
             if (executeButton) executeButton.onClick.AddListener(OnExecuteButtonClicked);
             if (skipDayButton) skipDayButton.onClick.AddListener(OnSkipDayButtonClicked);
@@ -140,6 +142,7 @@ namespace ScreamHotel.UI
         }
 
         // ===== Button callbacks =====
+        private void OnTutorialButtonClicked() => UIManager.Instance.OpenPanel("GuidePanel");
         private void OnPauseButtonClicked() => UIManager.Instance.OpenPanel("PausePanel");
 
         private void OnExecuteButtonClicked()
@@ -245,13 +248,11 @@ namespace ScreamHotel.UI
             var trigger = timeInfoButton.GetComponent<EventTrigger>();
             if (trigger == null) trigger = timeInfoButton.gameObject.AddComponent<EventTrigger>();
             trigger.triggers ??= new System.Collections.Generic.List<EventTrigger.Entry>();
-
-            // Pointer Enter
+            
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
             enter.callback.AddListener(_ => ShowTimeInfoTooltip());
             trigger.triggers.Add(enter);
-
-            // Pointer Exit
+            
             var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
             exit.callback.AddListener(_ => HideTimeInfoTooltip());
             trigger.triggers.Add(exit);

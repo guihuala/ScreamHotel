@@ -142,7 +142,7 @@ namespace ScreamHotel.Presentation
                         }));
                     });
                     
-                    return true; // 立刻把鬼放到锚点（等待选择完再开工）
+                    return true;
                 }
                 else if (r.Level == 2)
                 {
