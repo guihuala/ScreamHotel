@@ -184,30 +184,26 @@ namespace ScreamHotel.UI
         }
 
         // ====== 按钮点击 ======
-
         private void OnBuildClicked()
         {
             // Lv0 -> Lv1：解锁
             if (_room.Level == 0)
             {
-                if (_game.BuildSystem.TryUnlockRoom(_room.Id)) Hide();
+                DoBuildWithFx(() => _game.BuildSystem.TryUnlockRoom(_room.Id));
                 return;
             }
 
-            // Lv1 -> Lv2：必须已选择恐惧属性
+            // Lv1 -> Lv2：需要先选恐惧属性
             if (isLv1ToLv2Upgrade)
             {
-                if (!_selectedTag.HasValue)
-                    return;
-
-                if (_game.BuildSystem.TryUpgradeRoom(_room.Id, _selectedTag.Value))
-                    Hide();
+                if (!_selectedTag.HasValue) return;
+                var chosen = _selectedTag.Value;
+                DoBuildWithFx(() => _game.BuildSystem.TryUpgradeRoom(_room.Id, chosen));
                 return;
             }
 
             // Lv2 -> Lv3
-            if (_game.BuildSystem.TryUpgradeRoom(_room.Id))
-                Hide();
+            DoBuildWithFx(() => _game.BuildSystem.TryUpgradeRoom(_room.Id));
         }
 
         private void UpdateBuildButtonState()
@@ -222,6 +218,32 @@ namespace ScreamHotel.UI
             bool tagReady = !isLv1ToLv2Upgrade || _selectedTag.HasValue;
 
             buildBtn.interactable = haveGold && tagReady;
+        }
+        
+        // === 工具方法 – 找到本房间的 RoomDropZone ===
+        private RoomDropZone FindRoomDropZone()
+        {
+            var views = FindObjectsOfType<RoomView>();
+            var rv = views.FirstOrDefault(v => v.roomId == _room.Id);
+            return rv != null ? rv.GetComponent<RoomDropZone>() : null;
+        }
+
+        // === 新增：包装执行（带特效+音效）===
+        private void DoBuildWithFx(Func<bool> buildAction)
+        {
+            var dz = FindRoomDropZone();
+            if (dz != null)
+            {
+                dz.PlayBuildFxAndRun(buildAction);
+            }
+            else
+            {
+                // 找不到落点也允许直接执行，至少不阻塞流程
+                buildAction?.Invoke();
+            }
+
+            // UI 先收起，特效在世界中播放即可
+            Hide();
         }
 
         // ====== 面板定位（与 RoomHoverPanel 同步的实现） ======

@@ -3092,9 +3092,10 @@ MonoBehaviour:
   root: {fileID: 495362066}
   costText: {fileID: 674637302}
   buildBtn: {fileID: 2117708081}
+  buildBtnLabel: {fileID: 0}
   fearTagSelectionPanel: {fileID: 977552427}
   buttonContainer: {fileID: 977552428}
-  panelOffset: {x: 0, y: 2, z: 0}
+  panelOffset: {x: 0, y: 5, z: 0}
 --- !u!224 &495362066
 RectTransform:
   m_ObjectHideFlags: 0

@@ -30,8 +30,6 @@ namespace ScreamHotel.Presentation
         // 系统
         private AssignmentSystem _assign => GetSystem<AssignmentSystem>(game, "_assignmentSystem");
         private BuildSystem _build    => GetSystem<BuildSystem>(game, "_buildSystem");
-        private object _dayNightSysRaw=> GetSystem<object>(game, "_dayNightSystem");
-        private HoverUIController _hoverUI;
 
         // 正在建造中的鬼，避免重复触发
         private readonly HashSet<string> _busyGhosts = new HashSet<string>();
@@ -40,7 +38,6 @@ namespace ScreamHotel.Presentation
         {
             if (game == null) game = FindObjectOfType<Core.Game>();
             _rv = GetComponent<RoomView>();
-            _hoverUI = FindObjectOfType<HoverUIController>(true);
             
             if (buildIcon != null) buildIcon.SetActive(false);
             if (nightIcon != null) nightIcon.SetActive(false);
@@ -122,7 +119,6 @@ namespace ScreamHotel.Presentation
                 return true;
             }
             
-                        
             if (r.Level == 0)
             {
                 return false;
@@ -156,20 +152,30 @@ namespace ScreamHotel.Presentation
             return false;
         }
         
-        private IEnumerator Co_BuildOrUpgrade(string ghostId, Transform anchor, System.Func<bool> buildAction)
+        public void PlayBuildFxAndRun(System.Func<bool> buildAction)
         {
-            _busyGhosts.Add(ghostId);
+            // 取一个可用的锚点
+            var anchor = (_rv != null && _rv.ghostAnchors != null && _rv.ghostAnchors.Length > 0)
+                ? _rv.ghostAnchors[0]
+                : transform;
 
+            StartCoroutine(Co_PlayFxAndRun(anchor, buildAction));
+        }
+        
+        private IEnumerator Co_PlayFxAndRun(Transform anchor, System.Func<bool> buildAction)
+        {
+            // 音效
             AudioManager.Instance.PlaySfx("Build");
-            
-            // 播放粒子
+
+            // 粒子
             ParticleSystem fx = null;
             if (buildFxPrefab != null)
             {
                 fx = Instantiate(buildFxPrefab, anchor.position, Quaternion.identity);
                 fx.Play();
             }
-            
+
+            // 等待一小段时间做出“施工中”的感觉（和你之前的协程风格一致）
             float duration = Random.Range(1f, 1.5f);
             float t = 0f;
             while (t < duration)
@@ -178,23 +184,20 @@ namespace ScreamHotel.Presentation
                 yield return null;
             }
 
-            bool ok = false;
-            try
+            // 执行真正的建造/升级逻辑
+            bool ok = buildAction != null && buildAction.Invoke();
+
+            // 回收粒子
+            if (fx != null)
             {
-                ok = buildAction != null && buildAction.Invoke();
+                fx.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                Destroy(fx.gameObject, 0.05f);
             }
-            finally
+
+            if (!ok)
             {
-                // 停止并销毁粒子
-                if (fx != null)
-                {
-                    fx.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                    Destroy(fx.gameObject, 0.05f);
-                }
-                _busyGhosts.Remove(ghostId);
+                Debug.LogWarning("建造/升级失败：可能是金币不足或规则限制。");
             }
-            
-            if (!ok) Debug.LogWarning("建造/升级失败：可能是金币不足或规则限制。");
         }
         
         public void ShowHoverFeedback(string id, bool isGhost)
