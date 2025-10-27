@@ -38,7 +38,6 @@ namespace ScreamHotel.Core
         private Material skyboxMaterial;
         private float _skyTransition;
         
-        // Game.cs —— 添加在类内任意位置（比如字段区下方）
         private const string FirstEnterKey = "FirstEnterGame";
 
         private AssignmentSystem _assignmentSystem;
@@ -47,6 +46,8 @@ namespace ScreamHotel.Core
         private DayPhaseSystem _dayPhaseSystem;
         private ProgressionSystem _progressionSystem;
         private GhostTrainer _trainer;
+        
+        public BuildSystem BuildSystem => _buildSystem;
         
         private int _settleGuestsTotal;
         private int _settleGuestsScared;

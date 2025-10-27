@@ -103,7 +103,7 @@ namespace ScreamHotel.Presentation
             if (!EqualityComparer<FearTag>.Default.Equals(sub,  default)) list.Add(sub);
 
             TryAddListByMember(g, "Tags",  list);
-            TryAddListByMember(g, "Fears", list);
+            TryAddListByMember(g, "Immunities", list);
 
             // 去重保持顺序
             var seen = new HashSet<FearTag>();

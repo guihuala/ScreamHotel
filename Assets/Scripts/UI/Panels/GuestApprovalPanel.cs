@@ -162,7 +162,7 @@ public class GuestApprovalPanel : BasePanel
         string intro = !string.IsNullOrEmpty(cfg?.intro) ? cfg.intro : "null";
         intro += $"\n\npayment:{g.BaseFee}";
         
-        if (g.Fears != null && g.Fears.Count > 0)
+        if (g.Immunities != null && g.Immunities.Count > 0)
         {
             BuildImmunityIcons(g);
         }
@@ -336,7 +336,7 @@ public class GuestApprovalPanel : BasePanel
         immunityIconTemplate.SetActive(false);
 
         // 没图集也允许继续（只是不显示图标）
-        foreach (var tag in g.Fears)
+        foreach (var tag in g.Immunities)
         {
             // 从图集拿图
             Sprite s = fearAtlas ? fearAtlas.Get(tag) : null;

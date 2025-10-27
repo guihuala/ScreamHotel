@@ -111,7 +111,7 @@ namespace ScreamHotel.Presentation
             if (TryGetEnum<FearTag>(g, "Main", out var main)) list.Add(main);
             if (TryGetEnum<FearTag>(g, "Sub",  out var sub))  list.Add(sub);
             TryAddList(g, "Tags",  list);
-            TryAddList(g, "Fears", list);
+            TryAddList(g, "Immunities", list);
 
             // 更稳的去重：保持原顺序
             var seen = new HashSet<FearTag>();

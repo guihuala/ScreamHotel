@@ -26,13 +26,13 @@ namespace ScreamHotel.Systems
             if (_world.Economy.Gold < rules.roomUnlockCost) return false;
             _world.Economy.Gold -= rules.roomUnlockCost;
 
-            r.Level = 1;                      // Lv0 → Lv1
+            r.Level = 1;  // Lv0 → Lv1
             r.Capacity = rules.capacityLv1;
             r.RoomTag = null;
 
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
-            EventBus.Raise(new RoomUnlockedEvent(r.Id));   // 新事件
-            EventBus.Raise(new RoomUpgradedEvent(r.Id, r.Level)); // 通知刷新
+            EventBus.Raise(new RoomUnlockedEvent(r.Id));  // 新事件
+            EventBus.Raise(new RoomUpgradedEvent(r.Id, r.Level));  // 通知刷新
             return true;
         }
 
@@ -51,8 +51,8 @@ namespace ScreamHotel.Systems
                 if (rules.lv2HasTag && !setTagOnLv2.HasValue)
                     return false; // 必须先选择恐惧属性
 
-                if (_world.Economy.Gold < GetRoomUpgradeCost(roomId, r.Level)) return false;
-                _world.Economy.Gold -= GetRoomUpgradeCost(roomId, r.Level);
+                if (_world.Economy.Gold < GetRoomUpgradeCost(r.Level)) return false;
+                _world.Economy.Gold -= GetRoomUpgradeCost(r.Level);
 
                 r.Level = 2;
                 r.Capacity = rules.capacityLv1; // 若Lv2容量不同，可再加字段 capacityLv2
@@ -65,8 +65,8 @@ namespace ScreamHotel.Systems
             if (r.Level == 2)
             {
                 // Lv2 -> Lv3
-                if (_world.Economy.Gold < GetRoomUpgradeCost(roomId, r.Level)) return false;
-                _world.Economy.Gold -= GetRoomUpgradeCost(roomId, r.Level);
+                if (_world.Economy.Gold < GetRoomUpgradeCost(r.Level)) return false;
+                _world.Economy.Gold -= GetRoomUpgradeCost(r.Level);
 
                 r.Level = 3;
                 r.Capacity = rules.capacityLv3; // 扩容
@@ -134,7 +134,7 @@ namespace ScreamHotel.Systems
             return (int)Math.Round(cost);
         }
 
-        private int GetRoomUpgradeCost(string roomId, int currentLevel)
+        public int GetRoomUpgradeCost( int currentLevel)
         {
             var rules = _world.Config?.Rules;
             if (rules == null || rules.roomUpgradeCosts == null) return 0;

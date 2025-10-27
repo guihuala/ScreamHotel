@@ -196,6 +196,7 @@ namespace ScreamHotel.Presentation
             if (hover != null)
             {
                 hover.ClosePickFearPanelIfActive();
+                hover.CloseBuildRoomPanelIfActive();
             }
 
             _dragStartPos = transform.position;

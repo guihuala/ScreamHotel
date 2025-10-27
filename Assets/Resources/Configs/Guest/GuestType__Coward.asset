@@ -15,9 +15,10 @@ MonoBehaviour:
   id: 1
   displayName: Ordinary tourists
   immunities: 
+  maxImmunitiesCount: 0
   barMax: 90
   requiredPercent: 0.75
-  baseFee: 80
+  baseFee: 40
   prefabOverride: {fileID: 7106032176820751855, guid: aee0c326817c946228c61c62d2b9209c, type: 3}
   portrait: {fileID: 21300000, guid: f26a2dda2bb80421d95ee0f2322be5db, type: 3}
   intro: Visitors who come out of admiration. These folks are usually quite timid

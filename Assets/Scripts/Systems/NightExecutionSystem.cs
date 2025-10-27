@@ -105,7 +105,7 @@ namespace ScreamHotel.Systems
 
         private HashSet<FearTag> GetGuestVulnerabilities(Guest g)
         {
-            return g.Fears != null ? new HashSet<FearTag>(g.Fears) : new HashSet<FearTag>();
+            return g.Immunities != null ? new HashSet<FearTag>(g.Immunities) : new HashSet<FearTag>();
         }
 
         private int GetGuestBaseFee(Guest g)
@@ -125,7 +125,6 @@ namespace ScreamHotel.Systems
         public float ScareRate;
         public List<RoomNightResult> RoomResults;
 
-        // 新增
         public int AssignedFails; // 已接待但未被吓到的数量
         public int UnservedGuests; // 今日未接待的客人数
     }

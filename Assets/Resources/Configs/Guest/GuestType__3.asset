@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 3
   displayName: horror enthusiasts
-  immunities: 00000000
+  immunities: 
+  maxImmunitiesCount: 2
   barMax: 100
   requiredPercent: 0.8
-  baseFee: 100
+  baseFee: 150
   prefabOverride: {fileID: 7946536820087081390, guid: 68173c1f5fe8b4451917e68f459a99d0, type: 3}
   portrait: {fileID: 21300000, guid: fddcf9a36d0b542c794237afa618e661, type: 3}
   intro: Those who love all things horror, and they might even be YouTube bloggers.

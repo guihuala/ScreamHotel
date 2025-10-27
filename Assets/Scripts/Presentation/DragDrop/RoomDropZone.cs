@@ -20,7 +20,6 @@ namespace ScreamHotel.Presentation
         [Header("Build VFX")]
         public GameObject buildIcon;
         public GameObject nightIcon;
-
         
         private Game game;
         private RoomView _rv; // 只用于拿锚点/可视
@@ -88,11 +87,6 @@ namespace ScreamHotel.Presentation
                 return false;
             }
             
-            if (r.Level == 0)
-            {
-                return false;
-            }
-            
             if (isGhost && IsDaytime())
             {
                 // 显示白天的建造图标
@@ -122,50 +116,16 @@ namespace ScreamHotel.Presentation
                     ? _rv.ghostAnchors[0] : transform;
                 targetAnchor = anchor;
 
-                if (r.Level == 0)
-                {
-                    // Lv0 -> Lv1：无需选择恐惧属性
-                    StartCoroutine(Co_BuildOrUpgrade(id, anchor, () =>
-                    {
-                        // 施工结束时再真正扣费/解锁
-                        return _build.TryUnlockRoom(roomId);
-                    }));
-                    return true; // 让鬼进入锚点“施工”
-                }
-                else if (r.Level == 1)
-                {
-                    // Lv1 -> Lv2：先选择恐惧属性，然后开始施工
-                    if (_hoverUI == null)
-                    {
-                        return false;
-                    }
+                var hoverUI = FindObjectOfType<HoverUIController>();
+                hoverUI?.OpenBuildRoomPanel(r);
 
-                    var attach = _rv != null ? _rv.transform : transform;
-                    _hoverUI.OpenPickFearPanel(id, attach, 0, (ghostId, tag, slotIdx) =>
-                    {
-                        // 选完后再让鬼开始“施工 1~2s”，结束时真正升级
-                        StartCoroutine(Co_BuildOrUpgrade(ghostId, anchor, () =>
-                        {
-                            return _build.TryUpgradeRoom(roomId, tag); // Lv1->Lv2 必须有 tag
-                        }));
-                    });
-                    
-                    return true;
-                }
-                else if (r.Level == 2)
-                {
-                    // Lv2 -> Lv3：直接施工，不更新“按属性”的外观
-                    StartCoroutine(Co_BuildOrUpgrade(id, anchor, () =>
-                    {
-                        return _build.TryUpgradeRoom(roomId); // 不改变 tag
-                    }));
-                    return true;
-                }
-                else
-                {
-                    Debug.Log("房间已满级，无法继续升级。");
-                    return false;
-                }
+                return true;
+            }
+            
+                        
+            if (r.Level == 0)
+            {
+                return false;
             }
 
             // ============ 夜晚或非鬼：恢复“分配”逻辑 ============

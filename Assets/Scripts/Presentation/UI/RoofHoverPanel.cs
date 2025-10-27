@@ -14,6 +14,7 @@ namespace ScreamHotel.UI
         public Text titleText;
         public Text costText;
         public Button buildBtn;
+        public Image bulidImage;
 
         [Header("Panel Position")]
         public Vector3 panelOffset = new Vector3(0f, 2f, 0f); // 面板相对于楼顶的世界偏移
@@ -29,9 +30,6 @@ namespace ScreamHotel.UI
             Hide();
         }
 
-        /// <summary>
-        /// 将面板固定在目标 Transform 上方
-        /// </summary>
         public void Show(int nextFloor, int cost, Vector3? worldOffset = null)
         {
             if (!canvas) canvas = GetComponentInParent<Canvas>();
@@ -41,14 +39,32 @@ namespace ScreamHotel.UI
             root.gameObject.SetActive(true);
             titleText.text = $"Build Floor {nextFloor}";
             costText.text = $"Cost: {cost}";
+            
+            bool isDayTime = _game?.TimeSystem?.GetCurrentTimePeriod() == GameState.Day;
+
+            buildBtn.interactable = isDayTime;
+
+            if (!isDayTime)
+            {
+                bulidImage.gameObject.SetActive(false);
+                buildBtn.GetComponentInChildren<Text>().text = "Can't Build at Night";
+            }
+            else
+            {
+                bulidImage.gameObject.SetActive(true);
+                buildBtn.GetComponentInChildren<Text>().text = "Build";
+            }
 
             buildBtn.onClick.RemoveAllListeners();
             buildBtn.onClick.AddListener(() =>
             {
-                var build = GetBuild();
-                if (build.TryBuildNextFloor(out var builtFloor))
+                if (isDayTime)
                 {
-                    // 成功后位置会继续由 Update 刷新；你也可在此刷新展示数据
+                    var build = GetBuild();
+                    if (build.TryBuildNextFloor(out var builtFloor))
+                    {
+                        AudioManager.Instance.PlaySfx("Build");
+                    }
                 }
             });
 

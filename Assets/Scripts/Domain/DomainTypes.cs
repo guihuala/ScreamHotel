@@ -18,7 +18,7 @@ namespace ScreamHotel.Domain
     public class Guest
     {
         public string Id;
-        public List<FearTag> Fears;
+        public List<FearTag> Immunities;
         public float BarMax;
         public float RequiredPercent;
         public int BaseFee;
@@ -45,8 +45,8 @@ namespace ScreamHotel.Domain
     
     public class ShopState
     {
-        public List<GhostOffer> Offers = new(); // 当天货架（长度==规则槽位数）
-        public int DayLastRefreshed = -1;       // 上次刷新是哪一天
+        public List<GhostOffer> Offers = new();
+        public int DayLastRefreshed = -1;
     }
     
     public class Economy

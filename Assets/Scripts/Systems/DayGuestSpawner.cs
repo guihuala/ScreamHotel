@@ -74,7 +74,7 @@ public class DayGuestSpawner
             {
                 Id = id,
                 TypeId = typeCfg.id,
-                Fears = generatedImmunities,  // 设置生成的恐惧属性
+                Immunities = generatedImmunities,  // 设置生成的恐惧属性
                 BaseFee = typeCfg.baseFee,
                 BarMax = typeCfg.barMax,
                 RequiredPercent = typeCfg.requiredPercent,

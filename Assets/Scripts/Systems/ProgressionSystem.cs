@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace ScreamHotel.Systems
 {
-    
-// ===== 进程推进（难度/解锁曲线）=====
     public class ProgressionSystem
     {
         private readonly World _world;

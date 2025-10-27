@@ -2,6 +2,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using ScreamHotel.Core;
+using ScreamHotel.Domain;
 using ScreamHotel.Presentation.Shop;
 using UnityEngine.UI;
 using ScreamHotel.Presentation;
@@ -19,6 +20,7 @@ namespace ScreamHotel.UI
         public PickFearPanel pickFearPanel;
         public TrainingRemainPanel trainingRemainPanel;
         public FearIconsPanel fearIconsPanel;
+        public BuildRoomPanel buildRoomPanel;
 
         [Header("Raycast")]
         public LayerMask interactMask = ~0;
@@ -32,7 +34,7 @@ namespace ScreamHotel.UI
         private HoverKind _lastKind = HoverKind.None;
         private string _lastRoomId;
         private bool _isPickFearPanelActive = false;
-        private TrainingSlot _currentTrainingSlot; // 当前悬停的训练槽位
+        
 
         void Awake()
         {
@@ -80,7 +82,6 @@ namespace ScreamHotel.UI
                 {
                     tags = guest.GetFearTags() ?? new System.Collections.Generic.List<ScreamHotel.Domain.FearTag>();
                     target = guest.transform;
-                    if (tags.Count == 0) Debug.LogWarning($"[HoverUI] Guest found but no fear tags. guestId={guest.guestId}");
                 }
 
                 if (fearIconsPanel != null && target != null)
@@ -157,14 +158,12 @@ namespace ScreamHotel.UI
                     {
                         int remainDays = Mathf.Max(0, trainingTime - ghost.TrainingDays);
                         trainingRemainPanel.Show(remainDays, trainingSlot.transform);
-                        _currentTrainingSlot = trainingSlot;
                     }
                 }
             }
             else
             {
                 trainingRemainPanel?.Hide();
-                _currentTrainingSlot = null;
             }
 
             _lastKind = HoverKind.TrainingRoom;
@@ -174,10 +173,9 @@ namespace ScreamHotel.UI
         private void ShowPanels(HoverInfo info)
         {
             var screen = (Vector3)((Vector2)Input.mousePosition + hoverScreenOffset);
-            
+
             // 隐藏训练剩余天数面板
             trainingRemainPanel?.Hide();
-            _currentTrainingSlot = null;
 
             switch (info.Kind)
             {
@@ -198,12 +196,12 @@ namespace ScreamHotel.UI
                 {
                     if (!string.IsNullOrEmpty(info.ShopGhostId))
                         shopPanel?.Show(info.ShopGhostId, info.ShopPrice, screen);
-                    
+
                     _lastKind = HoverKind.ShopSlot;
                     _lastRoomId = null;
                     break;
                 }
-                
+
                 case HoverKind.ShopReroll:
                 {
                     shopRerollPanel?.Show(info.Cost, screen);
@@ -215,7 +213,7 @@ namespace ScreamHotel.UI
                     _lastKind = HoverKind.TrainingRoom;
                     _lastRoomId = null;
                     break;
-                
+
                 case HoverKind.TrainingRemain:
                     _lastKind = HoverKind.TrainingRoom;
                     _lastRoomId = null;
@@ -237,21 +235,17 @@ namespace ScreamHotel.UI
             fearIconsPanel?.Hide();
             _lastKind = HoverKind.None;
             _lastRoomId = null;
-            _currentTrainingSlot = null;
         }
-        
-        public void OpenPickFearPanel(string ghostId, Transform transform,int slotIndex, System.Action<string, Domain.FearTag, int> onFearSelected)
-        {
-            if (pickFearPanel == null)
-            {
-                // 如果没有预制体引用，动态创建
-                CreatePickFearPanel();
-            }
 
+        #region 升级操作
+
+        public void OpenPickFearPanel(string ghostId, Transform transform, int slotIndex,
+            System.Action<string, Domain.FearTag, int> onFearSelected)
+        {
             if (pickFearPanel != null)
             {
                 _isPickFearPanelActive = true;
-                pickFearPanel.Init(ghostId, slotIndex, transform,(selectedGhostId, tag, selectedSlotIndex) =>
+                pickFearPanel.Init(ghostId, slotIndex, transform, (selectedGhostId, tag, selectedSlotIndex) =>
                 {
                     // 面板关闭时恢复悬停逻辑
                     _isPickFearPanelActive = false;
@@ -260,28 +254,18 @@ namespace ScreamHotel.UI
             }
         }
 
-        /// <summary>
-        /// 动态创建恐惧标签选择面板
-        /// </summary>
-        private void CreatePickFearPanel()
+        public void OpenBuildRoomPanel(Room room)
         {
-            var panelObj = new GameObject("PickFearPanel");
-            panelObj.transform.SetParent(transform, false);
-            pickFearPanel = panelObj.AddComponent<PickFearPanel>();
-            
-            // 设置Canvas
-            var canvas = panelObj.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100; // 确保在最上层
-            
-            panelObj.AddComponent<GraphicRaycaster>();
+            // 初始化 BuildRoomPanel 并显示
+            buildRoomPanel.Init(room);
+            buildRoomPanel.Show();
         }
         
         public bool IsPickFearPanelActive()
         {
             return _isPickFearPanelActive;
         }
-        
+
         public void ClosePickFearPanelIfActive()
         {
             if (_isPickFearPanelActive && pickFearPanel != null)
@@ -290,5 +274,15 @@ namespace ScreamHotel.UI
                 _isPickFearPanelActive = false;
             }
         }
+        
+        public void CloseBuildRoomPanelIfActive()
+        {
+            if (buildRoomPanel != null && buildRoomPanel.gameObject.activeInHierarchy)
+            {
+                buildRoomPanel.Hide();
+            }
+        }
+
+        #endregion
     }
 }

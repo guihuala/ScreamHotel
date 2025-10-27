@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 2
   displayName: Daring tourists
-  immunities: 00000000
+  immunities: 
+  maxImmunitiesCount: 1
   barMax: 100
   requiredPercent: 0.8
-  baseFee: 100
+  baseFee: 60
   prefabOverride: {fileID: 3718224893873345725, guid: d793031b2310944679e1e4f1cfebbe40, type: 3}
   portrait: {fileID: 21300000, guid: e297fcac476ad4dcd99fec3d7ebf3c89, type: 3}
   intro: A group with some courage but not too much. It's a bit challenging to scare
