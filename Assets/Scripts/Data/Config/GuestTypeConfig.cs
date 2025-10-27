@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ScreamHotel.Domain;
+using ScreamHotel.Systems;
 using UnityEngine;
 using Spine.Unity;
 
@@ -29,5 +30,9 @@ namespace ScreamHotel.Data
         [Tooltip("默认使用的Skin，可留空使用默认skin")] public string spineDefaultSkin = "";
         [Tooltip("默认播放的动画名，例如 idle / loop 等")] public string spineDefaultAnimation = "idle";
         [Tooltip("默认动画是否循环")] public bool spineDefaultLoop = true;
+        
+        [Header("Audio Configuration")]
+        public AudioClip successAudio;
+        public AudioClip failureAudio;
     }
 }

@@ -284,12 +284,6 @@ namespace ScreamHotel.Core
                 StartSettlement();
             }
         }
-
-
-        private void ExecuteNightActions()
-        {
-            _executionSystem.ResolveNight();
-        }
         
         private void SeedInitialWorld(World w)
         {
@@ -361,7 +355,7 @@ namespace ScreamHotel.Core
             var rules = World?.Config?.Rules;
             if (rules != null)
             {
-                int delta = r.AssignedFails * Mathf.Max(0, rules.suspicionPerFailedGuest);
+                int delta = r.AssignedFails * Mathf.Max(0, rules.suspicionPerFailedGuest) + r.UnservedGuests * Mathf.Max(0, rules.suspicionPerFailedGuest);
 
                 if (delta != 0)
                 {

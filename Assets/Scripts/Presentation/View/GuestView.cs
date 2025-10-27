@@ -24,7 +24,6 @@ namespace ScreamHotel.Presentation
             var g = game?.World?.Guests?.Find(x => x.Id == guestId);
             if (g == null)
             {
-                Debug.LogWarning($"[GuestView] Guest not found: {guestId}");
                 return;
             }
             Bind(g);

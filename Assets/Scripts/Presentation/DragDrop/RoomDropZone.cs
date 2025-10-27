@@ -151,18 +151,20 @@ namespace ScreamHotel.Presentation
             
             return false;
         }
-        
+
         public void PlayBuildFxAndRun(System.Func<bool> buildAction)
         {
             // 取一个可用的锚点
             var anchor = (_rv != null && _rv.ghostAnchors != null && _rv.ghostAnchors.Length > 0)
                 ? _rv.ghostAnchors[0]
                 : transform;
-
-            StartCoroutine(Co_PlayFxAndRun(anchor, buildAction));
+            
+            buildAction.Invoke();
+            
+            StartCoroutine(Co_PlayFxAndRun(anchor));
         }
         
-        private IEnumerator Co_PlayFxAndRun(Transform anchor, System.Func<bool> buildAction)
+        private IEnumerator Co_PlayFxAndRun(Transform anchor)
         {
             // 音效
             AudioManager.Instance.PlaySfx("Build");
@@ -174,29 +176,13 @@ namespace ScreamHotel.Presentation
                 fx = Instantiate(buildFxPrefab, anchor.position, Quaternion.identity);
                 fx.Play();
             }
-
-            // 等待一小段时间做出“施工中”的感觉（和你之前的协程风格一致）
+            
             float duration = Random.Range(1f, 1.5f);
             float t = 0f;
             while (t < duration)
             {
                 t += Time.deltaTime;
                 yield return null;
-            }
-
-            // 执行真正的建造/升级逻辑
-            bool ok = buildAction != null && buildAction.Invoke();
-
-            // 回收粒子
-            if (fx != null)
-            {
-                fx.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                Destroy(fx.gameObject, 0.05f);
-            }
-
-            if (!ok)
-            {
-                Debug.LogWarning("建造/升级失败：可能是金币不足或规则限制。");
             }
         }
         

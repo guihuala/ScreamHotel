@@ -2,8 +2,7 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using ScreamHotel.Core;
-using ScreamHotel.Presentation;
-using ScreamHotel.Domain;
+using ScreamHotel.Data;
 using ScreamHotel.Systems;
 
 namespace ScreamHotel.Presentation
@@ -98,6 +97,8 @@ namespace ScreamHotel.Presentation
                 }
 
                 yield return new WaitForSeconds(_stayTimeScaled);
+                
+                ResetRoomToIdle(roomView, roomResult);
             }
 
             // —— 所有房间结束：回正（位置+FOV） ——
@@ -132,11 +133,9 @@ namespace ScreamHotel.Presentation
                 if (sum > 0.0001f) { rDay/=sum; rShow/=sum; rExec/=sum; rSettle/=sum; }
                 else { rDay=0.50f; rShow=0.20f; rExec=0.20f; rSettle=0.10f; }
             }
-            float execBudget = Mathf.Max(0.1f, daySeconds * rExec); // 夜间执行总配额
-            // ↑ 预算定义参考 TimeSystem 的时间推进/分段逻辑（Day/Show/Execute/Settlement）:contentReference[oaicite:1]{index=1}
+            float execBudget = Mathf.Max(0.1f, daySeconds * rExec);
 
             // 2) 估算“基准情况下”总耗时（不缩放）
-            //    聚焦用时 = 1 / focusMoveSpeed（与你当前 FocusOnRoom 的t推进一致）
             float moveTimeBase = 1f / Mathf.Max(0.0001f, focusMoveSpeed);
             int totalGuests = rooms.Sum(r => r.GuestResults != null ? r.GuestResults.Count : 0);
             int roomCount = rooms.Count;
@@ -160,15 +159,29 @@ namespace ScreamHotel.Presentation
             // FOV 的lerp速度也跟着等比缩放（保持视觉节奏）
             _focusFovLerpScaled  = Mathf.Max(0.1f, focusFovLerpSpeed * scale);
             _restoreFovLerpScaled= Mathf.Max(0.1f, restoreFovSpeed * scale);
-
-            // （可选）如果即便取了下限仍超预算，你可以根据需要减小 afterShowDelay 或再压缩 _stayTimeScaled 等；
-            // 此处不做“二次压缩”，优先保证最低可观看度。
         }
 
         private void PlayRoomAnimation(RoomView room, GuestNightResult gRes, bool success)
         {
             var guestView = FindObjectsOfType<GuestView>().FirstOrDefault(g => g.guestId == gRes.GuestId);
             if (guestView == null) return;
+
+            // 获取游戏世界和数据库
+            var game = FindObjectOfType<Game>();
+            var dataManager = FindObjectOfType<DataManager>();
+    
+            // 通过 TypeId 查找对应的 GuestTypeConfig
+            GuestTypeConfig guestTypeConfig = null;
+            if (game?.World != null && dataManager?.Database != null)
+            {
+                // 从世界中找到对应的客人
+                var guest = game.World.Guests.FirstOrDefault(g => g.Id == gRes.GuestId);
+                if (guest != null && !string.IsNullOrEmpty(guest.TypeId))
+                {
+                    // 从数据库获取客人类型配置
+                    dataManager.Database.GuestTypes.TryGetValue(guest.TypeId, out guestTypeConfig);
+                }
+            }
 
             // 找出房间内所有鬼怪（按世界分配）
             var ghosts = FindObjectsOfType<PawnView>().Where(p => GetRoomOfGhost(p) == room.roomId).ToList();
@@ -185,8 +198,21 @@ namespace ScreamHotel.Presentation
             {
                 guestSpine.state.SetAnimation(0, success ? "shock" : "idle", false);
             }
-
-            AudioManager.Instance.PlaySfx(success ? "SuccessScare" : "FailScare");
+            
+            if (success)
+            {
+                if (guestTypeConfig?.successAudio != null)
+                {
+                    AudioManager.Instance.PlaySfx(guestTypeConfig.successAudio);
+                }
+            }
+            else
+            {
+                if (guestTypeConfig?.failureAudio != null)
+                {
+                    AudioManager.Instance.PlaySfx(guestTypeConfig.failureAudio);
+                }
+            }
         }
 
         private string GetRoomOfGhost(PawnView ghost)
@@ -302,6 +328,28 @@ namespace ScreamHotel.Presentation
             else
             {
                 Destroy(go, 2f);
+            }
+        }
+        
+        private void ResetRoomToIdle(RoomView roomView, RoomNightResult roomResult)
+        {
+            // 鬼怪：按分配在本房的 PawnView
+            var ghosts = FindObjectsOfType<PawnView>().Where(p => GetRoomOfGhost(p) == roomView.roomId);
+            foreach (var g in ghosts)
+            {
+                var spine = g.GetComponentInChildren<Spine.Unity.SkeletonAnimation>();
+                if (spine != null)
+                    spine.state.SetAnimation(0, "idle", true);
+            }
+
+            // 客人：本房结果中的所有 GuestId
+            foreach (var gRes in roomResult.GuestResults)
+            {
+                var guestView = FindObjectsOfType<GuestView>().FirstOrDefault(v => v.guestId == gRes.GuestId);
+                if (guestView == null) continue;
+                var guestSpine = guestView.GetComponentInChildren<Spine.Unity.SkeletonAnimation>();
+                if (guestSpine != null)
+                    guestSpine.state.SetAnimation(0, "idle", true);
             }
         }
     }

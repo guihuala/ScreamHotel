@@ -59,8 +59,6 @@ namespace ScreamHotel.Systems
                     {
                         GuestId = g.Id,
                         Hits = hits,
-                        GoldEarned = gold,
-                        EffectiveTags = new List<FearTag>(effectiveTags),
                     });
                 }
 
@@ -72,15 +70,15 @@ namespace ScreamHotel.Systems
 
             // === 失败数 & 未接待数 ===
             int assignedFails = Mathf.Max(0, guestsTotal - guestsScared);
-
+            int unserved = Mathf.Max(0, _world.Guests.Count - servedGuestSet.Count);
+            
             result.TotalGold = totalGold;
             result.GuestsTotal = guestsTotal;
             result.GuestsScared = guestsScared;
             result.GhostsUsed = ghostSet.Count;
             result.RoomCount = _world.Rooms.Count;
             result.ScareRate = guestsTotal > 0 ? (float)guestsScared / guestsTotal : 0f;
-
-            // 新字段
+            result.UnservedGuests = unserved;
             result.AssignedFails = assignedFails;
 
             EventBus.Raise(result);
@@ -108,7 +106,6 @@ namespace ScreamHotel.Systems
         {
             return g.Immunities != null ? new HashSet<FearTag>(g.Immunities) : new HashSet<FearTag>();
         }
-
 
         private int GetGuestBaseFee(Guest g)
         {
@@ -141,7 +138,5 @@ namespace ScreamHotel.Systems
     {
         public string GuestId;
         public int Hits;
-        public int GoldEarned;
-        public List<FearTag> EffectiveTags; // 鬼/房间构成的全集
     }
 }

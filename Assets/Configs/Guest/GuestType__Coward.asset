@@ -27,3 +27,5 @@ MonoBehaviour:
   spineDefaultSkin: guest1
   spineDefaultAnimation: idle
   spineDefaultLoop: 1
+  successAudio: {fileID: 8300000, guid: 2ef070feff2424ae38438228b07da51d, type: 3}
+  failureAudio: {fileID: 8300000, guid: e7a63dea0c7474cb4a37c2ff574536ad, type: 3}

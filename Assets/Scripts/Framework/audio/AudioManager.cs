@@ -243,6 +243,43 @@ public class AudioManager : SingletonPersistent<AudioManager>
     }
 
     /// <summary>
+    /// 播放音效（重载：直接传入AudioClip）
+    /// </summary>
+    /// <param name="audioClip">要播放的音频片段</param>
+    /// <param name="loop">是否循环</param>
+    /// <param name="volumeScale">音量缩放（0-1），默认为1使用系统音量设置</param>
+    public void PlaySfx(AudioClip audioClip, bool loop = false, float volumeScale = 1f)
+    {
+        if (audioClip == null)
+        {
+            Debug.LogWarning("PlaySfx: AudioClip为null");
+            return;
+        }
+
+        // 创建音频播放器
+        GameObject sfxAudioGO = new GameObject("SFX_" + audioClip.name);
+        sfxAudioGO.transform.SetParent(_sfxSourcesRootGO.transform);
+
+        AudioSource sfxAudioSource = sfxAudioGO.AddComponent<AudioSource>();
+        sfxAudioSource.clip = audioClip;
+        sfxAudioSource.loop = loop;
+        
+        // 设置音量（系统音量 × 自定义音量缩放）
+        sfxAudioSource.volume = mainVolume * sfxVolumeFactor * volumeScale;
+        
+        sfxAudioSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Master")[2];
+
+        sfxAudioSource.Play();
+
+        AudioInfo info = new AudioInfo();
+        info.audioName = audioClip.name;
+        info.audioSource = sfxAudioSource;
+        sfxAudioInfoList.Add(info);
+
+        StartCoroutine(DetectingAudioPlayState(info, false));
+    }
+
+    /// <summary>
     /// 暂停音效
     /// </summary>
     /// <param name="pauseSfxName">要暂停的音效名称</param>
