@@ -46,8 +46,9 @@ namespace ScreamHotel.Systems
                     if (g == null) continue;
 
                     guestsTotal++;
-                    var vulnerabilities = GetGuestVulnerabilities(g);
-                    int hits = effectiveTags.Count(t => vulnerabilities.Contains(t));
+                    var immunities = GetGuestImmunities(g);
+                    int hits = effectiveTags.Count(t => !immunities.Contains(t));
+
                     int baseFee = GetGuestBaseFee(g);
 
                     int gold = (hits >= 1) ? baseFee * hits : 0;
@@ -103,10 +104,11 @@ namespace ScreamHotel.Systems
             return set;
         }
 
-        private HashSet<FearTag> GetGuestVulnerabilities(Guest g)
+        private HashSet<FearTag> GetGuestImmunities(Guest g)
         {
             return g.Immunities != null ? new HashSet<FearTag>(g.Immunities) : new HashSet<FearTag>();
         }
+
 
         private int GetGuestBaseFee(Guest g)
         {

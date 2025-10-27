@@ -3095,7 +3095,7 @@ MonoBehaviour:
   buildBtnLabel: {fileID: 0}
   fearTagSelectionPanel: {fileID: 977552427}
   buttonContainer: {fileID: 977552428}
-  panelOffset: {x: 0, y: 5, z: 0}
+  panelOffset: {x: 0, y: 3, z: 0}
 --- !u!224 &495362066
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4165,6 +4165,7 @@ GameObject:
   m_Component:
   - component: {fileID: 723280867}
   - component: {fileID: 723280868}
+  - component: {fileID: 723280869}
   m_Layer: 0
   m_Name: PresentationRoot
   m_TagString: Untagged
@@ -4228,6 +4229,26 @@ MonoBehaviour:
   shopSlotsPerRow: 5
   shopFixedZ: 0
   floorFramePrefab: {fileID: -8679921383154817045, guid: e90a0b26b45994889aa82a94a38ee4d7, type: 3}
+--- !u!114 &723280869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723280866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1056a0a9f7c342b2acd4148354a74d24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  focusMoveSpeed: 4
+  focusStayTime: 1
+  afterShowDelay: 0.8
+  focusFov: 45
+  focusFovLerpSpeed: 3
+  restoreFovSpeed: 2
+  perGuestWait: 1.5
+  successParticlePrefab: {fileID: 190236, guid: 39f586f40e7d928499bfe946ffb04ad5, type: 3}
 --- !u!1 &758897908
 GameObject:
   m_ObjectHideFlags: 0
@@ -4451,7 +4472,7 @@ AudioSource:
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
@@ -4849,13 +4870,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   ignoreEdgeWhenUnfocused: 1
   lockZ: 1
-  shakeDuration: 1.5
-  shakeStrength: 0.3
-  shakeFrequency: 20
-  recenterOnExecute: 1
-  executeFocusPosition: {x: 26, y: 2, z: -10}
-  executeRecenterLerp: 12
-  restrictHorizontalInExecute: 1
 --- !u!1 &977552427
 GameObject:
   m_ObjectHideFlags: 0
@@ -12106,7 +12120,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 76bc3f61aa0964aa98121af5e64e5b8a, type: 2}
+  - {fileID: 2100000, guid: 35b37ac3925414a07a0b5f0cba34e035, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

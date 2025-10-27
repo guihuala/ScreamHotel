@@ -6,6 +6,7 @@ using ScreamHotel.Core;
 using ScreamHotel.Data;
 using ScreamHotel.Systems;
 using ScreamHotel.Domain;
+using ScreamHotel.Presentation;
 using ScreamHotel.UI;
 
 namespace ScreamHotel.Core
@@ -267,10 +268,23 @@ namespace ScreamHotel.Core
             State = GameState.NightExecute;
             EventBus.Raise(new GameStateChanged(State));
             AudioManager.Instance.PlaySfx("NightFall");
-            
-            // 执行夜晚的相关逻辑
-            ExecuteNightActions();
+
+            // 执行夜晚逻辑（返回结果）
+            var result = _executionSystem.ResolveNight();
+
+            // 启动夜晚演出协程
+            var director = FindObjectOfType<NightShowDirector>();
+            if (director != null)
+            {
+                StartCoroutine(director.PlayNightShow(result));
+            }
+            else
+            {
+                Debug.LogWarning("[Game] 未找到 NightShowDirector，直接跳过演出进入结算。");
+                StartSettlement();
+            }
         }
+
 
         private void ExecuteNightActions()
         {

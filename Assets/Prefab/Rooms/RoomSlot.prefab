@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1392891691530366443}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.661, y: -0.266, z: -1.976}
+  m_LocalPosition: {x: 0.567, y: -0.266, z: -1.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -122,7 +122,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7132170312707066536}
   m_Layer: 0
-  m_Name: Ghost
+  m_Name: Guest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -253,7 +253,7 @@ Transform:
   m_GameObject: {fileID: 6253780119501042011}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.436, y: -0.266, z: -1.976}
+  m_LocalPosition: {x: 1.436, y: -0.266, z: -1.654}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -284,7 +284,7 @@ Transform:
   m_GameObject: {fileID: 7279760916850612621}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.123, y: -0.266, z: -1.18}
+  m_LocalPosition: {x: -0.713, y: -0.266, z: -1.591}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -413,7 +413,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5571275230327425749}
   m_Layer: 0
-  m_Name: Guset
+  m_Name: Ghost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
