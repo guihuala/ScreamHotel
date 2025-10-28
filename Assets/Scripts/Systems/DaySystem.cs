@@ -40,10 +40,7 @@ namespace ScreamHotel.Systems
             var progression = new ProgressionSystem(_world, _world.Config);
             float t = progression.GetHardGuestRatio(dayIndex);
 
-            int scaledCount = Mathf.Max(1, Mathf.RoundToInt(baseCount * Mathf.Lerp(1f, 1.75f, t)));
-
-            // 调试：输出当前生成客人的数量
-            Debug.Log($"[DayPhaseSystem] Generating {scaledCount} guest candidates for day {dayIndex}. Base count: {baseCount}, t: {t:0.00}");
+            int scaledCount = Mathf.Max(1, Mathf.RoundToInt(baseCount * Mathf.Lerp(1f, 2.5f, t)));
 
             _guestSpawner.GenerateCandidates(scaledCount);
 

@@ -136,7 +136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useWidthFromStart: 1
-  width: 6
+  width: 10
   leftPoint: {fileID: 0}
   rightPoint: {fileID: 0}
   speed: 2
@@ -150,7 +150,7 @@ MonoBehaviour:
   randomMidPause: 1
   midPausePerSecond: 0.12
   midPauseRange: {x: 0.15, y: 0.45}
-  randomTurnWithoutObstacle: 1
+  randomTurnWithoutObstacle: 0
   turnPerSecond: 0.04
   rotateYInsteadOfScale: 1
   visualRoot: {fileID: 0}

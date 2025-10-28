@@ -36,12 +36,24 @@ namespace ScreamHotel.Presentation
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             return (BuildSystem)f.GetValue(_game);
         }
-        
-        public HoverInfo GetHoverInfo() => new HoverInfo
+
+        public HoverInfo GetHoverInfo()
         {
-            Kind = HoverKind.Roof,
-            NextFloor = GetNextFloor(),
-            Cost = GetNextFloorCost(),
-        };
+            var next = GetNextFloor();
+            int maxFloor = _game?.World?.Config?.Rules?.maxFloor ?? 4;
+
+            if (next > maxFloor)
+            {
+                // 已经到最高层：不显示任何UI
+                return new HoverInfo { Kind = HoverKind.None };
+            }
+
+            return new HoverInfo
+            {
+                Kind = HoverKind.Roof,
+                NextFloor = next,
+                Cost = GetNextFloorCost(),
+            };
+        }
     }
 }

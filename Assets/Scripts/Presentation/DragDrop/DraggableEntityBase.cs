@@ -168,26 +168,37 @@ namespace ScreamHotel.Presentation
             }
         }
 
-        // —— 无落点时的处理：白天解绑并不回弹；其他时段回弹 —— 
+        // —— 无落点时的处理：在 NightShow 直接“解绑并自由移动”；否则回弹或原逻辑 —— 
         private void HandleNoDropZoneRelease()
         {
-            bool isDay = (game && game.State == GameState.Day);
-            if (isDay)
+            var state = game ? game.State : GameState.Day;
+            
+            if (state == GameState.NightShow)
+            {
+                var assign = GetSystem<AssignmentSystem>(game, "_assignmentSystem");
+                if (!string.IsNullOrEmpty(entityId))
+                    UnassignEntity(assign, entityId);
+                Debug.Log($"[{GetType().Name}] NightShow 无 DropZone：已清除 {entityId} 分配并释放移动");
+                UnpinForFreeMove(); // 恢复自由移动（不固定在锚点）
+                return;
+            }
+            
+            if (state == GameState.Day)
             {
                 var assign = GetSystem<AssignmentSystem>(game, "_assignmentSystem");
                 if (!string.IsNullOrEmpty(entityId)) UnassignEntity(assign, entityId);
-                Debug.Log($"[{GetType().Name}] 白天无 DropZone，已清除 {entityId} 分配");
-                UnpinForFreeMove(); // 恢复自由移动
+                Debug.Log($"[{GetType().Name}] 白天无 DropZone，已清除 {entityId} 分配（若系统允许）");
+                UnpinForFreeMove();
+                return;
             }
-            else
-            {
-                // 夜/结算：回到起点
-                var tmp = new GameObject($"{GetType().Name}_ReturnTmp").transform;
-                tmp.position = _dragStartPos;
-                _moveTo?.Invoke(tmp, 0.12f);
-                Destroy(tmp.gameObject, 0.2f);
-            }
+
+            // 其他阶段（例如 NightExecute 被锁不会开始拖；这里兜底维持原回弹）
+            var tmp = new GameObject($"{GetType().Name}_ReturnTmp").transform;
+            tmp.position = _dragStartPos;
+            _moveTo?.Invoke(tmp, 0.12f);
+            Destroy(tmp.gameObject, 0.2f);
         }
+
 
         // —— 拖拽开始/结束：切层 & 刚体保护 —— 
         private void BeginSelfDrag()
