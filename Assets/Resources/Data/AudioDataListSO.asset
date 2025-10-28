@@ -21,6 +21,8 @@ MonoBehaviour:
     audioPath: Audio/Sfx/GetMoney
   - audioName: Ghost_in
     audioPath: Audio/Sfx/Ghost_in
+  - audioName: HoverBtn
+    audioPath: Audio/Sfx/HoverBtn
   - audioName: PopupWindow
     audioPath: Audio/Sfx/PopupWindow
   - audioName: Settlement
@@ -37,11 +39,15 @@ MonoBehaviour:
     audioPath: Audio/Sfx/GuestAction/Guest_scare_2
   - audioName: Guest_scare_3
     audioPath: Audio/Sfx/GuestAction/Guest_scare_3
-  - audioName: Guest_doubt_3
-    audioPath: Audio/Sfx/GuestAction/Guest_doubt_3
   - audioName: Build
     audioPath: Audio/Sfx/Build
   - audioName: Guest_in
     audioPath: Audio/Sfx/Guest_in
   - audioName: NightFall
     audioPath: Audio/Sfx/NightFall
+  - audioName: error
+    audioPath: Audio/Sfx/error
+  - audioName: Guest_doubt_3
+    audioPath: Audio/Sfx/GuestAction/Guest_doubt_3
+  - audioName: OpenWindow
+    audioPath: Audio/Sfx/OpenWindow

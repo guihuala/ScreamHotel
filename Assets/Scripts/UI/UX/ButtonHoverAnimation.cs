@@ -115,7 +115,7 @@ public class ButtonHoverAnimation : MonoBehaviour, IPointerEnterHandler, IPointe
                 break;
         }
         
-        AudioManager.Instance.PlaySfx("ClickBtn");
+        AudioManager.Instance.PlaySfx("HoverBtn");
         
         // 添加震动效果
         if (enableShake)
@@ -159,6 +159,8 @@ public class ButtonHoverAnimation : MonoBehaviour, IPointerEnterHandler, IPointe
                 PlayCombinedClickAnimation();
                 break;
         }
+        
+        AudioManager.Instance.PlaySfx("ClickBtn");
     }
 
     public void OnPointerUp(PointerEventData eventData)

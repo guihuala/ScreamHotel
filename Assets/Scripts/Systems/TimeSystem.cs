@@ -3,57 +3,47 @@ using UnityEngine;
 
 namespace ScreamHotel.Systems
 {
-    [System.Serializable]
     public class TimeSystem
     {
-        public float dayDurationInSeconds = 300f; // 一天5分钟
-        public float currentTimeOfDay = 0.25f;    // 从早晨开始（6:00）
-        
-        public float DayProgress => currentTimeOfDay;
-
-        public bool isPaused
-        {
-            get => TimeManager.Instance != null && TimeManager.Instance.IsPaused;
-            set
-            {
-                if (TimeManager.Instance == null) return;
-                if (value) TimeManager.Instance.PauseTime();
-                else TimeManager.Instance.ResumeTime();
-            }
-        }
+        public float currentTimeOfDay = 0f;  // 当前时间（0 到 1 之间）
+        public float dayDurationInSeconds;  // 一天的时长
+        private float dayStartTime;          // 每日开始时间
 
         private Game _game;
 
-        public TimeSystem(Game game)  { _game = game; }
+        public TimeSystem(Game game)
+        {
+            _game = game;
+
+            // 从 GameRuleConfig 获取设置
+            var rules = _game.World?.Config?.Rules;
+            if (rules != null)
+            {
+                dayDurationInSeconds = rules.dayDurationInSeconds;
+                dayStartTime = rules.dayStartTime;
+            }
+        }
 
         public void Update(float deltaTime)
         {
-            if (deltaTime <= 0f) return; // 被 TimeManager 暂停时直接不推进
+            if (deltaTime <= 0f) return;  // 被 TimeManager 暂停时直接不推进
 
             // 正常推进时间（0~1）
-            currentTimeOfDay = (currentTimeOfDay + deltaTime / dayDurationInSeconds) % 1f;
+            currentTimeOfDay = Mathf.Repeat(currentTimeOfDay + deltaTime / dayDurationInSeconds, 1f);
 
+            // 按照新的配置，计算时间段
             var rules = _game?.World?.Config?.Rules;
-            float rDay = 0.50f, rShow = 0.20f, rExec = 0.20f, rSettle = 0.10f;
+            float rDay = rules?.dayRatio ?? 0.50f;
+            float rShow = rules?.nightShowRatio ?? 0.20f;
+            float rExec = rules?.nightExecuteRatio ?? 0.20f;
+            float rSettle = rules?.settlementRatio ?? 0.10f;
 
-            if (rules != null)
-            {
-                rDay   = Mathf.Max(0f, rules.dayRatio);
-                rShow  = Mathf.Max(0f, rules.nightShowRatio);
-                rExec  = Mathf.Max(0f, rules.nightExecuteRatio);
-                rSettle= Mathf.Max(0f, rules.settlementRatio);
-                var sum = rDay + rShow + rExec + rSettle;
-                if (sum > 0.0001f)
-                {
-                    rDay   /= sum; rShow /= sum; rExec /= sum; rSettle /= sum;
-                }
-                else { rDay=0.50f; rShow=0.20f; rExec=0.20f; rSettle=0.10f; }
-            }
+            // 设置时间比例
+            float dayEnd = rDay;
+            float showEnd = dayEnd + rShow;
+            float execEnd = showEnd + rExec;
 
-            float dayEnd   = rDay;
-            float showEnd  = dayEnd + rShow;
-            float execEnd  = showEnd + rExec;
-
+            // 根据时间进度调整游戏状态
             if (currentTimeOfDay >= dayEnd && currentTimeOfDay < showEnd)
             {
                 if (_game.State != GameState.NightShow) _game.StartNightShow();
@@ -76,7 +66,7 @@ namespace ScreamHotel.Systems
         {
             currentTimeOfDay = Mathf.Repeat(t, 1f);
         }
-        
+
         public GameState GetCurrentTimePeriod()
         {
             var rules = _game?.World?.Config?.Rules;
@@ -84,7 +74,7 @@ namespace ScreamHotel.Systems
             float rShow = rules?.nightShowRatio ?? 0.20f;
             float rExec = rules?.nightExecuteRatio ?? 0.20f;
 
-            float currentTime = DayProgress;  // 获取当前时间进度
+            float currentTime = currentTimeOfDay;  // 获取当前时间进度
 
             if (currentTime >= 0f && currentTime < rDay) return GameState.Day;  // 白天
             if (currentTime >= rDay && currentTime < rDay + rShow) return GameState.NightShow;  // 夜间展示
@@ -93,4 +83,3 @@ namespace ScreamHotel.Systems
         }
     }
 }
-

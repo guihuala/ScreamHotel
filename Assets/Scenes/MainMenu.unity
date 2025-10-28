@@ -653,7 +653,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Version 0.0.1
+  m_text: Version 1.0.0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d15dc5f7f65c54362b95847b2b45e636, type: 2}
   m_sharedMaterial: {fileID: -6118384104356249047, guid: d15dc5f7f65c54362b95847b2b45e636, type: 2}
@@ -1491,7 +1491,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Credit
+  m_Text: Credits
 --- !u!222 &215674662
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8959,7 +8959,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: -2197935478116520344, guid: cd090a0d57353430d8898f2b69beb5c8, type: 2}
-  m_audioClip: {fileID: 8300000, guid: ccae81d520940438384fc3c283db2cb5, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 30272eed4d2384d8d9f316be820e43f3, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -9005,7 +9005,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 0.13
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -9054,7 +9054,7 @@ Transform:
   m_GameObject: {fileID: 2132591044}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 722.0687, y: 520.4547, z: 3.0097032}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

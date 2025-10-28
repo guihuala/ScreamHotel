@@ -5,7 +5,6 @@ using ScreamHotel.Core;
 
 namespace ScreamHotel.Systems
 {
-    /// <summary>楼层里的四个房间槽位：左A/左B/右A/右B（中间电梯不占槽位）。</summary>
     public enum RoomSlot { LA, LB, RA, RB }
     
     public class BuildSystem
@@ -23,7 +22,11 @@ namespace ScreamHotel.Systems
             // 仅 Lv0（锁定）可解锁
             if (r.Level != 0) return false;
 
-            if (_world.Economy.Gold < rules.roomUnlockCost) return false;
+            if (_world.Economy.Gold < rules.roomUnlockCost)
+            {
+                AudioManager.Instance.PlaySfx("error");
+                return false;
+            }
             _world.Economy.Gold -= rules.roomUnlockCost;
 
             r.Level = 1;  // Lv0 → Lv1
@@ -42,16 +45,19 @@ namespace ScreamHotel.Systems
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
             if (r == null) return false;
             var rules = _world.Config?.Rules;
-            if (r.Level == 0) return false; // ← 必须先解锁
+            if (r.Level == 0) return false;
             if (rules == null) return false;
 
             if (r.Level == 1)
             {
-                // 若 Lv2 需要恐惧标签但未提供，则不允许升级
                 if (rules.lv2HasTag && !setTagOnLv2.HasValue)
-                    return false; // 必须先选择恐惧属性
+                    return false;
 
-                if (_world.Economy.Gold < GetRoomUpgradeCost(r.Level)) return false;
+                if (_world.Economy.Gold < GetRoomUpgradeCost(r.Level))
+                {
+                    AudioManager.Instance.PlaySfx("error");
+                    return false;
+                }
                 _world.Economy.Gold -= GetRoomUpgradeCost(r.Level);
 
                 r.Level = 2;
@@ -65,7 +71,11 @@ namespace ScreamHotel.Systems
             if (r.Level == 2)
             {
                 // Lv2 -> Lv3
-                if (_world.Economy.Gold < GetRoomUpgradeCost(r.Level)) return false;
+                if (_world.Economy.Gold < GetRoomUpgradeCost(r.Level))
+                {
+                    AudioManager.Instance.PlaySfx("error");
+                    return false;
+                }
                 _world.Economy.Gold -= GetRoomUpgradeCost(r.Level);
 
                 r.Level = 3;
@@ -93,7 +103,11 @@ namespace ScreamHotel.Systems
             }
 
             var cost = GetFloorBuildCost(newFloor);
-            if (_world.Economy.Gold < cost) return false;
+            if (_world.Economy.Gold < cost)
+            {
+                AudioManager.Instance.PlaySfx("error");
+                return false;
+            }
 
             _world.Economy.Gold -= cost;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
@@ -174,7 +188,6 @@ namespace ScreamHotel.Systems
         private bool TryParseFloor(string roomId, out int floor)
         {
             floor = 0;
-            // 形如 Room_F3_LA
             if (string.IsNullOrEmpty(roomId)) return false;
             var fIdx = roomId.IndexOf("_F", StringComparison.Ordinal);
             if (fIdx < 0) return false;

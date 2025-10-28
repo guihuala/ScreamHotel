@@ -97,6 +97,8 @@ public class UIManager : SingletonPersistent<UIManager>
             Destroy(panelObj);
             return null;
         }
+        
+        AudioManager.Instance.PlaySfx("OpenWindow");
 
         panel.OpenPanel(name);
         _panelDict.Add(name, panel);

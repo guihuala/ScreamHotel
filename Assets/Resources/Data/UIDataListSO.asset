@@ -13,19 +13,17 @@ MonoBehaviour:
   m_Name: UIDataListSO
   m_EditorClassIdentifier: 
   uiDataList:
+  - uiName: CreditPanel
+    uiPath: Panel/CreditPanel
+  - uiName: GameResultPanel
+    uiPath: Panel/GameResultPanel
+  - uiName: GuestApprovalPanel
+    uiPath: Panel/GuestApprovalPanel
+  - uiName: GuidePanel
+    uiPath: Panel/GuidePanel
   - uiName: PausePanel
     uiPath: Panel/PausePanel
   - uiName: SettingPanel
     uiPath: Panel/SettingPanel
   - uiName: SettlementPanel
     uiPath: Panel/SettlementPanel
-  - uiName: GuestApprovalPanel
-    uiPath: Panel/GuestApprovalPanel
-  - uiName: GameWinPanel
-    uiPath: Panel/GameWinPanel
-  - uiName: GameFailPanel
-    uiPath: Panel/GameFailPanel
-  - uiName: GuidePanel
-    uiPath: Panel/GuidePanel
-  - uiName: CreditPanel
-    uiPath: Panel/CreditPanel

@@ -47,8 +47,11 @@ namespace ScreamHotel.Data
         
         [Header("Ghost Training")]
         public int ghostTrainingTimeDays = 2; // 统一的训练天数（每个鬼怪都相同）
+
+        [Header("Time Configuration")]
+        [Tooltip("一天的总时长（单位：秒）")] public float dayDurationInSeconds = 300f; // 默认为 5 分钟
+        [Tooltip("一天开始时的时间（0 到 1 之间的值，0 为午夜，1 为第二天的午夜）")] public float dayStartTime = 0f;  // 默认为 0（午夜）
         
-        [Header("Time Ratios (per day)")]
         [Tooltip("白天所占比例")]      public float dayRatio = 0.50f;
         [Tooltip("夜间展示所占比例")]  public float nightShowRatio = 0.20f;
         [Tooltip("夜间执行所占比例")]  public float nightExecuteRatio = 0.20f;

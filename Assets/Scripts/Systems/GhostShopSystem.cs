@@ -86,7 +86,11 @@ namespace ScreamHotel.Systems
             int remaining = _world.Shop.Offers.Count;
             if (remaining <= 0) return false;
 
-            if (_world.Economy.Gold < rules.ghostShopRerollCost) return false;
+            if (_world.Economy.Gold < rules.ghostShopRerollCost)
+            {
+                AudioManager.Instance.PlaySfx("error");
+                return false;
+            }
             _world.Economy.Gold -= rules.ghostShopRerollCost;
             EventBus.Raise(new GoldChanged(_world.Economy.Gold));
 
@@ -101,14 +105,16 @@ namespace ScreamHotel.Systems
             var rules = _world.Config?.Rules;
             if (rules == null) return false;
             if (slotIndex < 0 || slotIndex >= _world.Shop.Offers.Count) return false;
-
+            
             var offer = _world.Shop.Offers[slotIndex];
-            if (_world.Economy.Gold < rules.ghostShopPrice) return false;
-
-            // 从报价的 ConfigId 取配置（ConfigId 来自世界实例 Id 的前缀）
+            if (_world.Economy.Gold < rules.ghostShopPrice)
+            {
+                AudioManager.Instance.PlaySfx("error");
+                return false;
+            }
+            
             if (!_db.Ghosts.TryGetValue(offer.ConfigId, out var cfg))
             {
-                Debug.LogError($"Ghost config not found: {offer.ConfigId}");
                 return false;
             }
 

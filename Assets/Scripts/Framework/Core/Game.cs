@@ -48,6 +48,8 @@ namespace ScreamHotel.Core
         private ProgressionSystem _progressionSystem;
         private GhostTrainer _trainer;
         
+        private SoundManager _soundManager;
+        
         public BuildSystem BuildSystem => _buildSystem;
         
         private int _settleGuestsTotal;
@@ -60,6 +62,7 @@ namespace ScreamHotel.Core
         private void Awake()
         {
             EventBus.Subscribe<ExecNightResolved>(OnNightResolved);
+            EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
             
             Application.targetFrameRate = 60;
             if (dataManager == null) dataManager = FindObjectOfType<DataManager>();
@@ -77,6 +80,8 @@ namespace ScreamHotel.Core
             _trainer = new GhostTrainer();
             TimeSystem = new TimeSystem(this);
             
+            _soundManager = SoundManager.Instance;
+            
             GoToDay();
         }
         
@@ -91,7 +96,7 @@ namespace ScreamHotel.Core
         private void Update()
         {
             if (TimeManager.Instance == null) return;
-            float dt = TimeManager.Instance.DeltaTime;     // 统一由 TimeManager 控制暂停/倍速
+            float dt = TimeManager.Instance.DeltaTime;
             TimeSystem.Update(dt);
             UpdateSkyboxTransition();
         }
@@ -115,14 +120,14 @@ namespace ScreamHotel.Core
         
         public bool ShopTryReroll()
         {
-            if (State != GameState.Day) { Debug.LogWarning("[Shop] 仅在 Day 阶段可刷新商店"); return false; }
+            if (State != GameState.Day) { AudioManager.Instance.PlaySfx("error"); return false; }
             return _dayPhaseSystem != null && _dayPhaseSystem.ShopReroll(DayIndex);
         }
 
         public bool ShopTryBuy(int slot, out string newGhostId)
         {
             newGhostId = null;
-            if (State != GameState.Day) { Debug.LogWarning("[Shop] 仅在 Day 阶段可购买鬼怪"); return false; }
+            if (State != GameState.Day) { AudioManager.Instance.PlaySfx("error"); return false; }
             return _dayPhaseSystem != null && _dayPhaseSystem.ShopBuy(slot, out newGhostId);
         }
 
@@ -365,8 +370,25 @@ namespace ScreamHotel.Core
 
                 if (World.Suspicion >= Mathf.Max(1, rules.suspicionThreshold))
                 {
-                    EndGame(false, "怀疑值达到上限，旅馆的秘密被揭穿");
+                    EndGame(false, "怀疑值达到上限");
                     return;
+                }
+            }
+        }
+        
+        private void OnGameStateChanged(GameStateChanged gameStateChanged)
+        {
+            // 根据游戏状态触发不同的音乐
+            if (gameStateChanged.State is GameState state)
+            {
+                switch (state)
+                {
+                    case GameState.Day:
+                        _soundManager.PlayMusic("DayTheme"); // 播放白天音乐
+                        break;
+                    case GameState.NightShow:
+                        _soundManager.PlayMusic("NightTheme", fadeDuration: 2f); // 播放夜间展示音乐
+                        break;
                 }
             }
         }
@@ -390,24 +412,48 @@ namespace ScreamHotel.Core
                         return;
                     }
                 }
-                
+
                 EndGame(true, "成功经营至最后一天，未被揭穿");
                 return;
             }
 
             GoToDay();
         }
-        
+
         private void EndGame(bool success, string reason)
         {
+            string musicToPlay = success ? "VictoryTheme" : "FailureTheme";
+            _soundManager.PlayMusic(musicToPlay, fadeDuration: 0.5f);
+
             TimeManager.Instance?.PauseTime();
             EventBus.Raise(new GameEnded(success, reason, DayIndex));
 
-            // 打开结果面板
-            var panel = UIManager.Instance.OpenPanel(success ? "GameWinPanel" : "GameFailPanel");
+            // 打开通用的结果面板并传递结局类型和失败原因
+            var panel = UIManager.Instance.OpenPanel("GameResultPanel");  // 使用通用的结果面板
             var result = panel as GameResultPanel;
             if (result != null)
-                result.Init(success);
+            {
+                if (success)
+                {
+                    result.Init(success);  // 成功结局
+                }
+                else
+                {
+                    // 根据失败原因传递失败类型
+                    GameResultPanel.FailureReason failureReason = GameResultPanel.FailureReason.None;
+
+                    if (reason.Contains("未达到目标金币"))
+                    {
+                        failureReason = GameResultPanel.FailureReason.InsufficientMoney;
+                    }
+                    else if (reason.Contains("怀疑值达到上限"))
+                    {
+                        failureReason = GameResultPanel.FailureReason.SuspicionTooHigh;
+                    }
+
+                    result.Init(success, failureReason);  // 失败结局并传递失败原因
+                }
+            }
         }
     }
 }
