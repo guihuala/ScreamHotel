@@ -85,13 +85,18 @@ namespace ScreamHotel.UI
         private void Update()
         {
             UpdateTimeDisplay();
-
-            // 鼠标悬停时，实时让 Tooltip 跟随鼠标
+            
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                OnPauseButtonClicked();
+            }
+            
             if (timeInfoTooltip != null && timeInfoTooltip.gameObject.activeInHierarchy)
             {
                 timeInfoTooltip.UpdatePosition(Input.mousePosition);
             }
         }
+
 
         // ===== Event handlers =====
         private void OnGoldChanged(GoldChanged g) => RefreshGoldUI();

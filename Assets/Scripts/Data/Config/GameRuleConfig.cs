@@ -39,8 +39,7 @@ namespace ScreamHotel.Data
         public int maxFloor = 4;
 
         [Header("Room Pricing & Capacity")]
-        [Tooltip("购买一间Lv1房间的价格")] public int roomBuyCost = 200;
-        [Tooltip("解锁一间房间（Lv0→Lv1）的价格")] public int roomUnlockCost = 150; // ← 新增
+        [Tooltip("解锁一间房间（Lv0→Lv1）的价格")] public int roomUnlockCost = 150;
         [Tooltip("Lv1与Lv3的容量（Lv2若与Lv1一致则无需字段）")] public int capacityLv1 = 1;
         public int capacityLv3 = 2;
         [Tooltip("Lv2/3 是否赋予房间恐惧Tag（装饰表现用）")] public bool lv2HasTag = true;

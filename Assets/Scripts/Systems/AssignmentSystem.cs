@@ -33,18 +33,14 @@ namespace ScreamHotel.Systems
 
             var g = _world.Ghosts.FirstOrDefault(x => x.Id == ghostId);
             var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
-
-            Debug.Log($"尝试分配鬼怪 {ghostId} 到房间 {roomId}");
-
+            
             if (g == null || r == null)
             {
-                Debug.LogWarning($"鬼怪 {ghostId} 或房间 {roomId} 未找到！");
                 return false;
             }
 
             if (g.State is GhostState.Training)
             {
-                Debug.LogWarning($"鬼怪 {ghostId} 处于不可分配状态！");
                 return false;
             }
 
@@ -61,7 +57,30 @@ namespace ScreamHotel.Systems
             {
                 r.AssignedGhostIds.Add(ghostId);
                 g.State = GhostState.Working;
-                Debug.Log($"成功将鬼怪 {ghostId} 分配到房间 {roomId}");
+                return true;
+            }
+
+            return false;
+        }
+        
+        public bool TryAssignGuestToRoom(string guestId, string roomId)
+        {
+            if (!IsAssignPhase()) return false;
+
+            var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
+            var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
+            
+
+            if (g == null || r == null)
+            {
+                return false;
+            }
+
+            foreach (var rr in _world.Rooms) rr.AssignedGuestIds.Remove(guestId);
+
+            if (!r.AssignedGuestIds.Contains(guestId))
+            {
+                r.AssignedGuestIds.Add(guestId);
                 return true;
             }
 
@@ -93,33 +112,6 @@ namespace ScreamHotel.Systems
             return removed;
         }
         
-        public bool TryAssignGuestToRoom(string guestId, string roomId)
-        {
-            if (!IsAssignPhase()) return false;
-
-            var g = _world.Guests.FirstOrDefault(x => x.Id == guestId);
-            var r = _world.Rooms.FirstOrDefault(x => x.Id == roomId);
-
-            Debug.Log($"尝试分配客人 {guestId} 到房间 {roomId}");
-
-            if (g == null || r == null)
-            {
-                Debug.LogWarning($"客人 {guestId} 或房间 {roomId} 未找到！");
-                return false;
-            }
-
-            foreach (var rr in _world.Rooms) rr.AssignedGuestIds.Remove(guestId);
-
-            if (!r.AssignedGuestIds.Contains(guestId))
-            {
-                r.AssignedGuestIds.Add(guestId);
-                Debug.Log($"成功将客人 {guestId} 分配到房间 {roomId}");
-                return true;
-            }
-
-            return false;
-        }
-
         public bool UnassignGuest(string guestId)
         {
             if (!IsAssignPhase()) return false;

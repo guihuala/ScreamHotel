@@ -425,7 +425,7 @@ namespace ScreamHotel.Core
         private void EndGame(bool success, string reason)
         {
             string musicToPlay = success ? "VictoryTheme" : "FailureTheme";
-            _soundManager.PlayMusic(musicToPlay, fadeDuration: 0.5f);
+            AudioManager.Instance.PlaySfx(musicToPlay);
 
             TimeManager.Instance?.PauseTime();
             EventBus.Raise(new GameEnded(success, reason, DayIndex));

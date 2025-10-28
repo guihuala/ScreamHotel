@@ -17,6 +17,8 @@ MonoBehaviour:
     audioPath: Audio/Sfx/ClickBtn
   - audioName: CostMoney
     audioPath: Audio/Sfx/CostMoney
+  - audioName: FailureTheme
+    audioPath: Audio/Sfx/FailureTheme
   - audioName: GetMoney
     audioPath: Audio/Sfx/GetMoney
   - audioName: Ghost_in
@@ -27,6 +29,8 @@ MonoBehaviour:
     audioPath: Audio/Sfx/PopupWindow
   - audioName: Settlement
     audioPath: Audio/Sfx/Settlement
+  - audioName: VictoryTheme
+    audioPath: Audio/Sfx/VictoryTheme
   - audioName: doubt_value_add
     audioPath: Audio/Sfx/doubt_value_add
   - audioName: Guest_doubt_1
