@@ -216,9 +216,9 @@ namespace ScreamHotel.UI
             if (dayText == null || game == null) return;
             string stateText = game.State switch
             {
-                GameState.Day          => "Day",
-                GameState.NightShow    => "Night Show",
-                GameState.NightExecute => "Night Execute",
+                GameState.Day          => "Daytime",
+                GameState.NightShow    => "Night",
+                GameState.NightExecute => "Night Show",
                 GameState.Settlement   => "Settlement",
                 _ => "Preparing"
             };

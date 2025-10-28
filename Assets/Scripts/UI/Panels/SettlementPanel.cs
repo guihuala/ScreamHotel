@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// 每日结算面板：显示今日完成度/收入等，并在点击“继续”时回调 Game 进入下一天
@@ -9,8 +10,8 @@ public class SettlementPanel : BasePanel
 {
     [Header("Bind")]
     public TextMeshProUGUI titleText;
-    public TextMeshProUGUI completionText;
-    public TextMeshProUGUI statsText;
+    public TextMeshProUGUI guestText;
+    public TextMeshProUGUI moneyText;
     public Button continueButton;
 
     // 供 Game 传入的数据
@@ -35,18 +36,9 @@ public class SettlementPanel : BasePanel
 
     private void Refresh()
     {
-        if (titleText != null)
-            titleText.text = $"The {_data.dayIndex} day outcome";
-
-        if (completionText != null)
-            completionText.text = $"completion:{Mathf.RoundToInt(_data.completion * 100f)}%";
-
-        if (statsText != null)
-        {
-            statsText.text =
-                $"guest:{_data.guestsScared}/{_data.guestsTotal} \n" +
-                $"gold erned:{_data.goldChange:+#;-#;0}";
-        }
+        titleText.text = $"Day {_data.dayIndex}\n outcome";
+        guestText.text = $"scare guest: {_data.guestsScared}/{_data.guestsTotal}";
+        moneyText.text = $"money: {_data.goldChange}";
     }
 
     private void BindEvents()
