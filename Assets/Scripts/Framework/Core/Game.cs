@@ -79,7 +79,7 @@ namespace ScreamHotel.Core
             _trainer = new GhostTrainer();
             TimeSystem = new TimeSystem(this);
             
-            _soundManager = SoundManager.Instance;
+            _soundManager = FindObjectOfType<SoundManager>();
             
             GoToDay();
         }
@@ -115,6 +115,7 @@ namespace ScreamHotel.Core
         private void OnDestroy()
         {
             EventBus.Unsubscribe<ExecNightResolved>(OnNightResolved);
+            EventBus.Unsubscribe<GameStateChanged>(OnGameStateChanged);
         }
         
         public bool ShopTryReroll()

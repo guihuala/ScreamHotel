@@ -1,17 +1,16 @@
 using System.Collections;
 using UnityEngine;
 using DG.Tweening;
-using UnityEngine;
 
 namespace ScreamHotel.Presentation
 {
-    public class SoundManager : Singleton<SoundManager>
+    public class SoundManager : MonoBehaviour
     {
-        [Header("游戏BGM播放器")] public AudioSource _musicSource;
+        [Header("游戏BGM播放器")] 
+        public AudioSource _musicSource;
         
-        private const string MusicPathPrefix = "Audio/BGM/";        // 音乐路径前缀
-
-        private bool isFading = false; // 标记当前是否正在淡出
+        private const string MusicPathPrefix = "Audio/BGM/"; // 音乐路径前缀
+        private bool isFading = false; // 当前是否正在淡出
 
         public void PlayMusic(string musicName, float fadeDuration = 0.5f)
         {
@@ -27,7 +26,6 @@ namespace ScreamHotel.Presentation
 
         private IEnumerator FadeInMusic(string musicName, float fadeDuration)
         {
-            // 构建资源路径
             string path = MusicPathPrefix + musicName;
             AudioClip newClip = Resources.Load<AudioClip>(path);
 
