@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   suspicionThreshold: 100
   suspicionPerFailedGuest: 5
-  totalDays: 1
+  totalDays: 10
   requireTargetGold: 1
   targetGold: 3500
   dayGuestSpawnCount: 4

@@ -28,6 +28,8 @@ namespace ScreamHotel.Systems
             _world.Guests.Clear();  // 清空 _world.Guests 列表
 
             _guestSpawner.ClearAll(); // 清空待接受和已接受的客人
+            
+            foreach (var r in _world.Rooms) r.AssignedGuestIds.Clear();// 清空房间
 
             // 2) 刷新商店
             _ghostShop.RefreshDaily(dayIndex);
