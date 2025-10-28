@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   suspicionThreshold: 100
   suspicionPerFailedGuest: 5
-  totalDays: 1
+  totalDays: 10
   requireTargetGold: 1
   targetGold: 4000
   dayGuestSpawnCount: 4
@@ -32,6 +32,8 @@ MonoBehaviour:
   capacityLv3: 2
   lv2HasTag: 1
   ghostTrainingTimeDays: 2
+  dayDurationInSeconds: 600
+  dayStartTime: 0
   dayRatio: 0.4
   nightShowRatio: 0.45
   nightExecuteRatio: 0.1

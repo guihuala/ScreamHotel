@@ -31,7 +31,6 @@ namespace ScreamHotel.Core
         public IReadOnlyList<Guest> PendingGuests => _dayGuestSpawner != null ? _dayGuestSpawner.Pending : Array.Empty<Guest>();
         public bool ApproveGuest(string guestId) => _dayGuestSpawner != null && _dayGuestSpawner.Accept(guestId);
         public bool RejectGuest(string guestId)  => _dayGuestSpawner != null && _dayGuestSpawner.Reject(guestId);
-
         
         public GameState State { get; private set; } = GameState.Boot;
         public int DayIndex { get; private set; } = 1;
@@ -247,7 +246,10 @@ namespace ScreamHotel.Core
             }
 
             State = GameState.Day;
+
+            // 每天开始时，清空之前的客人数据
             _dayPhaseSystem.PrepareDay(DayIndex);
+
             EventBus.Raise(new GameStateChanged(State));
             EventBus.Raise(new DayStartedEvent());
 

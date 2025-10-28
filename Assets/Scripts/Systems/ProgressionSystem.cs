@@ -13,15 +13,13 @@ namespace ScreamHotel.Systems
         {
             _world = world;
             _db = db;
-
-            // 从 ProgressionConfig 里取曲线；没有就用线性兜底
-            var prog = _db?.Progression as ScreamHotel.Data.ProgressionConfig;
+            
+            var prog = _db?.Progression;
             _guestMixCurve = prog != null && prog.guestMixCurve != null
                 ? prog.guestMixCurve
                 : AnimationCurve.Linear(0, 0f, 1, 1f);
         }
-
-        /// <summary>把 dayIndex 映射到 [0,1] 进度，并给出“高难客人占比”</summary>
+        
         public float GetHardGuestRatio(int dayIndex)
         {
             var rules = _world?.Config?.Rules;

@@ -216,8 +216,7 @@ public class GuestApprovalPanel : BasePanel
     private void ToggleEmptyState()
     {
         bool empty = _pendingCache.Count == 0;
-
-        // 无数据时隐藏右侧条/按钮等
+        
         if (thumbsRoot) thumbsRoot.gameObject.SetActive(!empty);
         if (acceptButton) acceptButton.gameObject.SetActive(!empty);
         if (rejectButton) rejectButton.gameObject.SetActive(!empty);
@@ -268,8 +267,7 @@ public class GuestApprovalPanel : BasePanel
                     Rebuild();
                     _cursor = Mathf.Clamp(keep, 0, Mathf.Max(0, _pendingCache.Count - 1));
                     UpdateMainCard();
-
-                    // NEW: 处理后检查是否全空 -> 自动关闭
+                    
                     TryAutoCloseIfDone();
                 }
             });
@@ -288,8 +286,7 @@ public class GuestApprovalPanel : BasePanel
                     Rebuild();
                     _cursor = Mathf.Clamp(keep, 0, Mathf.Max(0, _pendingCache.Count - 1));
                     UpdateMainCard();
-
-                    // NEW: 处理后检查是否全空 -> 自动关闭
+                    
                     TryAutoCloseIfDone();
                 }
             });
@@ -365,8 +362,7 @@ public class GuestApprovalPanel : BasePanel
     private void ClearImmunityIcons()
     {
         if (immunitiesRoot == null) return;
-
-        // 不删模板，只删除运行时生成的孩子
+        
         for (int i = immunitiesRoot.childCount - 1; i >= 0; i--)
         {
             var child = immunitiesRoot.GetChild(i);

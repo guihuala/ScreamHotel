@@ -9,7 +9,6 @@ namespace ScreamHotel.Presentation
     {
         private void SyncGuestsQueue()
         {
-            // 只在 NightShow 同步；其它阶段清空并退出
             if (game.State != GameState.NightShow)
             {
                 ClearGuestViews();
@@ -97,10 +96,9 @@ namespace ScreamHotel.Presentation
 
         private System.Collections.IEnumerator Co_BuildGuestsThenSync()
         {
-            yield return null; // 给一帧机会让 World 刷新完成（可保留/可去掉）
+            yield return null;
             SyncGuestsQueue();
         }
-
 
         // -------- Shop ----------
         private Vector3 GetShopSlotWorldPos(int index)
